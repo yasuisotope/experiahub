@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240" height="120" viewBox="0 0 240 120" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" fill-rule="evenodd">
+    <rect width="240" height="120" fill="#4A7C8C"/>
+    <text x="120" y="70" font-family="Cormorant Garamond" font-size="24" fill="#FFFFFF" text-anchor="middle">
+      ExperiaHub
+    </text>
+  </g>
+</svg>

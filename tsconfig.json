@@ -1,0 +1,82 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"],
+      "utils/*": ["./src/utils/*"],
+      "contexts/*": ["./src/contexts/*"],
+      "hooks/*": ["./src/hooks/*"],
+      "layout/*": ["./src/layout/*"],
+      "ui-component/*": ["./src/ui-component/*"],
+      "themes": ["./src/themes/index"],
+      "themes/*": ["./src/themes/*"],
+      "menu-items": ["./src/menu-items/index"],
+      "menu-items/*": ["./src/menu-items/*"],
+      "api/*": ["./src/api/*"],
+      "store": ["./src/store/index"],
+      "store/*": ["./src/store/*"],
+      "config": ["./src/config/index"],
+      "config/*": ["./src/config/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/app/**/*.ts",
+    "src/app/**/*.tsx",
+    "src/components/**/*.ts",
+    "src/components/**/*.tsx",
+    "src/contexts/WordPressContext.tsx",
+    "src/contexts/ChatContext.tsx",
+    "src/theme/**/*.ts",
+    "src/theme/**/*.tsx",
+    "src/utils/**/*.ts",
+    "src/utils/**/*.tsx",
+    "src/api/**/*.ts",
+    "src/api/**/*.tsx",
+    "middleware.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/views/**",
+    "src/ui-component/**",
+    "src/layout/**",
+    "src/menu-items/**",
+    "src/store/**",
+    "src/themes/**",
+    "src/types/**",
+    "src/types/**/*",
+    "src/views/**/*",
+    "src/hooks/useRecaptcha.ts",
+    "src/services/chatHistoryService.ts",
+    "src/services/**",
+    "src/types/dropzone.ts",
+    "src/types/index.ts",
+    "src/utils/route-guard/**",
+    "src/contexts/Auth0Context.tsx",
+    "src/contexts/AWSCognitoContext.tsx",
+    "src/contexts/FirebaseContext.tsx",
+    "src/contexts/SupabaseContext.tsx",
+    "src/contexts/JWTContext.tsx",
+    "src/contexts/ConfigContext.tsx",
+    "src/types/dropzone.ts",
+    "src/types/index.ts"
+  ]
+}

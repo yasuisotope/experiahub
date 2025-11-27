@@ -1,0 +1,9 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3001:3000"
+    environment:
+      - 
+NEXT_PUBLIC_BOKUN_CHANNEL_UUID=f7a4d2a1-e795-4b87-b9a2-3e3598394313
+      - NEXT_PUBLIC_SHOW_WIDGET_CTA=true
