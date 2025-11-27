@@ -1448,11 +1448,9 @@ export default function SupplierPortalPage() {
         <Paper sx={{ p: 2, borderRadius: 3, height: 'fit-content', position: 'sticky', top: 24, width: { md: 230 }, transition: 'all .3s ease' }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
             <img
-              src="https://res.cloudinary.com/dasahamyc/image/upload/f_auto,q_auto,w_480/v1752467928/ExperiaHub_Logo_V2_Small_Clear_zf1xy8.png"
-              srcSet="https://res.cloudinary.com/dasahamyc/image/upload/f_auto,q_auto,w_320/v1752467928/ExperiaHub_Logo_V2_Small_Clear_zf1xy8.png 320w, https://res.cloudinary.com/dasahamyc/image/upload/f_auto,q_auto,w_480/v1752467928/ExperiaHub_Logo_V2_Small_Clear_zf1xy8.png 480w, https://res.cloudinary.com/dasahamyc/image/upload/f_auto,q_auto,w_640/v1752467928/ExperiaHub_Logo_V2_Small_Clear_zf1xy8.png 640w"
-              sizes="(max-width: 480px) 320px, 480px"
+              src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png"
               alt="ExperiaHub Logo"
-              style={{ height: 'auto', width: 'auto', maxWidth: '100%' }}
+              style={{ height: 'auto', width: '100%', maxWidth: '200px' }}
             />
           </Box>
           <Typography variant="subtitle2" sx={{ mb: 1, letterSpacing: '.3px', color: '#777', textAlign: 'left' }}>Navigation</Typography>
