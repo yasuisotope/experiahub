@@ -40,12 +40,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         try {
           setLoading(true);
           const fetchedChats = await chatHistoryService.fetchChats();
-          console.log('Fetched chats:', fetchedChats);
           if (Array.isArray(fetchedChats) && fetchedChats.length > 0) {
             setChats(fetchedChats);
           } else {
             // No chats yet: seed a first chat so Recent is not empty
-            console.log('No chats in localStorage; seeding first chat');
             const first = await chatHistoryService.createChat('New Chat');
             setChats([first]);
             setCurrentChat(first);
@@ -55,7 +53,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
           // Get currentChatId from localStorage
           const currentChatId = localStorage.getItem('currentChatId');
-          console.log('Current chat ID from localStorage:', currentChatId);
           if (currentChatId) {
             const found = fetchedChats.find(chat => chat.id === currentChatId);
             if (found) {
@@ -190,8 +187,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         // Attach experiences (non-typed UI extension)
         (newAiMessage as unknown as { experiences?: any[] }).experiences = response.response.experiences || [];
 
-        console.log('Adding AI message to chat:', newAiMessage);
-        console.log('Current chat before update:', currentChat);
+        // Attach experiences (non-typed UI extension)
+        (newAiMessage as unknown as { experiences?: any[] }).experiences = response.response.experiences || [];
 
         setCurrentChat(prev => {
           if (!prev) return null;
@@ -200,8 +197,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             messages: [...(prev.messages || []), newAiMessage],
             updatedAt: new Date().toISOString()
           };
-          
-          console.log('Updated chat:', updatedChat);
           
           // Update the chat in localStorage
           const storedChats = localStorage.getItem('mock_chats');
@@ -228,9 +223,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem('mock_chats', JSON.stringify(normalizedChats));
             localStorage.setItem('currentChatId', updatedChat.id);
             
-            console.log('Updated chats in localStorage:', normalizedChats);
+            localStorage.setItem('currentChatId', updatedChat.id);
           } else {
-            console.log('No stored chats found in localStorage');
+            // No stored chats found in localStorage
           }
           
           return updatedChat;
