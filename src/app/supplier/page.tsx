@@ -27,8 +27,8 @@ import BackgroundImage from '@/components/BackgroundImage';
 import { getUserBackground, setUserBackground, searchUnsplash, trackDownload, loadCachedBackground, saveCachedBackground, getCuratedBackgrounds, prefetchBackgroundImage, type PortalBackground } from '@/services/backgroundService';
 import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
 
-const N8N_BASE = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
-const TOKENS_API_KEY = process.env.NEXT_PUBLIC_SUPPLIER_TOKENS_API_KEY || '';
+const N8N_BASE = process.env.NEXT_PUBLIC_N8N_API_URL || '';
+// Removed exposed TOKENS_API_KEY. Now handled in /api/supplier/tokens
 
 function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) => void; defaultActivityId?: string }) {
   const [photos, setPhotos] = React.useState<string>('');
@@ -1284,19 +1284,15 @@ export default function SupplierPortalPage() {
     setApiTokens([]);
   }, [subsection]);
 
-  const tokensHeaders: Record<string, string> = React.useMemo(() => {
-    const base: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (TOKENS_API_KEY) base['x-api-key'] = TOKENS_API_KEY;
-    return base;
-  }, []);
+  // tokensHeaders removed; API key is now server-side only
 
   const loadTokens = async () => {
     if (!tokensUser.trim() || !tokensPassword.trim()) { setToast('Enter login/email and current password'); return; }
     setTokensLoading(true);
     try {
-      const res = await fetch(`${N8N_BASE}/supplier/user/tokens/list`, {
-        method: 'POST', headers: tokensHeaders,
-        body: JSON.stringify({ userLogin: tokensUser, userEmail: tokensUser, passwordCurrent: tokensPassword })
+      const res = await fetch('/api/supplier/tokens', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'list', userLogin: tokensUser, userEmail: tokensUser, passwordCurrent: tokensPassword })
       });
       const json = await res.json();
       if (!json?.success) throw new Error(json?.error || 'List failed');
@@ -1309,9 +1305,9 @@ export default function SupplierPortalPage() {
     if (!tokensUser.trim() || !tokensPassword.trim()) { setToast('Enter login/email and current password'); return; }
     setTokenMutating(true);
     try {
-      const res = await fetch(`${N8N_BASE}/supplier/user/tokens/create`, {
-        method: 'POST', headers: tokensHeaders,
-        body: JSON.stringify({ userLogin: tokensUser, userEmail: tokensUser, passwordCurrent: tokensPassword, tokenName })
+      const res = await fetch('/api/supplier/tokens', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', userLogin: tokensUser, userEmail: tokensUser, passwordCurrent: tokensPassword, tokenName })
       });
       const json = await res.json();
       if (!json?.success || !json?.token) throw new Error(json?.error || 'Create failed');
@@ -1325,9 +1321,9 @@ export default function SupplierPortalPage() {
     if (!tokensUser.trim() || !tokensPassword.trim()) { setToast('Enter login/email and current password'); return; }
     setTokenMutating(true);
     try {
-      const res = await fetch(`${N8N_BASE}/supplier/user/tokens/delete`, {
-        method: 'POST', headers: tokensHeaders,
-        body: JSON.stringify({ userLogin: tokensUser, userEmail: tokensUser, passwordCurrent: tokensPassword, tokenUuid: uuid })
+      const res = await fetch('/api/supplier/tokens', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', userLogin: tokensUser, userEmail: tokensUser, passwordCurrent: tokensPassword, tokenUuid: uuid })
       });
       const json = await res.json();
       if (!json?.success) throw new Error(json?.error || 'Delete failed');
