@@ -33,6 +33,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <title>ExperiaHub</title>
+        <meta name="description" content="ExperiaHub - Connecting Suppliers and Travelers" />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="https://res.cloudinary.com/dasahamyc/image/upload/v1764230943/ExperiaHub_Logo_512x512_mlgydt.png" type="image/png" />
