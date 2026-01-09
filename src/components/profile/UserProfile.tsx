@@ -23,7 +23,7 @@ export default function UserProfile() {
     <Paper
       sx={{
         p: 4,
-        borderRadius: '16px',
+        borderRadius: 2,
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
         bgcolor: 'rgba(255, 255, 255, 0.7)',
         backdropFilter: 'blur(12px)',
@@ -35,7 +35,7 @@ export default function UserProfile() {
           sx={{
             width: 80,
             height: 80,
-            bgcolor: 'rgba(74, 124, 140, 0.9)',
+            bgcolor: '#010057',
             mr: 2
           }}
         >
@@ -61,7 +61,7 @@ export default function UserProfile() {
           rel="noopener noreferrer"
           sx={{
             textDecoration: 'none',
-            color: 'rgba(74, 124, 140, 0.9)',
+            color: '#010057',
             '&:hover': {
               textDecoration: 'underline',
             },

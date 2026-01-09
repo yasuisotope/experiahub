@@ -14,10 +14,13 @@ export async function POST(request: Request) {
     const { action, ...data } = body;
 
     let endpoint = '';
+    // Using the specific UUID path found by the user
+    const WEBHOOK_UUID = 'ce795c81-bfb0-4400-a25f-8dcb67d6f89e';
+    
     switch (action) {
-      case 'list': endpoint = '/supplier/user/tokens/list'; break;
-      case 'create': endpoint = '/supplier/user/tokens/create'; break;
-      case 'delete': endpoint = '/supplier/user/tokens/delete'; break;
+      case 'list': endpoint = `/webhook/${WEBHOOK_UUID}/supplier/user/tokens/list`; break;
+      case 'create': endpoint = `/webhook/${WEBHOOK_UUID}/supplier/user/tokens/create`; break;
+      case 'delete': endpoint = `/webhook/${WEBHOOK_UUID}/supplier/user/tokens/delete`; break;
       default: return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
     }
 

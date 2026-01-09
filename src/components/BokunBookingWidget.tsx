@@ -117,7 +117,7 @@ export default function BokunBookingWidget({
             zIndex: 1,
           }}
         >
-          <CircularProgress size={40} sx={{ color: 'rgba(74, 124, 140, 0.9)' }} />
+          <CircularProgress size={40} sx={{ color: '#010057' }} />
         </Box>
       )}
       <iframe
@@ -126,7 +126,7 @@ export default function BokunBookingWidget({
           width: '100%',
           height: '100%',
           border: 'none',
-          borderRadius: '8px',
+          borderRadius: '4px',
           opacity: loading ? 0 : 1,
           transition: 'opacity 0.3s ease',
         }}

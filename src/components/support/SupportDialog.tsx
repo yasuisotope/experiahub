@@ -136,7 +136,7 @@ export default function SupportDialog(props: SupportDialogProps) {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={submitting || !name.trim() || !email.trim() || !subject.trim() || !message.trim()} sx={{ bgcolor: 'rgba(74,124,140,0.9)', '&:hover': { bgcolor: 'rgba(74,124,140,1)' } }}>Submit</Button>
+        <Button variant="contained" onClick={onSubmit} disabled={submitting || !name.trim() || !email.trim() || !subject.trim() || !message.trim()} sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' } }}>Submit</Button>
       </DialogActions>
     </Dialog>
   );

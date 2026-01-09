@@ -21,7 +21,7 @@ export default function ForgotPassword({ className }: ForgotPasswordProps) {
         rel="noopener noreferrer"
         sx={{
           textDecoration: 'none',
-          color: 'rgba(74, 124, 140, 0.9)',
+          color: '#010057',
           '&:hover': {
             textDecoration: 'underline',
           },

@@ -233,7 +233,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
   return (
     <Paper elevation={0} sx={{ p: 2, borderRadius: 2, bgcolor: 'transparent', position: 'relative' }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="body2" sx={{ color: '#5b6a72' }}>
+        <Typography variant="body2" sx={{ color: '#010057', fontFamily: 'Inter' }}>
           Status: <strong>{statusInfo?.approved ? 'Approved' : (statusInfo?.status || 'Pending')}</strong>{lastSavedAt ? ` · Last saved: ${lastSavedAt}` : ''}
         </Typography>
         <Chip size="small" label={`Completeness: ${completeness}% (${completedCount}/${requiredKeys.length})`} color={completeness===100?'success':'default'} variant={completeness===100?'filled':'outlined'} />
@@ -244,7 +244,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
       {/* Section: Company & Contact */}
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#6b7780' }}>Company & Contact</Typography>
+          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem' }}>Company & Contact</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -270,7 +270,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
 
         {/* Section: Locations & Experiences */}
         <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#6b7780' }}>Locations & Experiences</Typography>
+          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem' }}>Locations & Experiences</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
         <Grid item xs={12}>
@@ -295,7 +295,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
 
         {/* Section: Product Details */}
         <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#6b7780' }}>Product Details</Typography>
+          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem' }}>Product Details</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
         <Grid item xs={12}>
@@ -332,7 +332,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
         </Grid>
         {/* Section: Requirements */}
         <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#6b7780', pl: 0.5 }}>Requirements</Typography>
+          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem', pl: 0.5 }}>Requirements</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
         <Grid item xs={12}>
@@ -341,7 +341,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
 
         {/* Section: Narrative */}
         <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#6b7780', pl: 0.5 }}>Narrative</Typography>
+          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem', pl: 0.5 }}>Narrative</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
         <Grid item xs={12} sm={6}><TextField label="Three Words" value={state.threeWords} onChange={onChange('threeWords')} fullWidth /></Grid>
@@ -350,26 +350,26 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
 
       {/* Review & Sticky Action Bar */}
       <Box sx={{ mt: 3 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700, color: '#6b7780' }}>Review</Typography>
+        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display' }}>Review</Typography>
         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
           <Stack spacing={1}>
-            <Typography variant="body2"><strong>Legal</strong>: {state.legalBusinessName || '—'}</Typography>
-            <Typography variant="body2"><strong>Contact</strong>: {state.contactName || '—'} · {state.contactEmail || '—'} · {state.contactPhone || '—'}</Typography>
-            <Typography variant="body2"><strong>Locations</strong>: {state.primaryLocations || '—'}</Typography>
-            <Typography variant="body2"><strong>Experiences</strong>: {state.experienceNames || '—'}</Typography>
-            <Typography variant="body2"><strong>Descriptions</strong>: {state.briefDescriptions || '—'}</Typography>
-            <Typography variant="body2"><strong>Booking</strong>: {state.bookingSystem || '—'} · {state.bookingLink || '—'}</Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Legal</strong>: {state.legalBusinessName || '—'}</Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Contact</strong>: {state.contactName || '—'} · {state.contactEmail || '—'} · {state.contactPhone || '—'}</Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Locations</strong>: {state.primaryLocations || '—'}</Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Experiences</strong>: {state.experienceNames || '—'}</Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Descriptions</strong>: {state.briefDescriptions || '—'}</Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Booking</strong>: {state.bookingSystem || '—'} · {state.bookingLink || '—'}</Typography>
           </Stack>
         </Paper>
       </Box>
 
       {/* Sticky Action Bar */}
       <Box sx={{ position: 'sticky', bottom: 12, mt: 3, ml: 'auto', width: 'fit-content' }}>
-        <Typography variant="caption" sx={{ color: '#666', mb: 0.5, textAlign: 'right' }}>
+        <Typography variant="caption" sx={{ color: '#666', mb: 0.5, textAlign: 'right', fontFamily: 'Inter' }}>
           {dirty ? 'Unsaved changes' : (lastSavedAt ? `Last saved: ${lastSavedAt}` : '')}
         </Typography>
-        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, p: 0.5, pr: 0.5, pl: 0.5, borderRadius: 999, bgcolor: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 10px rgba(0,0,0,0.06)' }}>
-          <Button onClick={handleSave} disabled={saving} sx={{ px: 3, py: 1, borderRadius: 999, bgcolor: 'rgba(74,124,140,0.95)', color: '#fff', fontWeight: 700, letterSpacing: '.2px', boxShadow: '0 8px 18px rgba(74,124,140,0.22)', '&:hover': { bgcolor: 'rgba(74,124,140,1)' } }} startIcon={!saving ? <CheckCircleOutlineIcon /> : undefined}>
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, p: 0.5, pr: 0.5, pl: 0.5, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 10px rgba(0,0,0,0.06)' }}>
+          <Button onClick={handleSave} disabled={saving} sx={{ px: 3, py: 1, borderRadius: 1, bgcolor: '#010057', color: '#fff', fontWeight: 700, fontFamily: 'Inter', letterSpacing: '.2px', boxShadow: '0 8px 18px rgba(1, 0, 87, 0.22)', '&:hover': { bgcolor: '#020080' } }} startIcon={!saving ? <CheckCircleOutlineIcon /> : undefined}>
             {saving ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Save Changes'}
           </Button>
           <Button
@@ -379,7 +379,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
               if (Object.keys(errors).length > 0 || completeness < 100) { setError('Please complete all required fields before submitting.'); return; }
               await handleSubmit();
             }}
-            sx={{ borderRadius: 999, px: 2.25, py: 1 }}
+            sx={{ borderRadius: 1, px: 2.25, py: 1, fontFamily: 'Inter', color: '#010057', borderColor: '#010057' }}
           >
             Submit for Review
           </Button>

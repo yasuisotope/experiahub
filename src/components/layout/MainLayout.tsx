@@ -195,8 +195,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
           sx={{
             mx: 2,
             mb: 2,
-            bgcolor: 'rgba(74, 124, 140, 0.9)',
-            '&:hover': { bgcolor: 'rgba(74, 124, 140, 1)' },
+            bgcolor: '#4A7C8C',
+            fontFamily: 'Inter',
+            '&:hover': { bgcolor: '#3A6370' },
           }}
         >
           NEW CHAT
@@ -205,34 +206,58 @@ export default function MainLayout({ children }: MainLayoutProps) {
         {/* Navigation */}
         <List>
           <ListItem disablePadding>
-            <ListItemButton onClick={() => router.push('/chat')} selected={pathname === '/chat'}>
-              <ListItemIcon>
+            <ListItemButton 
+              onClick={() => router.push('/chat')} 
+              selected={pathname === '/chat'}
+              sx={{
+                '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
+                '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+              }}
+            >
+              <ListItemIcon sx={{ color: pathname === '/chat' ? '#4A7C8C' : '#333' }}>
                 <ChatIcon />
               </ListItemIcon>
-              <ListItemText primary="Chat" />
+              <ListItemText 
+                primary="Chat" 
+                primaryTypographyProps={{ fontFamily: 'Inter', fontSize: '0.95rem', color: pathname === '/chat' ? '#4A7C8C' : '#333' }}
+              />
             </ListItemButton>
           </ListItem>
           {isLoggedIn && (
             <>
               <ListItem disablePadding>
-                <ListItemButton onClick={() => router.push('/bookings')} selected={pathname.startsWith('/bookings')}>
-                  <ListItemIcon>
+                <ListItemButton 
+                  onClick={() => router.push('/bookings')} 
+                  selected={pathname.startsWith('/bookings')}
+                  sx={{
+                    '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
+                    '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}>
                     <BookingIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary="Bookings"
-                    primaryTypographyProps={{ fontFamily: 'Urbanist', fontSize: '0.95rem', color: '#2F2F2F' }}
+                    primaryTypographyProps={{ fontFamily: 'Inter', fontSize: '0.95rem', color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}
                   />
                 </ListItemButton>
               </ListItem>
               <ListItem disablePadding>
-                <ListItemButton onClick={() => router.push('/schedule')} selected={pathname.startsWith('/schedule')}>
-                  <ListItemIcon>
+                <ListItemButton 
+                  onClick={() => router.push('/schedule')} 
+                  selected={pathname.startsWith('/schedule')}
+                  sx={{
+                    '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
+                    '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}>
                     <CalendarIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary="Schedule"
-                    primaryTypographyProps={{ fontFamily: 'Urbanist', fontSize: '0.95rem', color: '#2F2F2F' }}
+                    primaryTypographyProps={{ fontFamily: 'Inter', fontSize: '0.95rem', color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -240,10 +265,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
           )}
           <ListItem disablePadding>
             <ListItemButton onClick={() => setSupportOpen(true)}>
-              <ListItemIcon>
+              <ListItemIcon sx={{ color: '#333' }}>
                 <SupportAgentIcon />
               </ListItemIcon>
-              <ListItemText primary="Contact Support" />
+              <ListItemText 
+                primary="Contact Support" 
+                primaryTypographyProps={{ fontFamily: 'Inter', fontSize: '0.95rem', color: '#333' }}
+              />
             </ListItemButton>
           </ListItem>
         </List>
@@ -252,13 +280,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
         {/* Recent Chats - Always show */}
         <>
-          <Typography variant="overline" sx={{ px: 2, color: 'text.secondary' }}>
+          <Typography variant="overline" sx={{ px: 2, color: 'text.secondary', fontFamily: 'Inter' }}>
             RECENT
           </Typography>
           <List sx={{ flexGrow: 1, overflow: 'auto' }}>
             {chats.length === 0 ? (
               <ListItem>
-                <ListItemText primary="No recent conversations" primaryTypographyProps={{ fontSize: '0.85rem', color: 'text.secondary' }} />
+                <ListItemText primary="No recent conversations" primaryTypographyProps={{ fontSize: '0.85rem', color: 'text.secondary', fontFamily: 'Inter' }} />
               </ListItem>
             ) : (
               chats.slice(0, 10).map((chat) => (
@@ -291,8 +319,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                       primaryTypographyProps={{
                         fontSize: '0.95rem',
                         fontWeight: currentChat?.id === chat.id ? 600 : 500,
-                        color: '#2F2F2F',
+                        color: currentChat?.id === chat.id ? '#4A7C8C' : '#2F2F2F',
                         noWrap: true,
+                        fontFamily: 'Inter',
                       }}
                     />
                   </ListItemButton>

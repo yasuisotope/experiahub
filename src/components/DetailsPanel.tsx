@@ -82,35 +82,35 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
     }
   };
   return (
-    <Paper id="details-panel" role="dialog" aria-modal="true" aria-labelledby="details-title" tabIndex={-1} ref={panelRef} onKeyDown={handleKeyDown} elevation={0} sx={{ p: 2, m: 2, bgcolor: 'rgba(255,255,255,0.9)', border: '0', borderRadius: 2, boxShadow: '0 0 0 0 transparent', outline: 'none' }}>
+    <Paper id="details-panel" role="dialog" aria-modal="true" aria-labelledby="details-title" tabIndex={-1} ref={panelRef} onKeyDown={handleKeyDown} elevation={0} sx={{ p: 2, m: 2, bgcolor: 'rgba(255,255,255,0.9)', border: '0', borderRadius: 1, boxShadow: '0 0 0 0 transparent', outline: 'none' }}>
       <Stack spacing={1.25}>
         <Typography
           id="details-title"
           sx={{
-            fontFamily: 'Cormorant Garamond',
+            fontFamily: 'Playfair Display',
             fontSize: { xs: '1.35rem', sm: '1.6rem' },
             fontWeight: 700,
             lineHeight: 1.2,
-            color: '#2F2F2F'
+            color: '#010057'
           }}
         >
           {exp.title}
         </Typography>
         {(exp.price || exp.currency) && (
-          <Typography sx={{ fontFamily: 'Urbanist', color: '#2F2F2F' }}>
+          <Typography sx={{ fontFamily: 'Inter', color: '#010057', fontWeight: 500 }}>
             {exp.price}{exp.currency ? ` ${exp.currency}` : ''}
           </Typography>
         )}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, color: '#666', fontFamily: 'Urbanist' }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, color: '#666', fontFamily: 'Inter' }}>
           <Typography sx={{ fontSize: '0.8rem', lineHeight: 1.4 }}>Verified provider</Typography>
           <Typography sx={{ fontSize: '0.8rem', lineHeight: 1.4 }}>Secure checkout (Bokun/Stripe)</Typography>
           {(exp as any)?.metadata?.cancellation && (
             <Typography sx={{ fontSize: '0.8rem', lineHeight: 1.4 }}>{(exp as any).metadata.cancellation}</Typography>
           )}
         </Box>
-        <Typography sx={{ fontFamily: 'Urbanist', color: '#666', fontSize: '0.85rem' }}>{[exp.city, exp.category, exp.duration].filter(Boolean).join(' • ')}</Typography>
+        <Typography sx={{ fontFamily: 'Inter', color: '#666', fontSize: '0.85rem' }}>{[exp.city, exp.category, exp.duration].filter(Boolean).join(' • ')}</Typography>
         {exp.summary && (
-          <Typography sx={{ fontFamily: 'Urbanist', color: '#444', fontSize: '1rem', lineHeight: 1.55 }}>{exp.summary}</Typography>
+          <Typography sx={{ fontFamily: 'Inter', color: '#444', fontSize: '1rem', lineHeight: 1.55 }}>{exp.summary}</Typography>
         )}
         {/* Photos (gated) */}
         {isLoggedIn ? (
@@ -122,7 +122,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
             </Box>
           )
         ) : (
-          <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>
+          <Typography sx={{ fontFamily: 'Inter', color: '#666' }}>
             Log in to view photos and videos. You can still book via the widget below.
           </Typography>
         )}
@@ -131,21 +131,21 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
         {isLoggedIn && Array.isArray(exp.videos) && exp.videos.length > 0 && (
           <Stack spacing={1}>
             {exp.videos.slice(0, 2).map((src, i) => (
-              <Box key={i} component="video" src={src} controls preload="metadata" style={{ width: '100%', borderRadius: 8 }} />
+              <Box key={i} component="video" src={src} controls preload="metadata" style={{ width: '100%', borderRadius: 4 }} />
             ))}
           </Stack>
         )}
 
         {/* Price */}
         {(exp.price || exp.currency) && (
-          <Typography sx={{ fontFamily: 'Urbanist', color: '#2F2F2F' }}>
+          <Typography sx={{ fontFamily: 'Inter', color: '#010057' }}>
             {exp.price}{exp.currency ? ` ${exp.currency}` : ''}
           </Typography>
         )}
 
         {/* Schedule */}
         {exp.schedule && (
-          <Box sx={{ fontFamily: 'Urbanist', color: '#444' }}>
+          <Box sx={{ fontFamily: 'Inter', color: '#444' }}>
             {Array.isArray(exp.schedule)
               ? exp.schedule.slice(0, 6).map((s: any, i: number) => (
                   <Typography key={i} sx={{ fontSize: '0.95rem' }}>
@@ -159,7 +159,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
 
         {/* Availability (live fetch) */}
         {Array.isArray(slots) && slots.length > 0 && (
-          <Box sx={{ fontFamily: 'Urbanist', color: '#2F2F2F' }}>
+          <Box sx={{ fontFamily: 'Inter', color: '#010057' }}>
             <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Upcoming times</Typography>
             <Stack spacing={0.5}>
               {slots.slice(0, 8).map((s, i) => (
@@ -168,15 +168,15 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
             </Stack>
           </Box>
         )}
-        <Typography sx={{ fontFamily: 'Urbanist', color: '#666', mt: 0.5, fontSize: '0.85rem' }}>
+        <Typography sx={{ fontFamily: 'Inter', color: '#666', mt: 0.5, fontSize: '0.85rem' }}>
           Times shown are indicative. <strong>View live availability</strong> in the booking widget.
         </Typography>
-        {loadingAvail && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><CircularProgress size={16} /><Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Checking availability…</Typography></Box>}
-        {availError && <Alert severity="warning" sx={{ fontFamily: 'Urbanist' }}>{availError}</Alert>}
+        {loadingAvail && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><CircularProgress size={16} /><Typography sx={{ fontFamily: 'Inter', color: '#666' }}>Checking availability…</Typography></Box>}
+        {availError && <Alert severity="warning" sx={{ fontFamily: 'Inter' }}>{availError}</Alert>}
 
         {/* Provider Info */}
         {(exp.source || (exp as any)?.metadata?.source) && (
-          <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>
+          <Typography sx={{ fontFamily: 'Inter', color: '#666' }}>
             Provider: {exp.source || (exp as any)?.metadata?.source}
           </Typography>
         )}
@@ -197,7 +197,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
                 setOpenWidget(true);
               }}
               aria-label={`Book now for ${exp.title}`}
-              sx={{ bgcolor: 'rgba(74,124,140,0.9)' }}
+              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' }, fontFamily: 'Inter', textTransform: 'none' }}
             >
               Book Now
             </Button>
@@ -214,7 +214,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
                 setOpenWidget(true);
               }}
               aria-label={`Check availability for ${exp.title}`}
-              sx={{ bgcolor: 'rgba(74,124,140,0.9)' }}
+              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' }, fontFamily: 'Inter', textTransform: 'none' }}
             >
               Check availability
             </Button>
@@ -222,7 +222,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
         </Stack>
         {/* Secondary actions */}
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-start', flexWrap: 'wrap' }}>
-          <Button variant="outlined" size="small" aria-label="Bookmark experience" onClick={handleBookmark}>Bookmark</Button>
+          <Button variant="outlined" size="small" aria-label="Bookmark experience" onClick={handleBookmark} sx={{ fontFamily: 'Inter', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>Bookmark</Button>
           {onClose && (
             <Button
               size="small"
@@ -236,6 +236,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
                 }
               }}
               aria-label="Close details"
+              sx={{ fontFamily: 'Inter', textTransform: 'none', color: '#666' }}
             >
               Close
             </Button>

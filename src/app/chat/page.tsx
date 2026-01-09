@@ -394,6 +394,37 @@ export default function ChatPage() {
               >
                 {isLoggingIn ? 'Logging in...' : 'Log In'}
               </Box>
+              <Typography
+              variant="h3"
+              component="h1"
+              sx={{
+                fontFamily: 'Playfair Display',
+                fontWeight: 600,
+                color: '#010057',
+                letterSpacing: '-0.02em',
+                mb: 2,
+                opacity: isOpening ? 1 : 0,
+                transform: isOpening ? 'translateY(0)' : 'translateY(10px)',
+                transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
+                transitionDelay: '0.2s',
+              }}
+            >
+              Experia
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: 'Inter',
+                fontWeight: 400,
+                color: '#555',
+                opacity: isOpening ? 1 : 0,
+                transform: isOpening ? 'translateY(0)' : 'translateY(10px)',
+                transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
+                transitionDelay: '0.4s',
+              }}
+            >
+              Your personal travel assistant
+            </Typography>
               
               <Box
                 component="a"
@@ -529,427 +560,444 @@ export default function ChatPage() {
                 elevation={0}
                 sx={{
                   p: 2,
-                      backgroundColor: message.isUser ? '#FFF3E5' : '#E9F0F3',
-                      color: '#333333',
+                      backgroundColor: message.isUser ? 'rgba(74, 124, 140, 0.2)' : '#E9F0F3',
+                      color: message.isUser ? '#333333' : '#333333',
                   borderRadius: '16px',
                   ...(message.isUser ? {
                     borderBottomRightRadius: '4px',
                   } : {
                     borderBottomLeftRadius: '4px',
                   }),
-                  fontFamily: 'Urbanist',
-                      fontSize: '1rem',
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {(Array.isArray(experienceList) && experienceList.length > 0 && !message.isUser)
-                      ? stripEnumerationsFromText(displayContent)
-                      : displayContent}
-                  </Paper>
-                  {/* Structured/synthesized experiences list (top 5) */}
-                  {!message.isUser && Array.isArray(experienceList) && experienceList.length > 0 && (
-                    <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      {experienceList.slice(0,5).map((exp: any, i: number) => (
-                        <Paper key={i} elevation={0} sx={{ p: 1.5, backgroundColor: 'rgba(255,255,255,0.9)', border: '1px solid rgba(74,124,140,0.12)', borderRadius: '10px' }}>
-                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                            <Box sx={{ fontFamily: 'Urbanist', color: '#2F2F2F', fontSize: '0.95rem' }}>
-                              {`${i+1}. ${exp?.title || 'Experience'}`}
-                            </Box>
-                            <Box sx={{ fontFamily: 'Urbanist', color: '#666', fontSize: '0.85rem' }}>
-                              {[exp?.city, exp?.category, exp?.duration].filter(Boolean).join(' • ')}
-                            </Box>
-                            <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                              <Button size="small" variant="outlined" onClick={() => { track('details_click', { source: 'list', index: i+1, title: exp?.title, city: exp?.city, category: exp?.category }); setSelectedExperience(exp); }} sx={{ textTransform: 'none' }}>Details</Button>
-                              {showWidgetCta && (
-                                <Button
-                                  size="small"
-                                  variant="contained"
-                                  onClick={() => {
-                                    const pid = (exp as any)?.bokunProductId || (exp as any)?.productId || (exp as any)?.id;
-                                    if (!pid) return;
-                                    track('widget_open', { source: 'list', index: i + 1, title: exp?.title, city: exp?.city, category: exp?.category, productId: pid });
-                                    setListWidgetProductId(String(pid));
-                                    setListWidgetOpen(true);
-                                  }}
-                                  sx={{ textTransform: 'none', bgcolor: 'rgba(74, 124, 140, 0.9)' }}
-                                >
-                                  Check availability
-                                </Button>
-                              )}
-                            </Box>
-                          </Box>
-                        </Paper>
-                      ))}
-                    </Box>
-                  )}
-                  {/* Optional inline details action only when there are experiences available */}
-                  {!message.isUser && Array.isArray(experienceList) && experienceList.length > 0 && (
-                    <Box>
-                      <Button
-                        size="small"
-                        variant="text"
-                        aria-controls="details-panel"
-                        aria-expanded={Boolean(selectedExperience)}
-                        onClick={() => { track('details_click', { source: 'inline', title: experienceList[0]?.title, city: experienceList[0]?.city, category: experienceList[0]?.category }); setSelectedExperience(experienceList[0]); }}
-                      >
-                        See details
-                      </Button>
-                    </Box>
-                  )}
-                  
-                  {/* Signup Button for AI messages */}
-                  {!message.isUser && (message as any).cta && (
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        backgroundColor: 'rgba(255, 183, 107, 0.1)',
-                        border: '1px solid rgba(255, 183, 107, 0.3)',
-                        borderRadius: '12px',
-                        borderBottomLeftRadius: '4px',
-                      }}
-                    >
-                      <Button
-                        variant="contained"
-                        href={(message as any).cta.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => track('cta_click', { label: (message as any).cta.label, url: (message as any).cta.url })}
-                        sx={{
-                          backgroundColor: 'rgba(255, 183, 107, 0.9)',
-                          color: '#4A4A4A',
-                          fontFamily: 'Urbanist',
-                          fontSize: '0.85rem',
-                          textTransform: 'none',
-                          borderRadius: '8px',
-                          px: 3,
-                          py: 1,
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 183, 107, 1)',
-                          },
-                        }}
-                      >
-                        {(message as any).cta.label || 'Create Free Account'}
-                      </Button>
-                    </Paper>
-                  )}
-
-                  {/* Fallback button when no cta but URL is present */}
-                  {!message.isUser && !((message as any).cta) && showSignup && (
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        backgroundColor: 'rgba(255, 183, 107, 0.1)',
-                        border: '1px solid rgba(255, 183, 107, 0.3)',
-                        borderRadius: '12px',
-                        borderBottomLeftRadius: '4px',
-                      }}
-                    >
-                      <Button
-                        variant="contained"
-                        href={finalSignupUrl as string}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => track('cta_click', { label: 'Create Free Account', url: finalSignupUrl })}
-                        sx={{
-                          backgroundColor: 'rgba(255, 183, 107, 0.9)',
-                          color: '#4A4A4A',
-                          fontFamily: 'Urbanist',
-                          fontSize: '0.85rem',
-                          textTransform: 'none',
-                          borderRadius: '8px',
-                          px: 3,
-                          py: 1,
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 183, 107, 1)',
-                          },
-                        }}
-                      >
-                        Create Free Account
-                      </Button>
-                    </Paper>
-                  )}
-                </Box>
-              </Box>
-            );
-          })}
-          {loading && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 1.5,
-                  px: 2,
-                  backgroundColor: '#E9F0F3',
-                  color: '#333333',
-                  borderRadius: '16px',
-                  borderBottomLeftRadius: '4px',
-                  fontFamily: 'Urbanist',
+                  fontFamily: 'Inter',
                   fontSize: '1rem',
                   lineHeight: 1.6,
                 }}
               >
-                <Box sx={{ display: 'inline-flex', gap: 0.6 }}>
-                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s infinite' }} />
-                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.2s infinite' }} />
-                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.4s infinite' }} />
-                </Box>
-                <style jsx>{`
-                  @keyframes blink {
-                    0% { opacity: 0.2; transform: translateY(0px); }
-                    50% { opacity: 1; transform: translateY(-2px); }
-                    100% { opacity: 0.2; transform: translateY(0px); }
-                  }
-                `}</style>
+                {(Array.isArray(experienceList) && experienceList.length > 0 && !message.isUser)
+                  ? stripEnumerationsFromText(displayContent)
+                  : displayContent}
               </Paper>
-            </Box>
-          )}
-        </Box>
-
-        <Box sx={{ px: 1, pt: 1, pb: { xs: 'max(env(safe-area-inset-bottom, 0px), 30px)', md: '30px' }, background: 'transparent' }}>
-          <TextField
-            fullWidth
-            placeholder="How can I help you today?"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            disabled={loading}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                height: '44px',
-                borderRadius: '22px',
-                backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                backdropFilter: 'saturate(1) blur(0px)',
-                '& fieldset': {
-                  borderColor: 'rgba(74, 124, 140, 0.18)',
-                  borderWidth: '1px !important',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(74, 124, 140, 0.28) !important',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'rgba(74, 124, 140, 0.36) !important',
-                },
-                '& input': {
-                  padding: '10px 14px',
-                  fontFamily: 'Urbanist',
-                  fontSize: '1rem',
-                  color: '#2F2F2F',
-                },
-              },
-            }}
-            InputProps={{
-              endAdornment: (
-                <IconButton
-                  onClick={handleSend}
-                  disabled={!input.trim()}
+              {/* Structured/synthesized experiences list (top 5) */}
+              {!message.isUser && Array.isArray(experienceList) && experienceList.length > 0 && (
+                <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {experienceList.slice(0,5).map((exp: any, i: number) => (
+                    <Paper key={i} elevation={0} sx={{ p: 1.5, backgroundColor: 'rgba(255,255,255,0.9)', border: '1px solid rgba(74,124,140,0.12)', borderRadius: '10px' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <Box sx={{ fontFamily: 'Inter', color: '#2F2F2F', fontSize: '0.95rem' }}>
+                          {`${i+1}. ${exp?.title || 'Experience'}`}
+                        </Box>
+                        <Box sx={{ fontFamily: 'Inter', color: '#666', fontSize: '0.85rem' }}>
+                          {[exp?.city, exp?.category, exp?.duration].filter(Boolean).join(' • ')}
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                          <Button size="small" variant="outlined" onClick={() => { track('details_click', { source: 'list', index: i+1, title: exp?.title, city: exp?.city, category: exp?.category }); setSelectedExperience(exp); }} sx={{ textTransform: 'none' }}>Details</Button>
+                          {showWidgetCta && (
+                            <Button
+                              size="small"
+                              variant="contained"
+                              onClick={() => {
+                                const pid = (exp as any)?.bokunProductId || (exp as any)?.productId || (exp as any)?.id;
+                                if (!pid) return;
+                                track('widget_open', { source: 'list', index: i + 1, title: exp?.title, city: exp?.city, category: exp?.category, productId: pid });
+                                setListWidgetProductId(String(pid));
+                                setListWidgetOpen(true);
+                              }}
+                              sx={{ textTransform: 'none', bgcolor: 'rgba(74, 124, 140, 0.9)' }}
+                            >
+                              Check availability
+                            </Button>
+                          )}
+                        </Box>
+                      </Box>
+                    </Paper>
+                  ))}
+                </Box>
+              )}
+              {/* Optional inline details action only when there are experiences available */}
+              {!message.isUser && Array.isArray(experienceList) && experienceList.length > 0 && (
+                <Box>
+                  <Button
+                    size="small"
+                    variant="text"
+                    aria-controls="details-panel"
+                    aria-expanded={Boolean(selectedExperience)}
+                    onClick={() => { track('details_click', { source: 'inline', title: experienceList[0]?.title, city: experienceList[0]?.city, category: experienceList[0]?.category }); setSelectedExperience(experienceList[0]); }}
+                  >
+                    See details
+                  </Button>
+                </Box>
+              )}
+              
+              {/* Signup Button for AI messages */}
+              {!message.isUser && (message as any).cta && (
+                <Paper
+                  elevation={0}
                   sx={{
-                    mr: 0.5,
-                    color: input.trim() ? 'rgba(74, 124, 140, 0.9)' : 'rgba(0, 0, 0, 0.3)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(74, 124, 140, 0.1)',
-                    },
+                    p: 2,
+                    backgroundColor: 'rgba(255, 183, 107, 0.1)',
+                    border: '1px solid rgba(255, 183, 107, 0.3)',
+                    borderRadius: '12px',
+                    borderBottomLeftRadius: '4px',
                   }}
                 >
-                  <SendIcon />
+                  <Button
+                    variant="contained"
+                    href={(message as any).cta.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track('cta_click', { label: (message as any).cta.label, url: (message as any).cta.url })}
+                    sx={{
+                      backgroundColor: 'rgba(255, 183, 107, 0.9)',
+                      color: '#4A4A4A',
+                      fontFamily: 'Inter',
+                      fontSize: '0.85rem',
+                      textTransform: 'none',
+                      borderRadius: '8px',
+                      px: 3,
+                      py: 1,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 183, 107, 1)',
+                      },
+                    }}
+                  >
+                    {(message as any).cta.label || 'Create Free Account'}
+                  </Button>
+                </Paper>
+              )}
+
+              {/* Fallback button when no cta but URL is present */}
+              {!message.isUser && !((message as any).cta) && showSignup && (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    backgroundColor: 'rgba(255, 183, 107, 0.1)',
+                    border: '1px solid rgba(255, 183, 107, 0.3)',
+                    borderRadius: '12px',
+                    borderBottomLeftRadius: '4px',
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    href={finalSignupUrl as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track('cta_click', { label: 'Create Free Account', url: finalSignupUrl })}
+                    sx={{
+                      backgroundColor: 'rgba(255, 183, 107, 0.9)',
+                      color: '#4A4A4A',
+                      fontFamily: 'Inter',
+                      fontSize: '0.85rem',
+                      textTransform: 'none',
+                      borderRadius: '8px',
+                      px: 3,
+                      py: 1,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 183, 107, 1)',
+                      },
+                    }}
+                  >
+                    Create Free Account
+                  </Button>
+                </Paper>
+              )}
+            </Box>
+          </Box>
+        );
+      })}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 1.5,
+              px: 2,
+              backgroundColor: '#E9F0F3',
+              color: '#333333',
+              borderRadius: '16px',
+              borderBottomLeftRadius: '4px',
+              fontFamily: 'Inter',
+              fontSize: '1rem',
+              lineHeight: 1.6,
+            }}
+          >
+            <Box sx={{ display: 'inline-flex', gap: 0.6 }}>
+              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s infinite' }} />
+              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.2s infinite' }} />
+              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.4s infinite' }} />
+            </Box>
+            <style jsx>{`
+              @keyframes blink {
+                0% { opacity: 0.2; transform: translateY(0px); }
+                50% { opacity: 1; transform: translateY(-2px); }
+                100% { opacity: 0.2; transform: translateY(0px); }
+              }
+            `}</style>
+          </Paper>
+        </Box>
+      )}
+    </Box>
+
+    <Box sx={{ px: 1, pt: 1, pb: { xs: 'max(env(safe-area-inset-bottom, 0px), 30px)', md: '30px' }, background: 'transparent' }}>
+      <TextField
+        fullWidth
+        placeholder="How can I help you today?"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        }}
+        disabled={loading}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            height: '44px',
+            borderRadius: '22px',
+            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'saturate(1) blur(0px)',
+            '& fieldset': {
+              borderColor: 'rgba(74, 124, 140, 0.18)',
+              borderWidth: '1px !important',
+            },
+            '&:hover fieldset': {
+              borderColor: 'rgba(74, 124, 140, 0.28) !important',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: 'rgba(74, 124, 140, 0.36) !important',
+            },
+            '& input': {
+              padding: '10px 14px',
+              fontFamily: 'Inter',
+              fontSize: '1rem',
+              color: '#333333',
+            },
+          },
+        }}
+        InputProps={{
+          endAdornment: (
+            <IconButton
+              onClick={handleSend}
+              disabled={!input.trim()}
+              sx={{
+                mr: 0.5,
+                color: input.trim() ? 'rgba(74, 124, 140, 0.9)' : 'rgba(0, 0, 0, 0.3)',
+                '&:hover': {
+                  backgroundColor: 'rgba(74, 124, 140, 0.1)',
+                },
+              }}
+            >
+              <SendIcon />
+            </IconButton>
+          ),
+        }}
+      />
+      </Box>
+    </Box>
+
+    {/* Right column details panel (visible >= md, animates in). Keep layout column always present but visually hidden to avoid left column warp. */}
+    <Box
+      sx={{
+        display: { xs: 'none', md: 'block' },
+        position: 'sticky',
+        top: 0,
+        height: '100dvh',
+        overflowY: 'auto',
+        overflow: 'hidden',
+        width: { md: selectedExperience ? '420px' : 0 },
+        minWidth: 0,
+        transition: 'width 420ms cubic-bezier(.22,.61,.36,1), opacity 360ms ease-in-out, transform 360ms ease-in-out',
+        opacity: selectedExperience ? 1 : 0,
+        transform: selectedExperience ? 'translateY(0)' : 'translateY(8px)',
+        transitionDelay: selectedExperience ? (isOpening ? '140ms' : '90ms') : '0ms',
+        willChange: 'opacity, transform',
+        pointerEvents: selectedExperience ? 'auto' : 'visible'
+      }}
+    >
+      <DetailsPanel exp={selectedExperience} onClose={handleCloseDetails} />
+    </Box>
+    </Box>
+    <Dialog
+      open={listWidgetOpen}
+      onClose={() => setListWidgetOpen(false)}
+      fullWidth
+      maxWidth="md"
+      aria-labelledby="booking-widget-title-list"
+    >
+      <DialogContent
+        sx={{
+          p: 0,
+          paddingTop: 'max(16px, env(safe-area-inset-top))',
+          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+          paddingLeft: 'max(16px, env(safe-area-inset-left))',
+          paddingRight: 'max(16px, env(safe-area-inset-right))'
+        }}
+      >
+        {listWidgetProductId && (
+          <BokunBookingWidget
+            productId={listWidgetProductId}
+            source="list"
+            onError={(err) => console.error('Booking widget error:', err)}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+    <SupportDialog open={supportOpen} onClose={()=>setSupportOpen(false)} defaultRole={'user'} />
+    {/* Background picker opened via FAB to avoid header layout conflicts */}
+    <Popover
+      open={Boolean(bgAnchorEl)}
+      anchorEl={bgAnchorEl}
+      onClose={()=>setBgAnchorEl(null)}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+    >
+    <Paper
+      sx={{ p: 2, width: 360, maxHeight: 420, overflowY: 'auto' }}
+      onScroll={async (e:any)=>{
+          try {
+          if (!bgSearch.trim() || bgLoadingMore) return;
+            const el = e.currentTarget as HTMLElement;
+            const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 48;
+            if (!nearBottom) return;
+          setBgLoadingMore(true);
+            const next = bgPage + 1;
+            const more = await searchUnsplash(bgSearch.trim(), next, 30);
+            const existing = new Set((bgResults||[]).map((x:any)=>x?.id));
+            const merged = [...bgResults, ...more.filter((x:any)=> !existing.has(x?.id))];
+            setBgResults(merged);
+            setBgPage(next);
+        } finally { setBgLoadingMore(false); }
+        }}
+      >
+        <Stack spacing={1}>
+        <Stack direction="row" spacing={1}>
+          <TextField
+            size="small"
+            label="Search photos"
+            value={bgSearch}
+            onChange={(e)=>{
+              const v = e.target.value;
+              setBgSearch(v);
+              if (!v.trim()) { setBgResults([]); setBgPage(1); setBgSeed((s)=>s+1); }
+            }}
+            fullWidth
+            InputProps={{
+              endAdornment: bgSearch ? (
+                <IconButton size="small" aria-label="Clear" onClick={()=>{ setBgSearch(''); setBgResults([]); setBgPage(1); setBgSeed((s)=>s+1); }}>
+                  <ClearIcon fontSize="small" />
                 </IconButton>
-              ),
+              ) : null
             }}
           />
-          </Box>
-        </Box>
-
-        {/* Right column details panel (visible >= md, animates in). Keep layout column always present but visually hidden to avoid left column warp. */}
-        <Box
-          sx={{
-            display: { xs: 'none', md: 'block' },
-            position: 'sticky',
-            top: 0,
-            height: '100dvh',
-            overflowY: 'auto',
-            overflow: 'hidden',
-            width: { md: selectedExperience ? '420px' : 0 },
-            minWidth: 0,
-            transition: 'width 420ms cubic-bezier(.22,.61,.36,1), opacity 360ms ease-in-out, transform 360ms ease-in-out',
-            opacity: selectedExperience ? 1 : 0,
-            transform: selectedExperience ? 'translateY(0)' : 'translateY(8px)',
-            transitionDelay: selectedExperience ? (isOpening ? '140ms' : '90ms') : '0ms',
-            willChange: 'opacity, transform',
-            pointerEvents: selectedExperience ? 'auto' : 'none',
-            visibility: selectedExperience ? 'visible' : 'hidden'
-          }}
-        >
-          <DetailsPanel exp={selectedExperience} onClose={handleCloseDetails} />
-        </Box>
-        </Box>
-        <Dialog
-          open={listWidgetOpen}
-          onClose={() => setListWidgetOpen(false)}
-          fullWidth
-          maxWidth="md"
-          aria-labelledby="booking-widget-title-list"
-        >
-          <DialogContent
-            sx={{
-              p: 0,
-              paddingTop: 'max(16px, env(safe-area-inset-top))',
-              paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-              paddingLeft: 'max(16px, env(safe-area-inset-left))',
-              paddingRight: 'max(16px, env(safe-area-inset-right))'
-            }}
-          >
-            {listWidgetProductId && (
-              <BokunBookingWidget
-                productId={listWidgetProductId}
-                source="list"
-                onError={(err) => console.error('Booking widget error:', err)}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-        <SupportDialog open={supportOpen} onClose={()=>setSupportOpen(false)} defaultRole={'user'} />
-        {/* Background picker opened via FAB to avoid header layout conflicts */}
-        <Popover
-          open={Boolean(bgAnchorEl)}
-          anchorEl={bgAnchorEl}
-          onClose={()=>setBgAnchorEl(null)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-          transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-        <Paper
-          sx={{ p: 2, width: 360, maxHeight: 420, overflowY: 'auto' }}
-          onScroll={async (e:any)=>{
+            <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} onClick={async ()=>{
               try {
-              if (!bgSearch.trim() || bgLoadingMore) return;
-                const el = e.currentTarget as HTMLElement;
-                const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 48;
-                if (!nearBottom) return;
-              setBgLoadingMore(true);
-                const next = bgPage + 1;
-                const more = await searchUnsplash(bgSearch.trim(), next, 30);
-                const existing = new Set((bgResults||[]).map((x:any)=>x?.id));
-                const merged = [...bgResults, ...more.filter((x:any)=> !existing.has(x?.id))];
-                setBgResults(merged);
-                setBgPage(next);
-            } finally { setBgLoadingMore(false); }
-            }}
-          >
-            <Stack spacing={1}>
-            <Stack direction="row" spacing={1}>
-              <TextField
-                size="small"
-                label="Search photos"
-                value={bgSearch}
-                onChange={(e)=>{
-                  const v = e.target.value;
-                  setBgSearch(v);
-                  if (!v.trim()) { setBgResults([]); setBgPage(1); setBgSeed((s)=>s+1); }
-                }}
-                fullWidth
-                InputProps={{
-                  endAdornment: bgSearch ? (
-                    <IconButton size="small" aria-label="Clear" onClick={()=>{ setBgSearch(''); setBgResults([]); setBgPage(1); setBgSeed((s)=>s+1); }}>
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  ) : null
-                }}
-              />
-                <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} onClick={async ()=>{
-                  try {
-                    setBgLoading(true);
-                    const results = await searchUnsplash(bgSearch.trim(), 1, 30);
-                    setBgResults(Array.isArray(results)?results:[]);
-                    setBgPage(1);
-                  } finally { setBgLoading(false); }
-                }}>Go</Button>
-              </Stack>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
-              {(!bgSearch.trim() && bgResults.length > 0 ? [] : curatedList).map((p, idx)=> (
-                    <Box
-                      key={`cur_${idx}`}
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Use curated background"
-                      sx={{ cursor: 'pointer', borderRadius: 1, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
-                      onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
-                      onClick={async ()=>{
-                      const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-                      const next = { url: p.url, thumbUrl: p.thumbUrl } as PortalBackground;
-                      setBg(next);
-                      prefetchBackgroundImage(p.url);
-                      saveCachedBackground(next, 'user');
-                      try { await setUserBackground(token, next); } catch {}
-                      try { trackBackgroundChange('chat', next); } catch {}
-                      setBgAnchorEl(null);
-                    }}
-                    >
-                  <img src={p.thumbUrl || p.url} alt="" loading="lazy" style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block', background:'#e9eef2' }} />
-                    </Box>
-                  ))}
-                  {bgResults.map((p:any)=>{
-                    const id = p?.id; const url = p?.urls?.full || p?.urls?.regular || ''; const thumb = p?.urls?.small || p?.urls?.thumb || '';
-                    const authorName = p?.user?.name || ''; const authorUrl = p?.user?.links?.html || p?.user?.portfolio_url || '';
-                    return (
-                      <Box
-                        key={id}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`Use image by ${authorName || 'author'}`}
-                        sx={{ cursor: 'pointer', borderRadius: 1, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
-                        onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
-                        onClick={async ()=>{
-                        const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-                        const next = { id, url, thumbUrl: thumb, authorName, authorUrl } as PortalBackground;
-                        setBg(next);
-                        prefetchBackgroundImage(url);
-                        saveCachedBackground(next, 'user');
-                        try { await trackDownload(id); } catch (e) { console.warn('unsplash track failed', e); }
-                        try { await setUserBackground(token, next); } catch {}
-                        try { trackBackgroundChange('chat', next); } catch {}
-                        setBgAnchorEl(null);
-                      }}
-                    >
-                      <img src={thumb} alt={`Unsplash: ${p?.alt_description || authorName || 'photo'}`} style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }} />
-                    </Box>
-                  );
-                })
-              }
-            </Box>
-            {(bgLoading || bgLoadingMore) && (<Skeleton variant="rectangular" height={60} />)}
-            <Button size="small" color="error" variant="outlined" onClick={async ()=>{
-              const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-              setBg(null); saveCachedBackground(null, 'user');
-              try { await setUserBackground(token, null as any); } catch {}
-              try { trackBackgroundRemove('chat'); } catch {}
-              setBgAnchorEl(null);
-            }}>Remove</Button>
+                setBgLoading(true);
+                const results = await searchUnsplash(bgSearch.trim(), 1, 30);
+                setBgResults(Array.isArray(results)?results:[]);
+                setBgPage(1);
+              } finally { setBgLoading(false); }
+            }}>Go</Button>
           </Stack>
-        </Paper>
-      </Popover>
-      <Fab
-        color="primary"
-        aria-label="Contact support"
-        onClick={()=>setSupportOpen(true)}
-        sx={{ position: 'fixed', right: 20, bottom: 24, zIndex: 2000, bgcolor: 'rgba(74,124,140,0.9)', '&:hover': { bgcolor: 'rgba(74,124,140,1)' } }}
-      >
-        <SupportAgentIcon />
-      </Fab>
-      {/* Background FAB (restored) */}
-      <Fab
-        color="default"
-        aria-label="Background"
-        onClick={(e)=>{ setBgSeed(Date.now()); setBgAnchorEl(e.currentTarget); }}
-        sx={{ position: 'fixed', right: 20, bottom: 92, zIndex: 2000, bgcolor: 'rgba(255,255,255,0.9)', color: '#4a7c8c' }}
-      >
-        <WallpaperIcon />
-      </Fab>
-      </Box>
-    </BackgroundImage>
-  );
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
+          {(!bgSearch.trim() && bgResults.length > 0 ? [] : curatedList).map((p, idx)=> (
+                <Box
+                  key={`cur_${idx}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Use curated background"
+                  sx={{ cursor: 'pointer', borderRadius: 1, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
+                  onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
+                  onClick={async ()=>{
+                  const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+                  const next = { url: p.url, thumbUrl: p.thumbUrl } as PortalBackground;
+                  setBg(next);
+                  prefetchBackgroundImage(p.url);
+                  saveCachedBackground(next, 'user');
+                  try { await setUserBackground(token, next); } catch {}
+                  try { trackBackgroundChange('chat', next); } catch {}
+                  setBgAnchorEl(null);
+                }}
+                >
+              <img src={p.thumbUrl || p.url} alt="" loading="lazy" style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block', background:'#e9eef2' }} />
+                </Box>
+              ))}
+              {bgResults.map((p:any)=>{
+                const id = p?.id; const url = p?.urls?.full || p?.urls?.regular || ''; const thumb = p?.urls?.small || p?.urls?.thumb || '';
+                const authorName = p?.user?.name || ''; const authorUrl = p?.user?.links?.html || p?.user?.portfolio_url || '';
+                return (
+                  <Box
+                    key={id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Use image by ${authorName || 'author'}`}
+                    sx={{ cursor: 'pointer', borderRadius: 1, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
+                    onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
+                    onClick={async ()=>{
+                    const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+                    const next = { id, url, thumbUrl: thumb, authorName, authorUrl } as PortalBackground;
+                    setBg(next);
+                    prefetchBackgroundImage(url);
+                    saveCachedBackground(next, 'user');
+                    try { await trackDownload(id); } catch (e) { console.warn('unsplash track failed', e); }
+                    try { await setUserBackground(token, next); } catch {}
+                    try { trackBackgroundChange('chat', next); } catch {}
+                    setBgAnchorEl(null);
+                  }}
+                >
+                  <img src={thumb} alt={`Unsplash: ${p?.alt_description || authorName || 'photo'}`} style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }} />
+                </Box>
+              );
+            })
+          }
+        </Box>
+        {(bgLoading || bgLoadingMore) && (<Skeleton variant="rectangular" height={60} />)}
+        <Button size="small" color="error" variant="outlined" onClick={async ()=>{
+          const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+          setBg(null); saveCachedBackground(null, 'user');
+          try { await setUserBackground(token, null as any); } catch {}
+          try { trackBackgroundRemove('chat'); } catch {}
+          setBgAnchorEl(null);
+        }}>Remove</Button>
+      </Stack>
+    </Paper>
+  </Popover>
+  <Fab
+    color="default"
+    aria-label="Contact support"
+    onClick={()=>setSupportOpen(true)}
+    sx={{ 
+      position: 'fixed', 
+      right: 20, 
+      bottom: 24, 
+      zIndex: 2000, 
+      bgcolor: 'rgba(255,255,255,0.9)', 
+      color: '#010057',
+      transition: 'all 0.5s ease',
+      '&:hover': { color: '#ffbf00' } 
+    }}
+  >
+    <SupportAgentIcon />
+  </Fab>
+  {/* Background FAB (restored) */}
+  <Fab
+    color="default"
+    aria-label="Background"
+    onClick={(e)=>{ setBgSeed(Date.now()); setBgAnchorEl(e.currentTarget); }}
+    sx={{ 
+      position: 'fixed', 
+      right: 20, 
+      bottom: 92, 
+      zIndex: 2000, 
+      bgcolor: 'rgba(255,255,255,0.9)', 
+      color: '#010057',
+      transition: 'all 0.5s ease',
+      '&:hover': { color: '#ffbf00' }
+    }}
+  >
+    <WallpaperIcon />
+  </Fab>
+  </Box>
+</BackgroundImage>
+);
 }
