@@ -19,19 +19,30 @@ export default function HomePage() {
           gap: 2,
         }}
       >
-        <Typography variant="h4" sx={{ color: '#4A4A4A', fontFamily: 'Cormorant Garamond' }}>
-          Welcome to ExperiaHub
+        <Typography variant="h3" component="h1" sx={{ color: '#010057', fontFamily: 'Playfair Display', fontWeight: 600, letterSpacing: '-0.02em' }}>
+          Experia
+        </Typography>
+        <Typography variant="h6" sx={{ color: '#555', fontFamily: 'Inter', fontWeight: 400, mb: 2 }}>
+          Your personal travel assistant
         </Typography>
         <Link href="/chat" style={{ textDecoration: 'none' }}>
-          <Typography
+          <Box
             sx={{
-              color: 'rgba(74, 124, 140, 0.9)',
-              fontFamily: 'Urbanist',
-              '&:hover': { textDecoration: 'underline' },
+              bgcolor: '#4A7C8C',
+              color: 'white',
+              px: 4,
+              py: 1.5,
+              borderRadius: '24px',
+              fontFamily: 'Inter',
+              fontWeight: 500,
+              transition: 'background-color 0.2s',
+              '&:hover': {
+                bgcolor: '#3A6370',
+              },
             }}
           >
             Start Chatting
-          </Typography>
+          </Box>
         </Link>
       </Box>
     </MainLayout>
