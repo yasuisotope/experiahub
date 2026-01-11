@@ -158,8 +158,20 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
         const res = await fetch(`${N8N_BASE}/supplier/onboarding/status?applicationId=${encodeURIComponent(state.applicationId)}`);
         const json = await parseJsonSafe(res);
         if (!abort) {
-          if (json?.success) setStatusInfo({ exists: json.exists, status: json.status ?? null, approved: !!json.approved });
-          else setStatusInfo(null);
+          if (json?.success) {
+            setStatusInfo({ exists: json.exists, status: json.status ?? null, approved: !!json.approved });
+            // Pre-fill fields from Supabase if currently empty
+            setState(prev => ({
+              ...prev,
+              contactEmail: prev.contactEmail || json.email || '',
+              legalBusinessName: prev.legalBusinessName || json.businessName || '',
+              contactName: prev.contactName || json.fullName || '',
+              contactPhone: prev.contactPhone || json.phone || json.contactPhone || '',
+              primaryLocations: prev.primaryLocations || (json.city && json.country ? `${json.city}, ${json.country}` : json.city || json.country || '')
+            }));
+          } else {
+            setStatusInfo(null);
+          }
         }
       } catch {
         if (!abort) setStatusInfo(null);
