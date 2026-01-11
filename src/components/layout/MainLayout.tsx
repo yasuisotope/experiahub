@@ -196,7 +196,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             mx: 2,
             mb: 2,
             bgcolor: '#4A7C8C',
-            fontFamily: 'Inter',
+            fontFamily: 'Nunito, sans-serif',
             '&:hover': { bgcolor: '#3A6370' },
           }}
         >
@@ -219,7 +219,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               </ListItemIcon>
               <ListItemText 
                 primary="Chat" 
-                primaryTypographyProps={{ fontFamily: 'Inter', fontSize: '0.95rem', color: pathname === '/chat' ? '#4A7C8C' : '#333' }}
+                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname === '/chat' ? '#4A7C8C' : '#333' }}
               />
             </ListItemButton>
           </ListItem>
@@ -239,7 +239,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   </ListItemIcon>
                   <ListItemText
                     primary="Bookings"
-                    primaryTypographyProps={{ fontFamily: 'Inter', fontSize: '0.95rem', color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -257,7 +257,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   </ListItemIcon>
                   <ListItemText
                     primary="Schedule"
-                    primaryTypographyProps={{ fontFamily: 'Inter', fontSize: '0.95rem', color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -270,7 +270,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               </ListItemIcon>
               <ListItemText 
                 primary="Contact Support" 
-                primaryTypographyProps={{ fontFamily: 'Inter', fontSize: '0.95rem', color: '#333' }}
+                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: '#333' }}
               />
             </ListItemButton>
           </ListItem>
@@ -280,13 +280,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
         {/* Recent Chats - Always show */}
         <>
-          <Typography variant="overline" sx={{ px: 2, color: 'text.secondary', fontFamily: 'Inter' }}>
+          <Typography variant="overline" sx={{ px: 2, color: 'text.secondary', fontFamily: 'Nunito, sans-serif' }}>
             RECENT
           </Typography>
           <List sx={{ flexGrow: 1, overflow: 'auto' }}>
             {chats.length === 0 ? (
               <ListItem>
-                <ListItemText primary="No recent conversations" primaryTypographyProps={{ fontSize: '0.85rem', color: 'text.secondary', fontFamily: 'Inter' }} />
+                <ListItemText primary="No recent conversations" primaryTypographyProps={{ fontSize: '0.85rem', color: 'text.secondary', fontFamily: 'Nunito, sans-serif' }} />
               </ListItem>
             ) : (
               chats.slice(0, 10).map((chat) => (
@@ -321,7 +321,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                         fontWeight: currentChat?.id === chat.id ? 600 : 500,
                         color: currentChat?.id === chat.id ? '#4A7C8C' : '#2F2F2F',
                         noWrap: true,
-                        fontFamily: 'Inter',
+                        fontFamily: 'Nunito, sans-serif',
                       }}
                     />
                   </ListItemButton>

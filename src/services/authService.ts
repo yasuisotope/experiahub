@@ -76,7 +76,7 @@ export class AuthService {
     }
   }
 
-  static async register(username: string, email: string, password: string): Promise<RegisterResponse> {
+  static async register(username: string, email: string, password: string, applicationId?: string): Promise<RegisterResponse> {
     try {
       const response = await fetch(`${this.AUTH_BASE_URL}`, {
         method: 'POST',
@@ -85,7 +85,8 @@ export class AuthService {
           action: 'register',
           username, 
           email, 
-          password 
+          password,
+          applicationId // Pass appId to link the account
         })
       });
 

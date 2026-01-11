@@ -58,11 +58,11 @@ export default function LoginPage() {
     const extractAppId = (text: string) => {
       try {
         const u = new URL(text, typeof window !== 'undefined' ? window.location.origin : 'https://app.experiahub.com');
-        return u.searchParams.get('appId');
+        return u.searchParams.get('appId') || u.searchParams.get('id');
       } catch {
         const qs = (text.split('?')[1] || '');
         const usp = new URLSearchParams(qs);
-        return usp.get('appId');
+        return usp.get('appId') || usp.get('id');
       }
     };
 
@@ -82,9 +82,10 @@ export default function LoginPage() {
       }
     }
 
-    // normalize: if target is /supplier/onboarding..., send to /supplier...
+    // normalize: if target is /supplier/onboarding... or /onboarding..., send to /supplier...
     const normalizeSupplierPath = (p: string) =>
-      p.replace(/^\/supplier\/onboarding(?=\/|\?|$)/, '/supplier');
+      p.replace(/^\/supplier\/onboarding(?=\/|\?|$)/, '/supplier')
+       .replace(/^\/onboarding(?=\/|\?|$)/, '/supplier');
     desiredPath = normalizeSupplierPath(desiredPath);
 
     // Persist appId for onboarding page

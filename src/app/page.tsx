@@ -19,10 +19,10 @@ export default function HomePage() {
           gap: 2,
         }}
       >
-        <Typography variant="h3" component="h1" sx={{ color: '#010057', fontFamily: 'Playfair Display', fontWeight: 600, letterSpacing: '-0.02em' }}>
+        <Typography variant="h3" component="h1" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 600, letterSpacing: '-0.02em' }}>
           Experia
         </Typography>
-        <Typography variant="h6" sx={{ color: '#555', fontFamily: 'Inter', fontWeight: 400, mb: 2 }}>
+        <Typography variant="h6" sx={{ color: '#555', fontFamily: 'Nunito, sans-serif', fontWeight: 400, mb: 2 }}>
           Your personal travel assistant
         </Typography>
         <Link href="/chat" style={{ textDecoration: 'none' }}>
@@ -33,7 +33,7 @@ export default function HomePage() {
               px: 4,
               py: 1.5,
               borderRadius: '24px',
-              fontFamily: 'Inter',
+              fontFamily: 'Nunito, sans-serif',
               fontWeight: 500,
               transition: 'background-color 0.2s',
               '&:hover': {

@@ -5,7 +5,7 @@ import { Box, Grid, TextField, Button, Alert, CircularProgress, Paper, Divider, 
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { AuthService } from '@/services/authService';
 
-const N8N_BASE = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
+const N8N_BASE = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
 
 // Safely parse JSON; return null if body is empty or invalid JSON
 async function parseJsonSafe(res: Response): Promise<any | null> {

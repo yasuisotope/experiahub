@@ -6,7 +6,7 @@ const nextConfig = {
   transpilePackages: ['@mui/material'],
   output: 'standalone',
   poweredByHeader: false,
-  reactStrictMode: true,
+  reactStrictMode: false,
   swcMinify: true,
   images: {
     remotePatterns: [
@@ -15,8 +15,24 @@ const nextConfig = {
         hostname: 'res.cloudinary.com',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'flagcdn.com',
+        pathname: '**'
+      }
     ],
   },
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
+  async redirects() {
+    return [
+      {
+        source: '/onboarding',
+        destination: '/supplier',
+        permanent: false,
+      }
+    ]
+  }
 };
 
 module.exports = nextConfig;

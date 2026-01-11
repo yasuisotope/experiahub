@@ -37,49 +37,55 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: 'Urbanist, sans-serif',
+    fontFamily: 'Nunito, Urbanist, sans-serif',
     h1: {
-      fontFamily: 'Cormorant Garamond, serif',
+      fontFamily: 'Agrandir, Cormorant Garamond, serif',
       color: '#4A4A4A',
+      fontWeight: 700,
     },
     h2: {
-      fontFamily: 'Cormorant Garamond, serif',
+      fontFamily: 'Agrandir, Cormorant Garamond, serif',
       color: '#4A4A4A',
+      fontWeight: 700,
     },
     h3: {
-      fontFamily: 'Cormorant Garamond, serif',
+      fontFamily: 'Agrandir, Cormorant Garamond, serif',
       color: '#4A4A4A',
+      fontWeight: 600,
     },
     h4: {
-      fontFamily: 'Cormorant Garamond, serif',
+      fontFamily: 'Agrandir, Cormorant Garamond, serif',
       color: '#4A4A4A',
+      fontWeight: 600,
     },
     h5: {
-      fontFamily: 'Cormorant Garamond, serif',
+      fontFamily: 'Agrandir, Cormorant Garamond, serif',
       color: '#4A4A4A',
+      fontWeight: 600,
     },
     h6: {
-      fontFamily: 'Cormorant Garamond, serif',
+      fontFamily: 'Agrandir, Cormorant Garamond, serif',
       color: '#4A4A4A',
+      fontWeight: 600,
     },
     body1: {
-      fontFamily: 'Urbanist, sans-serif',
+      fontFamily: 'Nunito, Urbanist, sans-serif',
       color: '#666666',
     },
     body2: {
-      fontFamily: 'Urbanist, sans-serif',
+      fontFamily: 'Nunito, Urbanist, sans-serif',
       color: '#666666',
     },
     subtitle1: {
-      fontFamily: 'Urbanist, sans-serif',
+      fontFamily: 'Nunito, Urbanist, sans-serif',
       color: '#666666',
     },
     subtitle2: {
-      fontFamily: 'Urbanist, sans-serif',
+      fontFamily: 'Nunito, Urbanist, sans-serif',
       color: '#666666',
     },
     button: {
-      fontFamily: 'Urbanist, sans-serif',
+      fontFamily: 'Nunito, Urbanist, sans-serif',
       textTransform: 'none',
     },
   },
@@ -88,6 +94,7 @@ const theme = createTheme({
       styleOverrides: {
         body: {
           backgroundColor: '#f5f5f5',
+          fontFamily: 'Nunito, Urbanist, sans-serif',
         },
       },
     },
@@ -95,14 +102,14 @@ const theme = createTheme({
       styleOverrides: {
         primary: {
           color: '#666666',
-          fontFamily: 'Urbanist, sans-serif',
+          fontFamily: 'Nunito, Urbanist, sans-serif',
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          fontFamily: 'Urbanist, sans-serif',
+          fontFamily: 'Nunito, Urbanist, sans-serif',
           textTransform: 'none',
         },
       },
