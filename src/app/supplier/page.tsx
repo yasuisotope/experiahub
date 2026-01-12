@@ -1532,6 +1532,9 @@ export default function SupplierPortalPage() {
           textAlign: 'center',
           transition: 'all 0.4s ease-in-out',
         }}>
+          <Box sx={{ mb: 3 }}>
+            <img src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png" alt="ExperiaHub" style={{ height: '32px', width: 'auto' }} />
+          </Box>
           <Typography variant="overline" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 3, mb: 2, display: 'block' }}>
             {authTab === 'login' ? 'PARTNER PORTAL' : 'PARTNERSHIP APPROVED'}
           </Typography>
@@ -1554,15 +1557,15 @@ export default function SupplierPortalPage() {
               : 'Finalize your credentials to activate your supplier access.'}
           </Typography>
 
-          {/* Steps Grid - Always Visible for Context */}
-          <Grid container spacing={2} sx={{ mb: 4, textAlign: 'left', px: 2 }}>
+          {/* Steps Grid - Equal Height */}
+          <Grid container spacing={2} sx={{ mb: 4, textAlign: 'left', px: 2, alignItems: 'stretch' }}>
             {[
                { step: '01', title: 'Secure Access', desc: 'Create partner login.' },
                { step: '02', title: 'Direct Profile', desc: 'Verify business details.' },
                { step: '03', title: 'Portfolio Sync', desc: 'Connect inventory.' },
             ].map((item, i) => (
-              <Grid item xs={12} sm={4} key={i}>
-                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'rgba(255,255,255,0.6)', borderRadius: '0 4px 4px 0' }}>
+              <Grid item xs={12} sm={4} key={i} sx={{ display: 'flex' }}>
+                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'rgba(255,255,255,0.6)', borderRadius: '0 4px 4px 0', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
                   <Typography variant="subtitle2" sx={{ color: '#010057', fontWeight: 700, lineHeight: 1.2 }}>{item.title}</Typography>
                   <Typography variant="caption" sx={{ color: '#64748B', lineHeight: 1.1 }}>{item.desc}</Typography>
@@ -1629,7 +1632,7 @@ export default function SupplierPortalPage() {
                 }
               }}
             >
-              {authLoading ? <CircularProgress size={24} color="inherit" /> : (authTab === 'login' ? 'Enter Portal' : 'Finalize Approval')}
+              {authLoading ? <CircularProgress size={24} color="inherit" /> : (authTab === 'login' ? 'Enter Portal' : 'Activate Access')}
             </Button>
 
             <Box sx={{ mt: 2 }}>
