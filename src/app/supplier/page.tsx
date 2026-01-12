@@ -1565,7 +1565,7 @@ export default function SupplierPortalPage() {
                { step: '03', title: 'Portfolio Sync', desc: 'Connect inventory.' },
             ].map((item, i) => (
               <Grid item xs={12} sm={4} key={i} sx={{ display: 'flex' }}>
-                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'rgba(255,255,255,0.6)', borderRadius: '0 4px 4px 0', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'rgba(255,255,255,0.6)', borderRadius: '0 4px 4px 0', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
                   <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
                   <Typography variant="subtitle2" sx={{ color: '#010057', fontWeight: 700, lineHeight: 1.2 }}>{item.title}</Typography>
                   <Typography variant="caption" sx={{ color: '#64748B', lineHeight: 1.1 }}>{item.desc}</Typography>
@@ -1652,13 +1652,10 @@ export default function SupplierPortalPage() {
             </Box>
           </Box>
 
-          <Box sx={{ mt: 6, pt: 3, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
             <Stack direction="row" justifyContent="center" spacing={3} sx={{ mb: 1 }}>
               <Typography variant="caption" sx={{ color: '#94A3B8', letterSpacing: 1 }}>
                 ID: {appId || 'NONE'}
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#94A3B8', letterSpacing: 1 }}>
-                 {companyBilling.companyName ? 'CONNECTED' : 'WAITING'}
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
