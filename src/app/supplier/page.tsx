@@ -998,7 +998,8 @@ export default function SupplierPortalPage() {
         console.log(`[SupplierPortal] Initiating handshake for appId: ${appId} at ${N8N_BASE}`);
 
         // A. Fetch Onboarding Status (Primary Source for New Suppliers / Supabase)
-        const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status?applicationId=${encodeURIComponent(appId)}`);
+        // Updated to v2 to bypass ghost workflows
+        const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status-v2?applicationId=${encodeURIComponent(appId)}`);
         
         if (statusRes.ok) {
           const statusData = await parseJsonSafe(statusRes);
@@ -1659,7 +1660,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1060_UI_DEPLOYED
+              Build: 2026.01.12.1070_FIX_N8N_PATH
             </Typography>
           </Box>
         </Paper>
