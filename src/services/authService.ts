@@ -78,7 +78,7 @@ export class AuthService {
 
   static async register(username: string, email: string, password: string, applicationId?: string): Promise<RegisterResponse> {
     try {
-      const response = await fetch(`${this.AUTH_BASE_URL}`, {
+      const response = await fetch(`${this.AUTH_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
