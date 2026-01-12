@@ -1092,31 +1092,44 @@ export default function SupplierPortalPage() {
     return `https://app.experiahub.com/login?next=${enc}`;
   }, [appId]);
 
-  const heroImage = '/images/supplier-hero.png';
+const heroImage = '/images/supplier-hero.png';
 
-  const loadingView = (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
-      <Stack spacing={2} alignItems="center">
-        <CircularProgress sx={{ color: '#C5A059' }} />
-        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
-      </Stack>
-    </Box>
-  );
+const loadingView = (
+  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
+    <Stack spacing={2} alignItems="center">
+      <CircularProgress sx={{ color: '#C5A059' }} />
+      <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
+    </Stack>
+  </Box>
+);
 
-  const LoggedOutView = () => (
-    <Box sx={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden',
-      backgroundImage: `linear-gradient(rgba(1, 0, 87, 0.4), rgba(1, 0, 87, 0.4)), url(${heroImage})`,
+const LoggedOutView = () => (
+  <Box sx={{
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    bgcolor: '#f5f5f5', // Fallback color
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundImage: `url("${heroImage}")`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
-      transition: 'all 0.5s ease-in-out'
-    }}>
+      zIndex: 0
+    },
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      top: 0, left: 0, right: 0, bottom: 0,
+      background: 'linear-gradient(rgba(1, 0, 87, 0.45), rgba(1, 0, 87, 0.45))', // Overlay
+      zIndex: 0
+    }
+  }}>
       <Container maxWidth="md">
         <Paper elevation={0} sx={{
           p: { xs: 4, md: 6 },
