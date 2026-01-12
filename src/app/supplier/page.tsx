@@ -1551,54 +1551,61 @@ export default function SupplierPortalPage() {
                     { step: '03', title: 'Portfolio Sync', desc: 'Connect your inventory or upload experiences.' },
                   ].map((item, i) => (
                     <Grid item xs={12} md={4} key={i}>
-                      <Box sx={{ 
-                        p: 3, 
-                        borderLeft: '2px solid #C5A059',
-                        transition: 'all 0.3s ease',
-                        '&:hover': { bgcolor: 'rgba(255,255,255,0.05)', transform: 'translateY(-2px)' }
-                        }}>
+                      <Box sx={{ p: 2, borderLeft: '2px solid #C5A059' }}>
                         <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1 }}>STEP {item.step}</Typography>
-                        <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 0.5 }}>{item.title}</Typography>
-                        <Typography variant="body2" sx={{ color: '#CFD8DC', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
+                        <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 0.5 }}>{item.title}</Typography>
+                        <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
                       </Box>
                     </Grid>
                   ))}
                 </Grid>
 
-                <Stack spacing={3} alignItems="center">
+                <Stack direction="column" spacing={3} justifyContent="center" alignItems="center">
                   <Button 
                     onClick={() => setShowForm(true)}
                     variant="contained" 
                     size="large"
                     sx={{ 
-                      bgcolor: '#fff', 
-                      color: '#010057', 
+                      bgcolor: '#010057', 
+                      color: '#fff', 
                       px: 8, 
-                      py: 2,
+                      py: 2.2, 
+                      borderRadius: '4px',
                       fontSize: '1.1rem',
                       fontWeight: 700,
-                      textTransform: 'none',
                       fontFamily: 'Agrandir, serif',
-                      '&:hover': { bgcolor: '#C5A059', color: '#fff' }
+                      textTransform: 'none',
+                      boxShadow: '0 10px 30px rgba(1, 0, 87, 0.2)',
+                      transition: 'all 0.4s ease',
+                      width: { xs: '100%', sm: 'auto' },
+                      '&:hover': { 
+                        bgcolor: '#C5A059', // GOLD on hover
+                        transform: 'translateY(-2px)', 
+                        boxShadow: '0 15px 35px rgba(197, 160, 89, 0.3)' 
+                      },
                     }}
                   >
                     Begin Onboarding
                   </Button>
                   
-                  <Button 
-                    component="a" 
-                    href="/login" 
-                    sx={{ 
-                      color: '#010057', 
-                      fontWeight: 700, 
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '4px',
-                      textTransform: 'none', 
-                      '&:hover': { color: '#C5A059' } 
-                    }}
-                  >
-                    Already have an account? Sign In
-                  </Button>
+                  <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>
+                    Already set up your password? <Button 
+                      component="a" 
+                      href="/login" 
+                      variant="text" 
+                      size="small" 
+                      sx={{ 
+                        color: '#010057', 
+                        textTransform: 'none', 
+                        fontWeight: 700,
+                        p: 0,
+                        minWidth: 'auto',
+                        verticalAlign: 'baseline',
+                        fontFamily: 'Nunito, sans-serif',
+                        '&:hover': { background: 'none', textDecoration: 'underline' }
+                      }}
+                    >Sign In</Button>
+                  </Typography>
                 </Stack>
               </Box>
             </Fade>
@@ -1607,13 +1614,13 @@ export default function SupplierPortalPage() {
                 <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 1 }}>
                   {authTab === 'login' ? 'Partner Login' : 'Finalize Your Access'}
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#334155', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
+                <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
                   {authTab === 'login' 
                     ? 'Enter your credentials to access your dashboard.' 
                     : 'Set up your secure portal credentials to complete approval.'}
                 </Typography>
                 {appId && (
-                  <Typography variant="caption" sx={{ color: '#64748B', display: 'block', mb: 2, fontStyle: 'italic' }}>
+                  <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2, fontStyle: 'italic' }}>
                     Portal ID: {appId}
                   </Typography>
                 )}
@@ -1626,7 +1633,6 @@ export default function SupplierPortalPage() {
                       fullWidth label="Choose Username" variant="outlined" 
                       value={suUsername} onChange={(e) => setSuUsername(e.target.value)}
                       required disabled={authLoading}
-                      sx={{ bgcolor: '#fff' }}
                     />
                   )}
                   <TextField 
@@ -1635,14 +1641,12 @@ export default function SupplierPortalPage() {
                     value={authTab === 'login' ? username : suEmail}
                     onChange={(e) => authTab === 'login' ? setUsername(e.target.value) : setSuEmail(e.target.value)}
                     required disabled={authLoading}
-                    sx={{ bgcolor: '#fff' }}
                   />
                   <TextField 
                     fullWidth label="Pick a Password" type="password" variant="outlined" 
                     value={authTab === 'login' ? password : suPassword}
                     onChange={(e) => authTab === 'login' ? setPassword(e.target.value) : setSuPassword(e.target.value)}
                     required disabled={authLoading}
-                    sx={{ bgcolor: '#fff' }}
                   />
                   
                   <Button 
@@ -1656,10 +1660,10 @@ export default function SupplierPortalPage() {
                       py: 2, 
                       borderRadius: '4px',
                       fontWeight: 700,
-                      fontSize: '1.2rem',
+                      fontSize: '1.1rem',
                       mt: 1,
                       fontFamily: 'Agrandir, serif',
-                      textTransform: 'none',
+                      textTransform: 'uppercase',
                       letterSpacing: '1px',
                       transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                       '&:hover': { 
@@ -1676,7 +1680,7 @@ export default function SupplierPortalPage() {
                     <Button 
                       variant="text" 
                       onClick={() => setShowForm(false)}
-                      sx={{ color: '#475569', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
+                      sx={{ color: '#64748B', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
                     >
                       Back
                     </Button>
@@ -1705,7 +1709,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.7 }}>
-              Build: 2026.01.12.0990_STYLE_POLISH | Portal ID: {appId || 'NONE'}
+              Build: 2026.01.12.0995_VISUAL_RESTORE | Portal ID: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
