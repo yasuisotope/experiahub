@@ -2,13 +2,13 @@
   "env": {
     "TSC_COMPILE_ON_ERROR": "true",
     "NEXT_TELEMETRY_DISABLED": "1",
-    "NEXT_PUBLIC_N8N_API_URL": "https://n8n.isotope-blue.com:8443"
+    "NEXT_PUBLIC_N8N_API_URL": "https://n8n.isotope-blue.com"
   },
   "build": {
     "env": {
       "TSC_COMPILE_ON_ERROR": "true",
       "NEXT_TELEMETRY_DISABLED": "1",
-      "NEXT_PUBLIC_N8N_API_URL": "https://n8n.isotope-blue.com:8443"
+      "NEXT_PUBLIC_N8N_API_URL": "https://n8n.isotope-blue.com"
     }
   }
 }
