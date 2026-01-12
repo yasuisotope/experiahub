@@ -1700,7 +1700,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1205_FINAL_POLISH
+              Build: 2026.01.12.1245_FINAL_V2
             </Typography>
           </Box>
         </Paper>
@@ -1734,17 +1734,17 @@ export default function SupplierPortalPage() {
             {/* Identity Card */}
             {/* Identity Card */}
             {/* Identity Card */}
-            <Stack spacing={0.5} sx={{ mb: 3, pl: 0.5 }}>
-              <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', lineHeight: 1.2 }}>
+            <Box sx={{ mb: 3, py: 2, borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', textAlign: 'center' }}>
+              <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
                 {statusData?.businessName || 'ExperiaHub Partner'}
               </Typography>
               <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', fontWeight: 600 }}>
                 {statusData?.fullName || statusData?.email || 'Guest User'}
               </Typography>
-              <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#94A3B8', display: 'block' }}>
+              <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#94A3B8', display: 'block', mt: 0.5 }}>
                 ID: {appId || '—'}
               </Typography>
-            </Stack>
+            </Box>
           </Stack>
           
           <List>
@@ -2019,7 +2019,7 @@ export default function SupplierPortalPage() {
                     </Typography>
                     <Button
                       variant="contained"
-                      sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3 }}
+                      sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }}
                       onClick={async ()=>{
                         try {
                           if (!appId) { setToast('Missing application ID'); return; }
@@ -2047,7 +2047,7 @@ export default function SupplierPortalPage() {
 
         {section === 'company' && subsection === 'billing' && (
           <Fade in timeout={250}>
-          <Box>
+          <Box sx={{ p: 4 }}>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
@@ -2062,7 +2062,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Invoice email" value={companyBilling.invoiceEmail} onChange={(e)=>setCompanyBilling(s=>({ ...s, invoiceEmail: e.target.value }))} fullWidth />
                   <TextField label="Billing currency" value={companyBilling.currency} onChange={(e)=>setCompanyBilling(s=>({ ...s, currency: e.target.value }))} onBlur={(e)=>setCompanyBilling(s=>({ ...s, currency: String(e.target.value||'').toUpperCase() }))} fullWidth />
                 </Stack>
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/billing/save`, {
@@ -2081,7 +2081,7 @@ export default function SupplierPortalPage() {
 
         {section === 'company' && subsection === 'legal' && (
           <Fade in timeout={250}>
-          <Box>
+          <Box sx={{ p: 4 }}>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
@@ -2096,7 +2096,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Privacy URL" value={companyLegal.privacyUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, privacyUrl: e.target.value }))} fullWidth />
                 </Stack>
                 <TextField label="Representative" value={companyLegal.representative} onChange={(e)=>setCompanyLegal(s=>({ ...s, representative: e.target.value }))} fullWidth />
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/legal/save`, {
@@ -2115,7 +2115,7 @@ export default function SupplierPortalPage() {
 
         {section === 'company' && subsection === 'locations' && (
           <Fade in timeout={250}>
-            <Box>
+            <Box sx={{ p: 4 }}>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>Locations</Typography>
@@ -2134,7 +2134,7 @@ export default function SupplierPortalPage() {
                 ))}
                 <Stack direction="row" spacing={1}>
                   <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
-                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} onClick={async ()=>{
+                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const res = await fetch(`${N8N_BASE}/supplier/company/locations/save`, {
@@ -2154,13 +2154,13 @@ export default function SupplierPortalPage() {
 
         {section === 'user' && subsection === 'user_profile' && (
           <Fade in timeout={250}>
-            <Box>
+            <Box sx={{ p: 4 }}>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>User Profile</Typography>
                 <TextField label="Display name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <Button variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     if (!userDisplayName.trim()) { setToast('Please enter a display name'); return; }
@@ -2180,7 +2180,7 @@ export default function SupplierPortalPage() {
 
         {section === 'user' && subsection === 'user_security' && (
           <Fade in timeout={250}>
-            <Box>
+            <Box sx={{ p: 4 }}>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>Security Settings</Typography>
@@ -2188,7 +2188,7 @@ export default function SupplierPortalPage() {
                 <TextField label="New password" type="password" value={passwordNew} onChange={(e)=>setPasswordNew(e.target.value)} fullWidth required error={passwordNew.length>0 && passwordNew.length<8} helperText={passwordNew.length>0 && passwordNew.length<8 ? 'Min 8 characters' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }}
+                  sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }}
                   disabled={securitySubmitting}
                   onClick={async ()=>{
                     try {
@@ -2218,13 +2218,13 @@ export default function SupplierPortalPage() {
 
         {section === 'user' && subsection === 'user_tokens' && (
           <Fade in timeout={250}>
-            <Box>
+            <Box sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>API Tokens</Typography>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1}>
                   <TextField size="small" label="Login or Email" value={tokensUser} onChange={(e)=>setTokensUser(e.target.value)} fullWidth />
                   <TextField size="small" label="Current Password" type="password" value={tokensPassword} onChange={(e)=>setTokensPassword(e.target.value)} fullWidth />
-                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
+                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
                 </Stack>
 
                 <Stack direction="row" spacing={1} alignItems="center">
@@ -2248,7 +2248,7 @@ export default function SupplierPortalPage() {
 
         {section === 'experiences' && subsection === 'overview' && (
           <Fade in timeout={250}>
-            <Box>
+            <Box sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Experience Overview</Typography>
               <Alert severity="info" sx={{ mb: 2 }}>Create draft experiences (title, city, duration). Saving will push to n8n later.</Alert>
             <ActivitiesSkeleton onToast={(m)=>setToast(m)} />
@@ -2258,7 +2258,7 @@ export default function SupplierPortalPage() {
 
         {section === 'experiences' && subsection === 'media' && (
           <Fade in timeout={250}>
-          <Box>
+          <Box sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Photos & Video</Typography>
               <Alert severity="info" sx={{ mb: 2 }}>Add Google Drive links for photos/videos, or paste YouTube/Vimeo URLs.</Alert>
               <GridLikeMedia onToast={(m)=>setToast(m)} defaultActivityId={selectedExperienceId} />
@@ -2268,7 +2268,7 @@ export default function SupplierPortalPage() {
 
         {section === 'experiences' && subsection === 'pricing' && (
           <Fade in timeout={250}>
-          <Box>
+          <Box sx={{ p: 4 }}>
             <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Pricing & Rates</Typography>
             <Alert severity="info" sx={{ mb: 2 }}>Add pricing categories and rates. The first row will be used as the base rate for channels that support a single rate.</Alert>
             <Table size="small" sx={{ mb: 1 }}>
@@ -2301,7 +2301,7 @@ export default function SupplierPortalPage() {
               <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
             </Stack>
             <Stack direction="row" spacing={1}>
-              <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={async ()=>{
+              <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
                 const currencies = new Set(pricingRows.map(r=>r.currency).filter(Boolean));
                 if (currencies.size > 1) { setToast('Use a single currency across pricing rows'); return; }
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
@@ -2317,6 +2317,7 @@ export default function SupplierPortalPage() {
 
         {section === 'experiences' && subsection === 'details' && (
           <Fade in timeout={250}>
+          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Product Details</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit details.</Alert>)}
@@ -2356,15 +2357,17 @@ export default function SupplierPortalPage() {
                     </Stack>
                   );
                 })()}
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={onSaveDetails}>Save Details</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={onSaveDetails}>Save Details</Button>
               </>
             )}
           </Stack>
+          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'availability' && (
           <Fade in timeout={250}>
+          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Availability & Schedule</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit availability.</Alert>)}
@@ -2388,15 +2391,17 @@ export default function SupplierPortalPage() {
                   <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={onSaveDetails}>Save Availability</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={onSaveDetails}>Save Availability</Button>
               </>
             )}
           </Stack>
+          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'policies' && (
           <Fade in timeout={250}>
+          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Policies & Requirements</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit policies.</Alert>)}
@@ -2406,15 +2411,17 @@ export default function SupplierPortalPage() {
                   <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={onSaveDetails}>Save Policies</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={onSaveDetails}>Save Policies</Button>
               </>
             )}
           </Stack>
+          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'distribution' && (
           <Fade in timeout={250}>
+          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Channel Distribution</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to view distribution.</Alert>)}
@@ -2467,11 +2474,13 @@ export default function SupplierPortalPage() {
               </>
             )}
           </Stack>
+          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'validation' && (
           <Fade in timeout={250}>
+          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Data Validation</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to validate.</Alert>)}
@@ -2518,11 +2527,13 @@ export default function SupplierPortalPage() {
               </>
             )}
           </Stack>
+          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'sync' && (
           <Fade in timeout={250}>
+          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Channel Sync</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to sync.</Alert>)}
@@ -2570,7 +2581,7 @@ export default function SupplierPortalPage() {
                 </Stack>
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}
+                  sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }}
                   onClick={syncSelected}
                   disabled={(validationMap[selectedExperienceId] ?? Infinity) !== 0}
                 >
@@ -2584,6 +2595,7 @@ export default function SupplierPortalPage() {
               </>
             )}
           </Stack>
+          </Box>
           </Fade>
         )}
 

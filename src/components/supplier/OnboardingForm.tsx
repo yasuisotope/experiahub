@@ -248,10 +248,10 @@ export default function OnboardingForm({ applicationId, initialData }: { applica
             fontWeight: 700, fontFamily: 'Nunito, sans-serif', 
             textTransform: 'none', fontSize: '1rem',
             boxShadow: '0 4px 12px rgba(1, 0, 87, 0.2)',
-            transition: 'all 0.2s ease',
+            transition: 'all 0.5s ease',
             '&:hover': { 
-              bgcolor: '#000040', 
-              boxShadow: '0 6px 16px rgba(1, 0, 87, 0.3)',
+              bgcolor: '#C5A059', 
+              boxShadow: '0 6px 16px rgba(197, 160, 89, 0.3)',
               transform: 'translateY(-1px)'
             } 
           }} 
