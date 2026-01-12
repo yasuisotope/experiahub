@@ -1166,6 +1166,77 @@ export default function SupplierPortalPage() {
                   Your application to join ExperiaHub's exclusive supplier network has been approved. 
                   Finalize your access to showcase your signature experiences to our global audience.
                 </Typography>
+
+                <Grid container spacing={4} sx={{ mb: 6, textAlign: 'left' }}>
+                  {[
+                    { step: '01', title: 'Secure Access', desc: 'Create your partner login credentials.' },
+                    { step: '02', title: 'Direct Profile', desc: 'Verify business details and compliance.' },
+                    { step: '03', title: 'Portfolio Sync', desc: 'Connect your inventory or upload experiences.' },
+                  ].map((item, i) => (
+                    <Grid item xs={12} md={4} key={i}>
+                      <Box sx={{ 
+                        p: 3, 
+                        borderLeft: '2px solid #C5A059',
+                        transition: 'all 0.3s ease',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.05)', transform: 'translateY(-2px)' }
+                        }}>
+                        <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1 }}>STEP {item.step}</Typography>
+                        <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 0.5 }}>{item.title}</Typography>
+                        <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} justifyContent="center" alignItems="center">
+                  <Button 
+                    onClick={() => { setAuthTab('signup'); setShowAuth(true); }}
+                    variant="contained" 
+                    size="large"
+                    sx={{ 
+                      bgcolor: '#010057', 
+                      color: '#fff', 
+                      px: 8, 
+                      py: 2.2, 
+                      borderRadius: '4px',
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      fontFamily: 'Agrandir, serif',
+                      textTransform: 'none',
+                      boxShadow: '0 10px 30px rgba(1, 0, 87, 0.2)',
+                      transition: 'all 0.4s ease',
+                      width: { xs: '100%', sm: 'auto' },
+                      '&:hover': { 
+                        bgcolor: '#C5A059', // GOLD on hover
+                        transform: 'translateY(-2px)', 
+                        boxShadow: '0 15px 35px rgba(197, 160, 89, 0.3)' 
+                      },
+                    }}
+                  >
+                    Begin Onboarding
+                  </Button>
+                  
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>
+                      Already joined?
+                    </Typography>
+                    <Button 
+                      onClick={() => { setAuthTab('login'); setShowAuth(true); }}
+                      variant="text" 
+                      size="small" 
+                      sx={{ 
+                        color: '#010057', 
+                        textTransform: 'none', 
+                        fontWeight: 700,
+                        p: 0,
+                        minWidth: 'auto',
+                        verticalAlign: 'baseline',
+                        fontFamily: 'Nunito, sans-serif',
+                        '&:hover': { background: 'none', textDecoration: 'underline' }
+                      }}
+                    >Sign In</Button>
+                  </Stack>
+                </Stack>
               </Box>
             </Fade>
           ) : (
@@ -1269,8 +1340,8 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             
-            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.5 }}>
-              Build: 2026.01.12.0940_RESTORED | Portal ID: {appId || 'NONE'}
+            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.6 }}>
+              Build: 2026.01.12.0955_FIX_ACTIONS | Portal ID: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
