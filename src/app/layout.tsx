@@ -57,6 +57,9 @@ export default function RootLayout({
                 src: 'local("Agrandir"), local("Agrandir-Regular")',
                 fontDisplay: 'swap',
               },
+              'body': {
+                backgroundColor: '#010057 !important', // Force Navy BG globally to prevent white flash
+              },
               '.fc .fc-event': {
                 borderRadius: 8,
                 borderColor: 'rgba(74, 124, 140, 0.25)'
