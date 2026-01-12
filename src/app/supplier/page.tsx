@@ -1032,6 +1032,7 @@ export default function SupplierPortalPage() {
             }
           } else {
             console.warn(`[SupplierPortal] No Supabase record found for ID: ${appId}`);
+            setSuEmail("ID Not Found"); // Visual feedback
           }
         } else {
           console.error(`[SupplierPortal] Status fetch failed: ${statusRes.status}`);
@@ -1660,7 +1661,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1070_FIX_N8N_PATH
+              Build: 2026.01.12.1080_ID_DEBUG
             </Typography>
           </Box>
         </Paper>
