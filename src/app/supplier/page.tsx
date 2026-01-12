@@ -1559,7 +1559,7 @@ export default function SupplierPortalPage() {
                         }}>
                         <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1 }}>STEP {item.step}</Typography>
                         <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 0.5 }}>{item.title}</Typography>
-                        <Typography variant="body2" sx={{ color: '#90A4AE', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
+                        <Typography variant="body2" sx={{ color: '#CFD8DC', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
                       </Box>
                     </Grid>
                   ))}
@@ -1589,10 +1589,12 @@ export default function SupplierPortalPage() {
                     component="a" 
                     href="/login" 
                     sx={{ 
-                      color: '#B0BEC5', 
-                      fontWeight: 600, 
+                      color: '#010057', 
+                      fontWeight: 700, 
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '4px',
                       textTransform: 'none', 
-                      '&:hover': { color: '#fff' } 
+                      '&:hover': { color: '#C5A059' } 
                     }}
                   >
                     Already have an account? Sign In
@@ -1605,13 +1607,13 @@ export default function SupplierPortalPage() {
                 <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 1 }}>
                   {authTab === 'login' ? 'Partner Login' : 'Finalize Your Access'}
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
+                <Typography variant="body2" sx={{ color: '#334155', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
                   {authTab === 'login' 
                     ? 'Enter your credentials to access your dashboard.' 
                     : 'Set up your secure portal credentials to complete approval.'}
                 </Typography>
                 {appId && (
-                  <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2, fontStyle: 'italic' }}>
+                  <Typography variant="caption" sx={{ color: '#64748B', display: 'block', mb: 2, fontStyle: 'italic' }}>
                     Portal ID: {appId}
                   </Typography>
                 )}
@@ -1624,6 +1626,7 @@ export default function SupplierPortalPage() {
                       fullWidth label="Choose Username" variant="outlined" 
                       value={suUsername} onChange={(e) => setSuUsername(e.target.value)}
                       required disabled={authLoading}
+                      sx={{ bgcolor: '#fff' }}
                     />
                   )}
                   <TextField 
@@ -1632,12 +1635,14 @@ export default function SupplierPortalPage() {
                     value={authTab === 'login' ? username : suEmail}
                     onChange={(e) => authTab === 'login' ? setUsername(e.target.value) : setSuEmail(e.target.value)}
                     required disabled={authLoading}
+                    sx={{ bgcolor: '#fff' }}
                   />
                   <TextField 
                     fullWidth label="Pick a Password" type="password" variant="outlined" 
                     value={authTab === 'login' ? password : suPassword}
                     onChange={(e) => authTab === 'login' ? setPassword(e.target.value) : setSuPassword(e.target.value)}
                     required disabled={authLoading}
+                    sx={{ bgcolor: '#fff' }}
                   />
                   
                   <Button 
@@ -1651,7 +1656,7 @@ export default function SupplierPortalPage() {
                       py: 2, 
                       borderRadius: '4px',
                       fontWeight: 700,
-                      fontSize: '1.1rem',
+                      fontSize: '1.2rem',
                       mt: 1,
                       fontFamily: 'Agrandir, serif',
                       textTransform: 'none',
@@ -1671,7 +1676,7 @@ export default function SupplierPortalPage() {
                     <Button 
                       variant="text" 
                       onClick={() => setShowForm(false)}
-                      sx={{ color: '#64748B', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
+                      sx={{ color: '#475569', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
                     >
                       Back
                     </Button>
@@ -1700,7 +1705,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.7 }}>
-              Build: 2026.01.12.0985_FIX_INLINE_ALL | Portal ID: {appId || 'NONE'}
+              Build: 2026.01.12.0990_STYLE_POLISH | Portal ID: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
