@@ -1093,7 +1093,7 @@ export default function SupplierPortalPage() {
     return `https://app.experiahub.com/login?next=${enc}`;
   }, [appId]);
 
-  const heroImage = '/images/supplier-hero.png';
+  const heroImage = 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80';
 
   // View definitions moved inline to main render
 
@@ -1513,7 +1513,7 @@ export default function SupplierPortalPage() {
         zIndex: -1
       }
     }}>
-      <Container maxWidth="md">
+      <Container maxWidth="sm">
         <Paper elevation={0} sx={{
           p: { xs: 4, md: 6 },
           borderRadius: 4,
@@ -1663,7 +1663,7 @@ export default function SupplierPortalPage() {
                       fontSize: '1.1rem',
                       mt: 1,
                       fontFamily: 'Agrandir, serif',
-                      textTransform: 'uppercase',
+                      textTransform: 'none',
                       letterSpacing: '1px',
                       transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                       '&:hover': { 
@@ -1709,7 +1709,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.7 }}>
-              Build: 2026.01.12.0995_VISUAL_RESTORE | Portal ID: {appId || 'NONE'}
+              Build: 2026.01.12.1000_FIX_BG_LAYOUT | Portal ID: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
