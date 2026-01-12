@@ -1154,10 +1154,6 @@ export default function SupplierPortalPage() {
                 }}>
                   {companyBilling.companyName ? `Welcome, ${companyBilling.companyName}` : 'Welcome to the Portfolio'}
                 </Typography>
-                <Typography variant="h6" sx={{ 
-                  color: '#475569', 
-                  fontFamily: 'Nunito, sans-serif', 
-                  fontWeight: 400, 
                 <Grid container spacing={4} sx={{ mb: 6, textAlign: 'left' }}>
                   {[
                     { step: '01', title: 'Secure Access', desc: 'Create your partner login credentials.' },
@@ -1301,7 +1297,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.6 }}>
-              Build: 2026.01.12.0958_FINAL_POLISH | Portal ID: {appId || 'NONE'}
+              Build: 2026.01.12.0960_FIX_SYNTAX | Portal ID: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
