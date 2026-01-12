@@ -1093,7 +1093,7 @@ export default function SupplierPortalPage() {
     return `https://app.experiahub.com/login?next=${enc}`;
   }, [appId]);
 
-  const heroImage = 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80';
+  const heroImage = 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&q=80';
 
   // View definitions moved inline to main render
 
@@ -1506,15 +1506,15 @@ export default function SupplierPortalPage() {
           content: '""',
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          backgroundImage: `url(${heroImage})`,
+          backgroundImage: `url('${heroImage}')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
-          filter: 'brightness(0.7) saturate(1.1)',
+          filter: 'brightness(0.6) saturate(1.2)',
           zIndex: -1
         }
       }}>
-      <Container maxWidth="sm">
+      <Container maxWidth="md">
         <Paper elevation={0} sx={{
           p: { xs: 4, md: 6 },
           borderRadius: 4,
@@ -1547,6 +1547,23 @@ export default function SupplierPortalPage() {
           </Typography>
 
           {authError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{authError}</Alert>}
+
+          {/* Steps Grid - Restored for Context */}
+          <Grid container spacing={2} sx={{ mb: 4, textAlign: 'left', display: { xs: 'none', md: 'flex' } }}>
+            {[
+               { step: '01', title: 'Secure Access', desc: 'Create partner login.' },
+               { step: '02', title: 'Direct Profile', desc: 'Verify business details.' },
+               { step: '03', title: 'Portfolio Sync', desc: 'Connect inventory.' },
+            ].map((item, i) => (
+              <Grid item xs={12} md={4} key={i}>
+                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'rgba(255,255,255,0.5)', borderRadius: '0 4px 4px 0' }}>
+                  <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
+                  <Typography variant="subtitle2" sx={{ color: '#010057', fontWeight: 700, lineHeight: 1.2 }}>{item.title}</Typography>
+                  <Typography variant="caption" sx={{ color: '#64748B', lineHeight: 1.1 }}>{item.desc}</Typography>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
 
           <Box component="form" onSubmit={authTab === 'login' ? handleLoginSubmit : handleSignupSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             {authTab === 'signup' && (
