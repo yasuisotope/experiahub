@@ -1339,7 +1339,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.5 }}>
-              Build: 2026.01.12.0815 | Trace: {appId || 'NONE'}
+              Build: 2026.01.12.0845 | RE-RESTORED REACTIVE UI | Trace: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
