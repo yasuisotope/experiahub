@@ -23,6 +23,7 @@ import CollectionsIcon from '@mui/icons-material/Collections';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ShareIcon from '@mui/icons-material/Share';
 import { useWordPressAuth } from '@/contexts/WordPressContext';
+import { AuthService } from '@/services/authService';
 import OnboardingForm from '@/components/supplier/OnboardingForm';
 import SupportDialog from '@/components/support/SupportDialog';
 import { ToggleButtonGroup, ToggleButton } from '@mui/material';
@@ -1661,7 +1662,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1080_ID_DEBUG
+              Build: 2026.01.12.1090_FIX_CRASH
             </Typography>
           </Box>
         </Paper>
