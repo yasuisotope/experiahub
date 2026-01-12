@@ -1103,79 +1103,105 @@ const loadingView = (
   </Box>
 );
 
+// Simplified LoggedOutView - Robust Dark Theme
   const LoggedOutView = () => (
     <Box sx={{
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden',
-      bgcolor: '#010057', // Deep Brand Blue (Safety Fallback)
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0, left: 0, right: 0, bottom: 0,
-        backgroundImage: `url("${heroImage}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        opacity: 0.5, // Allow the deep blue to show through
-        zIndex: 0
-      },
-      '&::after': {
-        content: '""',
-        position: 'absolute',
-        top: 0, left: 0, right: 0, bottom: 0,
-        background: 'linear-gradient(135deg, rgba(1, 0, 87, 0.9) 0%, rgba(1, 0, 87, 0.4) 100%)', // Premium Gradient Overlay
-        zIndex: 1
-      }
+      bgcolor: '#010057', // Deep Brand Blue (Solid)
+      backgroundImage: `linear-gradient(rgba(1, 0, 87, 0.85), rgba(1, 0, 87, 0.6)), url("${heroImage}")`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      color: '#fff',
+      p: 2
     }}>
-      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 2 }}>
+      <Container maxWidth="md">
+        <Box sx={{ textAlign: 'center', mb: 8 }}>
+           <Typography variant="overline" sx={{ letterSpacing: 3, color: '#C5A059', fontWeight: 700, display: 'block', mb: 2 }}>
+            PARTNERSHIP APPROVED
+          </Typography>
+          
+          <Typography variant="h1" sx={{ 
+            fontSize: { xs: '2.5rem', md: '4rem' },
+            fontFamily: 'Agrandir, sans-serif',
+            fontWeight: 700,
+            mb: 3,
+            color: '#fff'
+          }}>
+            {businessName ? `Welcome, ${businessName}` : 'Welcome to the Portfolio'}
+          </Typography>
+
+          <Typography variant="body1" sx={{ fontSize: '1.2rem', color: '#B0BEC5', mb: 6, maxWidth: 660, mx: 'auto', lineHeight: 1.6 }}>
+            Your application to join ExperiaHub's exclusive supplier network has been approved. Finalize your access below to begin showcasing your experiences.
+          </Typography>
+        </Box>
+
         <Paper elevation={0} sx={{
           p: { xs: 4, md: 6 },
           borderRadius: 2,
-          textAlign: 'center',
-          background: 'rgba(255, 255, 255, 0.95)', // Glassy White Card
+          bgcolor: 'rgba(255, 255, 255, 0.05)', // Very subtle white tint
           backdropFilter: 'blur(10px)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+          border: '1px solid rgba(255,255,255,0.1)'
         }}>
-                  <Button 
-                    variant="text" 
-                    size="small"
-                    onClick={() => { setAuthTab('login'); setShowAuth(false); }} // Guest mode logic? Actually wait, guest mode needs logic.
-                    sx={{ color: '#94a3b8', fontSize: '0.85rem', mt: 2, textTransform: 'none', '&:hover': { color: '#010057' } }}
-                  >
-                    Continue as Guest (No login)
+          {!showForm ? (
+              <Stack spacing={4} alignItems="center">
+                 <Button 
+                  variant="contained" 
+                  size="large"
+                  onClick={() => setShowForm(true)}
+                  sx={{ 
+                    bgcolor: '#fff', 
+                    color: '#010057', 
+                    px: 6, 
+                    py: 2,
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    fontFamily: 'Agrandir, sans-serif',
+                    '&:hover': { bgcolor: '#C5A059', color: '#fff' }
+                  }}
+                >
+                  Begin Onboarding
+                </Button>
+                
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2" sx={{ color: '#90A4AE' }}>Already have an account?</Typography>
+                  <Button component="a" href="/login" sx={{ color: '#fff', fontWeight: 700, textTransform: 'none', minWidth: 'auto', p: 0, '&:hover': { color: '#C5A059' } }}>
+                    Sign In
                   </Button>
                 </Stack>
-              </Box>
-            </Fade>
-          ) : (
-            <Fade in={showAuth}>
-              <Box>
-                <AuthForm 
-                  mode={authTab} 
-                  appId={appId || 'PENDING'} 
-                  email={email} 
-                  onSuccess={() => { window.location.href = `/onboarding?appId=${appId}`; }}
-                  onCancel={() => setShowAuth(false)}
-                />
-              </Box>
-            </Fade>
-          )}
-
-          {/* Footer inside the card */}
-          <Box sx={{ mt: 6, py: 2, borderTop: '1px solid #f1f5f9' }}>
-            <Stack direction="row" spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 1 }}>
-              <Chip label={status || 'READY TO START'} size="small" sx={{ bgcolor: status === 'APPROVED' ? '#dcfce7' : '#e2e8f0', color: status === 'APPROVED' ? '#166534' : '#475569', fontWeight: 700, fontSize: '0.7rem' }} />
-              <Typography variant="caption" sx={{ color: '#94a3b8', fontFamily: 'monospace' }}>ID: {appId || 'PENDING'}</Typography>
-            </Stack>
-            <Typography variant="caption" sx={{ color: '#cbd5e1', fontSize: '0.7rem' }}>
-              Build: 2026.01.12.0922 | Secure Environment
-            </Typography>
-          </Box>
+              </Stack>
+            ) : (
+             <Box sx={{ textAlign: 'left' }}>
+               <Button onClick={() => setShowForm(false)} sx={{ color: '#90A4AE', mb: 2, textTransform: 'none' }}>&larr; Back</Button>
+               <OnboardingForm 
+                 appId={appId || ''} 
+                 baseInfo={{ 
+                   email: email || '', 
+                   businessName: businessName || '', 
+                   fullName: supplierName || ''
+                 }} 
+               />
+             </Box>
+            )}
         </Paper>
+
+        <Box sx={{ mt: 6, textAlign: 'center' }}>
+          <Stack direction="row" spacing={3} justifyContent="center" sx={{ mb: 2 }}> 
+            <Typography variant="caption" sx={{ color: '#546E7A', fontWeight: 600, letterSpacing: 1 }}>
+              PORTAL ID: <span style={{ color: '#90A4AE' }}>{appId || 'PENDING'}</span>
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#546E7A', fontWeight: 600, letterSpacing: 1 }}>
+              STATUS: <span style={{ color: '#C5A059' }}>{status || 'READY TO START'}</span>
+            </Typography>
+          </Stack>
+          
+          <Typography variant="caption" sx={{ display: 'block', color: '#455A64', mt: 1 }}>
+            Build: 2026.01.12.0935_FIX | Portal ID: {appId || 'NONE'}
+          </Typography>
+        </Box>
       </Container>
     </Box>
   );
