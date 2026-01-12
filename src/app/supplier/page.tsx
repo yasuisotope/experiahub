@@ -1209,10 +1209,9 @@ export default function SupplierPortalPage() {
                     Already have an account? Sign In
                   </Button>
                 </Stack>
+                </Stack>
               </Box>
-            </Fade>
-          ) : (
-            <Fade in={showAuth}>
+            ) : (
               <Box sx={{ maxWidth: 400, mx: 'auto', width: '100%' }}>
                 <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 1 }}>
                   {authTab === 'login' ? 'Partner Login' : 'Finalize Your Access'}
@@ -1297,8 +1296,7 @@ export default function SupplierPortalPage() {
                   </Stack>
                 </Box>
               </Box>
-            </Fade>
-          )}
+            )}
 
           <Box sx={{ mt: 10, pt: 4, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="center" spacing={4} sx={{ mb: 3 }}>
@@ -1313,7 +1311,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.6 }}>
-              Build: 2026.01.12.0970_FIX_CRITICAL_LOGIC | Portal ID: {appId || 'NONE'}
+              Build: 2026.01.12.0975_FIX_NAV_FINAL | Portal ID: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
