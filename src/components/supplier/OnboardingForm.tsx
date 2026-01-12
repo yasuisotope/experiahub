@@ -25,96 +25,48 @@ async function parseJsonSafe(res: Response): Promise<any | null> {
 
 export type OnboardingFormState = {
   applicationId: string;
-  originStory: string;
-  fulfillment: string;
-  authenticEchoes: string;
-  unforgettableFeeling: string;
-  magicMoment: string;
-  hiddenGem: string;
-  communityConnection: string;
-  perfectMatch: string;
-  availability: string;
-  bookingAdvance: string;
-  bookingSystem: string;
-  bookingLink: string;
-  cancellationPolicy: string;
-  safetyMeasures: string;
-  insurance: string;
-  requirements: string;
-  threeWords: string;
-  moreAboutYou: string;
   legalBusinessName: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  primaryLocations: string;
-  experienceNames: string;
-  briefDescriptions: string;
-  duration: string;
-  maxParticipants: string;
-  minParticipants: string;
-  priceRange: string;
-  included: string;
-  notIncluded: string;
 };
 
 const defaultState: OnboardingFormState = {
   applicationId: '',
-  originStory: '',
-  fulfillment: '',
-  authenticEchoes: '',
-  unforgettableFeeling: '',
-  magicMoment: '',
-  hiddenGem: '',
-  communityConnection: '',
-  perfectMatch: '',
-  availability: '',
-  bookingAdvance: '',
-  bookingSystem: '',
-  bookingLink: '',
-  cancellationPolicy: '',
-  safetyMeasures: '',
-  insurance: '',
-  requirements: '',
-  threeWords: '',
-  moreAboutYou: '',
   legalBusinessName: '',
   contactName: '',
   contactEmail: '',
-  contactPhone: '',
-  primaryLocations: '',
-  experienceNames: '',
-  briefDescriptions: '',
-  duration: '',
-  maxParticipants: '',
-  minParticipants: '',
-  priceRange: '',
-  included: '',
-  notIncluded: ''
+  contactPhone: ''
 };
 
-export default function OnboardingForm({ applicationId }: { applicationId: string }) {
+export default function OnboardingForm({ applicationId, initialData }: { applicationId: string; initialData?: any }) {
   const [state, setState] = React.useState<OnboardingFormState>({ ...defaultState, applicationId });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = React.useState<string>('');
-  const [statusInfo, setStatusInfo] = React.useState<{ exists?: boolean; status?: string | null; approved?: boolean } | null>(null);
   const [dirty, setDirty] = React.useState(false);
+
+  // Pre-fill from initialData if available
+  React.useEffect(() => {
+    if (initialData) {
+      setState(prev => ({
+        ...prev,
+        legalBusinessName: initialData.businessName || prev.legalBusinessName,
+        contactEmail: initialData.email || prev.contactEmail,
+        contactName: initialData.fullName || prev.contactName,
+        contactPhone: initialData.phone || prev.contactPhone,
+      }));
+    }
+  }, [initialData]);
 
   const requiredKeys: (keyof OnboardingFormState)[] = [
     'applicationId',
     'legalBusinessName',
     'contactName',
     'contactEmail',
-    'contactPhone',
-    'primaryLocations',
-    'experienceNames',
-    'briefDescriptions',
-    'bookingSystem',
-    'bookingLink',
-    'cancellationPolicy'
+    'contactPhone'
   ];
   const completedCount = requiredKeys.reduce((acc, k) => acc + (String((state as any)[k] || '').trim() ? 1 : 0), 0);
   const completeness = Math.round((completedCount / requiredKeys.length) * 100);
@@ -124,67 +76,18 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
   }, [applicationId]);
 
   React.useEffect(() => {
-    // Auto-save draft locally
-    if (!state.applicationId) return;
-    const key = `supplier_onboarding_${state.applicationId}`;
-    try { localStorage.setItem(key, JSON.stringify(state)); } catch {}
-  }, [state]);
-
-  React.useEffect(() => {
     // Validate basic fields
     const next: Record<string, string> = {};
     if (!state.applicationId?.trim()) next.applicationId = 'Portal ID is required';
     const email = state.contactEmail?.trim();
     if (email && !/^([^\s@]+)@([^\s@]+)\.[^\s@]+$/.test(email)) next.contactEmail = 'Invalid email format';
-    const url = state.bookingLink?.trim();
-    if (url) {
-      try { const u = new URL(url); if (!['http:', 'https:'].includes(u.protocol)) throw new Error(); }
-      catch { next.bookingLink = 'Invalid URL'; }
-    }
-    // Additional requireds
+    
     if (!state.legalBusinessName?.trim()) next.legalBusinessName = 'Legal business name is required';
     if (!state.contactName?.trim()) next.contactName = 'Contact name is required';
     if (!state.contactPhone?.trim()) next.contactPhone = 'Contact phone is required';
-    if (!state.primaryLocations?.trim()) next.primaryLocations = 'Please enter at least one primary location';
-    if (!state.experienceNames?.trim()) next.experienceNames = 'Please enter at least one experience name';
-    if (!state.briefDescriptions?.trim()) next.briefDescriptions = 'Please provide a brief description';
-    if (!state.bookingSystem?.trim()) next.bookingSystem = 'Please specify your booking system';
-    if (!state.bookingLink?.trim()) next.bookingLink = 'Portal booking link is required';
-    if (!state.cancellationPolicy?.trim()) next.cancellationPolicy = 'Cancellation policy is required';
+    
     setErrors(next);
-  }, [state.applicationId, state.contactEmail, state.bookingLink, state.legalBusinessName, state.contactName, state.contactPhone, state.primaryLocations, state.experienceNames, state.briefDescriptions, state.bookingSystem, state.cancellationPolicy]);
-
-  // Fetch status for header chip
-  React.useEffect(() => {
-    let abort = false;
-    const fetchStatus = async () => {
-      if (!state.applicationId) { setStatusInfo(null); return; }
-      try {
-        const res = await fetch(`${N8N_BASE}/supplier/onboarding/status?applicationId=${encodeURIComponent(state.applicationId)}`);
-        const json = await parseJsonSafe(res);
-        if (!abort) {
-          if (json?.success) {
-            setStatusInfo({ exists: json.exists, status: json.status ?? null, approved: !!json.approved });
-            // Pre-fill fields from Supabase (matching n8n v3 fields)
-            setState(prev => ({
-              ...prev,
-              contactEmail: prev.contactEmail || json.email || '',
-              legalBusinessName: prev.legalBusinessName || json.businessName || '',
-              contactName: prev.contactName || json.fullName || '',
-              contactPhone: prev.contactPhone || json.phone || '',
-              primaryLocations: prev.primaryLocations || (json.city && json.country ? `${json.city}, ${json.country}` : json.city || json.country || '')
-            }));
-          } else {
-            setStatusInfo(null);
-          }
-        }
-      } catch {
-        if (!abort) setStatusInfo(null);
-      }
-    };
-    fetchStatus();
-    return () => { abort = true; };
-  }, [state.applicationId]);
+  }, [state.applicationId, state.contactEmail, state.legalBusinessName, state.contactName, state.contactPhone]);
 
   const onChange = (key: keyof OnboardingFormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setSaved(false);
@@ -197,6 +100,8 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
     try {
       if (!state.applicationId) throw new Error('Missing application ID');
       const token = AuthService.getToken();
+      // Note: This endpoint might expect more fields. If n8n fails, we might need to send dummy data for removed fields.
+      // But usually JSON upsert handles partial updates if configured.
       const res = await fetch(`${N8N_BASE}/supplier/onboarding/save`, {
         method: 'POST',
         headers: {
@@ -218,7 +123,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
   };
 
   const handleSubmit = async () => {
-    await handleSave();
+    await handleSave(); // Ensure latest is saved
     try {
       const token = AuthService.getToken();
       const res = await fetch(`${N8N_BASE}/supplier/onboarding/submit`, {
@@ -230,13 +135,13 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
       if (!res.ok || !json?.success) {
         throw new Error((json && (json.error || json.message)) || `Submit failed (HTTP ${res.status})`);
       }
-      setStatusInfo((s) => ({ ...(s||{}), status: 'Submitted', approved: false }));
       alert('Submitted for review. We will notify you by email.');
     } catch (e: any) {
       setError(e.message || 'Submit failed');
     }
   };
-
+  
+  // Prevent loss of changes
   React.useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!dirty) return;
@@ -248,188 +153,113 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
   }, [dirty]);
 
   return (
-    <Paper elevation={0} sx={{ p: 2, borderRadius: 2, bgcolor: 'transparent', position: 'relative' }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="body2" sx={{ color: '#010057', fontFamily: 'Inter' }}>
-          Status: <strong>{statusInfo?.approved ? 'Approved' : (statusInfo?.status || 'Pending')}</strong>{lastSavedAt ? ` · Last saved: ${lastSavedAt}` : ''}
-        </Typography>
-        <Chip size="small" label={`Completeness: ${completeness}% (${completedCount}/${requiredKeys.length})`} color={completeness===100?'success':'default'} variant={completeness===100?'filled':'outlined'} />
+    <Paper elevation={0} sx={{ p: 4, borderRadius: 2, bgcolor: 'transparent', position: 'relative' }}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
+        <Box>
+           <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>Company Profile</Typography>
+           <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#475569' }}>
+             Verify your main contact details. For location details, use the Locations tab.
+           </Typography>
+        </Box>
+
       </Stack>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {saved && <Alert severity="success" sx={{ mb: 2 }}>Saved successfully{lastSavedAt ? ` at ${lastSavedAt}` : ''}.</Alert>}
+      
+      {error && <Alert severity="error" sx={{ mb: 2, fontFamily: 'Nunito, sans-serif' }}>{error}</Alert>}
+      {saved && <Alert severity="success" sx={{ mb: 2, fontFamily: 'Nunito, sans-serif' }}>Saved successfully{lastSavedAt ? ` at ${lastSavedAt}` : ''}.</Alert>}
 
       {/* Section: Company & Contact */}
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
         <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem' }}>Company & Contact</Typography>
-          <Divider sx={{ mb: 2 }} />
+           <TextField 
+             label="Supplier ID" 
+             value={state.applicationId || ''} 
+             disabled 
+             fullWidth 
+             helperText="Unique identifier for support and API usage"
+             InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+             InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }}
+             FormHelperTextProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <TextField label="Portal ID" value={state.applicationId} onChange={onChange('applicationId')} fullWidth disabled={!state.applicationId}
-            error={!!errors.applicationId} helperText={errors.applicationId || ''} />
+          <TextField 
+            label="Legal Business Name" 
+            value={state.legalBusinessName} 
+            onChange={onChange('legalBusinessName')} 
+            fullWidth 
+            error={!!errors.legalBusinessName} 
+            helperText={errors.legalBusinessName || ''}
+            InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+            InputProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+            FormHelperTextProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+          />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <TextField label="Account Email" value={state.contactEmail} onChange={onChange('contactEmail')} fullWidth helperText="Used for login and communication" />
+          <TextField 
+            label="Account Email" 
+            value={state.contactEmail} 
+            onChange={onChange('contactEmail')} 
+            fullWidth 
+            helperText="Used for login and communication"
+            InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+            InputProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+            FormHelperTextProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+          />
         </Grid>
 
         <Grid item xs={12} sm={6}>
-          <TextField label="Legal Business Name" value={state.legalBusinessName} onChange={onChange('legalBusinessName')} fullWidth error={!!errors.legalBusinessName} helperText={errors.legalBusinessName || ''} />
+          <TextField 
+            label="Contact Person Name" 
+            value={state.contactName} 
+            onChange={onChange('contactName')} 
+            fullWidth 
+            error={!!errors.contactName} 
+            helperText={errors.contactName || ''}
+            InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+            InputProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+            FormHelperTextProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+          />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <TextField label="Contact Person Name" value={state.contactName} onChange={onChange('contactName')} fullWidth error={!!errors.contactName} helperText={errors.contactName || ''} />
+          <TextField 
+            label="Contact Phone" 
+            value={state.contactPhone} 
+            onChange={onChange('contactPhone')} 
+            fullWidth 
+            InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+            InputProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+            FormHelperTextProps={{ style: { fontFamily: 'Nunito, sans-serif' } }}
+          />
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField label="Support Email" value={state.contactEmail} onChange={onChange('contactEmail')} fullWidth error={!!errors.contactEmail} helperText={errors.contactEmail || ''} />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField label="Contact Phone" value={state.contactPhone} onChange={onChange('contactPhone')} fullWidth />
-        </Grid>
-
-        {/* Section: Locations & Experiences */}
-        <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem' }}>Locations & Experiences</Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField label="Primary Locations (City, Country)" value={state.primaryLocations} onChange={onChange('primaryLocations')} fullWidth error={!!errors.primaryLocations} helperText={errors.primaryLocations || ''} />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField label="Experience Name(s)" value={state.experienceNames} onChange={onChange('experienceNames')} fullWidth error={!!errors.experienceNames} helperText={errors.experienceNames || ''} />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField label="Brief Description(s)" value={state.briefDescriptions} onChange={onChange('briefDescriptions')} fullWidth multiline minRows={3} error={!!errors.briefDescriptions} helperText={errors.briefDescriptions || ''} />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField label="Typical Duration" value={state.duration} onChange={onChange('duration')} fullWidth />
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <TextField label="Max Participants" value={state.maxParticipants} onChange={onChange('maxParticipants')} fullWidth />
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <TextField label="Min Participants" value={state.minParticipants} onChange={onChange('minParticipants')} fullWidth />
-        </Grid>
-
-        {/* Section: Product Details */}
-        <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem' }}>Product Details</Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField label="Typical Price / Range" value={state.priceRange} onChange={onChange('priceRange')} fullWidth />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField label="Included in Price" value={state.included} onChange={onChange('included')} fullWidth multiline minRows={2} />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField label="NOT Included" value={state.notIncluded} onChange={onChange('notIncluded')} fullWidth multiline minRows={2} />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField label="Availability" value={state.availability} onChange={onChange('availability')} fullWidth />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField label="Booking Lead Time" value={state.bookingAdvance} onChange={onChange('bookingAdvance')} fullWidth />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField label="Booking System" value={state.bookingSystem} onChange={onChange('bookingSystem')} fullWidth />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField label="Booking Link" value={state.bookingLink} onChange={onChange('bookingLink')} fullWidth error={!!errors.bookingLink} helperText={errors.bookingLink || ''} />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField label="Cancellation Policy" value={state.cancellationPolicy} onChange={onChange('cancellationPolicy')} fullWidth />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField label="Safety Measures" value={state.safetyMeasures} onChange={onChange('safetyMeasures')} fullWidth />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField label="Insurance" value={state.insurance} onChange={onChange('insurance')} fullWidth />
-        </Grid>
-        {/* Section: Requirements */}
-        <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem', pl: 0.5 }}>Requirements</Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField label="Participant Requirements" value={state.requirements} onChange={onChange('requirements')} fullWidth multiline minRows={2} />
-        </Grid>
-
-        {/* Section: Narrative */}
-        <Grid item xs={12}>
-          <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display', fontSize: '1.1rem', pl: 0.5 }}>Narrative</Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid item xs={12} sm={6}><TextField label="Three Words" value={state.threeWords} onChange={onChange('threeWords')} fullWidth /></Grid>
-        <Grid item xs={12}><TextField label="More About You / Team" value={state.moreAboutYou} onChange={onChange('moreAboutYou')} fullWidth multiline minRows={3} /></Grid>
       </Grid>
 
-      {/* Review & Sticky Action Bar */}
-      <Box sx={{ mt: 3 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700, color: '#010057', fontFamily: 'Playfair Display' }}>Review</Typography>
-        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-          <Stack spacing={1}>
-            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Legal</strong>: {state.legalBusinessName || '—'}</Typography>
-            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Contact</strong>: {state.contactName || '—'} · {state.contactEmail || '—'} · {state.contactPhone || '—'}</Typography>
-            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Locations</strong>: {state.primaryLocations || '—'}</Typography>
-            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Experiences</strong>: {state.experienceNames || '—'}</Typography>
-            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Descriptions</strong>: {state.briefDescriptions || '—'}</Typography>
-            <Typography variant="body2" sx={{ fontFamily: 'Inter' }}><strong>Booking</strong>: {state.bookingSystem || '—'} · {state.bookingLink || '—'}</Typography>
-          </Stack>
-        </Paper>
-      </Box>
-
       {/* Sticky Action Bar */}
-      <Box sx={{ position: 'sticky', bottom: 12, mt: 3, ml: 'auto', width: 'fit-content', zIndex: 10 }}>
-        <Typography variant="caption" sx={{ color: '#666', mb: 0.5, textAlign: 'right', display: 'block', fontFamily: 'Inter', pr: 1 }}>
-          {dirty ? 'Unsaved changes' : (lastSavedAt ? `Last saved: ${lastSavedAt}` : '')}
+      <Box sx={{ mt: 5, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
+        <Typography variant="caption" sx={{ color: '#666', fontFamily: 'Nunito, sans-serif' }}>
+          {dirty ? 'Unsaved changes' : (lastSavedAt ? `Saved` : '')}
         </Typography>
-        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, p: 1, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-          <Button 
-            onClick={handleSave} 
-            disabled={saving} 
-            sx={{ 
-              px: 4, py: 1.5, borderRadius: 2, 
-              bgcolor: '#010057', color: '#fff', 
-              fontWeight: 800, fontFamily: 'Agrandir, serif', 
-              textTransform: 'uppercase', letterSpacing: '1px',
-              transition: 'all 0.3s ease',
-              '&:hover': { 
-                bgcolor: '#C5A059', 
-                boxShadow: '0 8px 25px rgba(197, 160, 89, 0.4)',
-                transform: 'translateY(-2px)'
-              } 
-            }} 
-            startIcon={!saving ? <CheckCircleOutlineIcon /> : undefined}
-          >
-            {saving ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Save Draft'}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={async ()=>{
-              if (Object.keys(errors).length > 0 || completeness < 100) { setError('Please complete all required fields before submitting.'); return; }
-              await handleSubmit();
-            }}
-            sx={{ 
-              borderRadius: 2, px: 3, py: 1.5, 
-              fontFamily: 'Agrandir, serif', fontWeight: 800,
-              bgcolor: '#010057', color: '#fff',
-              textTransform: 'uppercase', letterSpacing: '1px',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                bgcolor: '#C5A059',
-                boxShadow: '0 8px 25px rgba(197, 160, 89, 0.4)',
-                transform: 'translateY(-2px)'
-              }
-            }}
-          >
-            Submit Portal
-          </Button>
-        </Box>
+        <Button 
+          onClick={handleSave} 
+          disabled={saving} 
+          variant="contained"
+          sx={{ 
+            px: 4, py: 1.2, borderRadius: 2, 
+            bgcolor: '#010057', color: '#fff', 
+            fontWeight: 700, fontFamily: 'Nunito, sans-serif', 
+            textTransform: 'none', fontSize: '1rem',
+            boxShadow: '0 4px 12px rgba(1, 0, 87, 0.2)',
+            transition: 'all 0.2s ease',
+            '&:hover': { 
+              bgcolor: '#000040', 
+              boxShadow: '0 6px 16px rgba(1, 0, 87, 0.3)',
+              transform: 'translateY(-1px)'
+            } 
+          }} 
+          startIcon={!saving ? <CheckCircleOutlineIcon /> : undefined}
+        >
+          {saving ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Save Profile'}
+        </Button>
       </Box>
     </Paper>
   );
 }
-
-

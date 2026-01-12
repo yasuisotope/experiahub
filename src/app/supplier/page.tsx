@@ -1,7 +1,7 @@
 'use client';
 
-// Build Trace: 2026.01.12.0815 - Ensuring reactive patterns are live
-export const buildId = "2026.01.12.0815";
+// Build Trace: 2026.01.12.1245_LAYOUT_CONSOLIDATION - Removing right rail, adding tabs
+export const buildId = "2026.01.12.1245_LAYOUT_CONSOLIDATION";
 
 // Disable static prerendering — this page depends on search params/localStorage.
 export const dynamic = 'force-dynamic';
@@ -26,8 +26,10 @@ import { useWordPressAuth } from '@/contexts/WordPressContext';
 import { AuthService } from '@/services/authService';
 import OnboardingForm from '@/components/supplier/OnboardingForm';
 import SupportDialog from '@/components/support/SupportDialog';
-import { ToggleButtonGroup, ToggleButton } from '@mui/material';
+import { ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab } from '@mui/material';
 import BackgroundImage from '@/components/BackgroundImage';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import WallpaperIcon from '@mui/icons-material/Wallpaper';
 import { getUserBackground, setUserBackground, searchUnsplash, trackDownload, loadCachedBackground, saveCachedBackground, getCuratedBackgrounds, prefetchBackgroundImage, type PortalBackground } from '@/services/backgroundService';
 import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
 
@@ -720,12 +722,31 @@ export default function SupplierPortalPage() {
   const { isLoggedIn, isLoading, logout, login } = useWordPressAuth() as any;
   const appId = useSupplierAppId();
   const [bg, setBg] = React.useState<PortalBackground | null>(null);
+  const [bgAnchorEl, setBgAnchorEl] = React.useState<HTMLElement | null>(null);
   const [bgSearch, setBgSearch] = React.useState<string>('');
   const [bgResults, setBgResults] = React.useState<any[]>([]);
   const [bgLoading, setBgLoading] = React.useState<boolean>(false);
   const [bgPage, setBgPage] = React.useState<number>(1);
   const [bgLoadingMore, setBgLoadingMore] = React.useState<boolean>(false);
   const [bgSeed, setBgSeed] = React.useState<number>(0);
+  const [statusData, setStatusData] = React.useState<any>(null);
+  // Stable curated list to prevent re-render flicker
+  const [curatedBgs] = React.useState<PortalBackground[]>(() => getCuratedBackgrounds());
+
+  // Load saved background on mount
+  React.useEffect(() => {
+    const loadBg = async () => {
+      try {
+        const token = AuthService.getToken();
+        const cached = loadCachedBackground('supplier'); 
+        if (cached) setBg(cached);
+        const server = await getUserBackground(token);
+        if (server) { setBg(server); saveCachedBackground(server, 'supplier'); }
+      } catch {}
+    };
+    loadBg();
+  }, []);
+
   const loadRandomBg = React.useCallback(async () => {
     try {
       setBgLoading(true);
@@ -737,13 +758,24 @@ export default function SupplierPortalPage() {
     } finally { setBgLoading(false); }
   }, [setBgLoading, setBgResults, setBgPage]);
   // Load fresh random images when opening the Background picker with no query
+  // Load fresh random images when opening the Background picker with no query
+  // Load fresh random images when opening the Background picker with no query
   React.useEffect(() => {
-    // Triggered by changing seed before opening the popover
-    if (!bgSearch.trim() && bgSeed) {
-      loadRandomBg();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bgSeed]);
+    (async () => {
+      if (!bgAnchorEl) return;
+      if (bgSearch.trim()) return;
+      try {
+        setBgLoading(true);
+        const topics = ['nature','city','ocean','mountains','forest','sky','beach','night','sunset','architecture'];
+        const q = topics[Math.floor(Math.random() * topics.length)];
+        const results = await searchUnsplash(q, 1, 30);
+        setBgResults(Array.isArray(results) ? results : []);
+        setBgPage(1);
+      } finally {
+        setBgLoading(false);
+      }
+    })();
+  }, [bgAnchorEl, bgSeed, bgSearch]);
   const [tab, setTab] = React.useState<number>(0);
   const [section, setSection] = React.useState<'welcome'|'company'|'user'|'experiences'|'information'>('company');
   const [toast, setToast] = React.useState<string | null>(null);
@@ -1003,9 +1035,11 @@ export default function SupplierPortalPage() {
         const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status-v2?applicationId=${encodeURIComponent(appId)}`);
         
         if (statusRes.ok) {
-          const statusData = await parseJsonSafe(statusRes);
-          console.log(`[SupplierPortal] Handshake - Mapping Data:`, statusData);
-          if (statusData && statusData.exists) {
+          const fetchedStatus = await parseJsonSafe(statusRes);
+          setStatusData(fetchedStatus);
+          console.log(`[SupplierPortal] Handshake - Mapping Data:`, fetchedStatus);
+          if (fetchedStatus && fetchedStatus.exists) {
+            const statusData = fetchedStatus; // Local ref for logic below
             // Field mapping MUST match n8n version 3 output
             const primaryEmail = statusData.email || statusData.contactEmail || statusData.supplierEmail || '';
             const primaryName = statusData.fullName || statusData.businessName || '';
@@ -1654,7 +1688,7 @@ export default function SupplierPortalPage() {
                   '&:hover': { color: '#010057', bgcolor: 'transparent', textDecoration: 'underline' }
                 }}
               >
-                {authTab === 'login' ? "Don't have an account? Complete Setup" : "Already have an account? Sign In"}
+                {authTab === 'login' ? "Don't have an account? Set up access" : "Already have an account? Sign In"}
               </Button>
             </Box>
           </Box>
@@ -1666,7 +1700,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1120_AUTH_FIX
+              Build: 2026.01.12.1205_FINAL_POLISH
             </Typography>
           </Box>
         </Paper>
@@ -1685,7 +1719,7 @@ export default function SupplierPortalPage() {
       bgcolor: 'rgba(255, 255, 255, 0.25)',
       backgroundImage: 'radial-gradient(circle at 20% 10%, rgba(1, 0, 87, 0.05), transparent 45%), radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 40%)'
     }}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: section !== 'welcome' ? '240px 1fr 220px' : '240px 1fr' }, gap: 2, maxWidth: 1280, mx: 'auto' }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '240px 1fr' }, gap: 3, maxWidth: 1280, mx: 'auto' }}>
         {/* Sidebar */}
         <Paper sx={{ p: 2, borderRadius: 1, height: 'fit-content', position: 'sticky', top: 24, width: { md: 230 }, transition: 'all .3s ease' }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
@@ -1695,40 +1729,57 @@ export default function SupplierPortalPage() {
               style={{ height: 'auto', width: '100%', maxWidth: '200px' }}
             />
           </Box>
-          <Typography variant="subtitle2" sx={{ mb: 1, letterSpacing: '.3px', color: '#777', textAlign: 'left' }}>Navigation</Typography>
-          <List>
-            <ListItemButton selected={section==='welcome'} onClick={() => { setSection('welcome'); setTab(0); setSubsection('resources'); }} sx={{ ...(section==='welcome'?{ bgcolor:'#F0F4F6' }:{} ) }}>
-              <ListItemText primary="Welcome" />
-            </ListItemButton>
-            <ListItemButton selected={section==='company'} onClick={() => { setSection('company'); setTab(0); setSubsection('profile'); }} sx={{ ...(section==='company'?{ bgcolor:'#F0F4F6' }:{} ) }}>
-              <ListItemText primary="Company" />
-            </ListItemButton>
-            <ListItemButton selected={section==='user'} onClick={() => { setSection('user'); setTab(0); setSubsection('user_profile'); }} sx={{ ...(section==='user'?{ bgcolor:'#F0F4F6' }:{} ) }}>
-              <ListItemText primary="User" />
-            </ListItemButton>
-            <ListItemButton selected={section==='experiences'} onClick={() => { setSection('experiences'); setTab(0); setSubsection('overview'); }} sx={{ ...(section==='experiences'?{ bgcolor:'#F0F4F6' }:{} ) }}>
-              <ListItemText primary="Experiences" />
-            </ListItemButton>
-            <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('resources'); }} sx={{ ...(section==='information'?{ bgcolor:'#F0F4F6' }:{} ) }}>
-              <ListItemText primary="Information" />
-            </ListItemButton>
-          </List>
-          <Divider sx={{ my: 2 }} />
-          <Stack direction="row" spacing={1}>
-            <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()}>Refresh</Button>
-            {isLoggedIn ? (
-              <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }}>Log out</Button>
-            ) : (
-              <Button variant="contained" size="small" fullWidth sx={{ bgcolor: '#010057' }} onClick={() => { setHasBegun(false); }}>Sign in</Button>
-            )}
+
+          <Stack spacing={2} sx={{ mb: 2, px: 1 }}>
+            {/* Identity Card */}
+            {/* Identity Card */}
+            {/* Identity Card */}
+            <Stack spacing={0.5} sx={{ mb: 3, pl: 0.5 }}>
+              <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', lineHeight: 1.2 }}>
+                {statusData?.businessName || 'ExperiaHub Partner'}
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', fontWeight: 600 }}>
+                {statusData?.fullName || statusData?.email || 'Guest User'}
+              </Typography>
+              <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#94A3B8', display: 'block' }}>
+                ID: {appId || '—'}
+              </Typography>
+            </Stack>
           </Stack>
-          <Divider sx={{ my: 1.5 }} />
-          <Typography variant="caption" sx={{ color: '#888', mb: 0.5, pl: 1 }}>Resources</Typography>
+          
           <List>
-            <ListItemButton dense component="a" href="https://experiahub.com/supplier-agreement/" target="_blank"><ListItemText primary="Supplier Agreement" /></ListItemButton>
-            <ListItemButton dense component="a" href="https://experiahub.com/suppliers/" target="_blank"><ListItemText primary="Supplier Signup Info" /></ListItemButton>
-            <ListItemButton dense onClick={()=>setSupportOpen(true)}><ListItemText primary="Contact Support" /></ListItemButton>
+            <ListItemButton selected={section==='welcome'} onClick={() => { setSection('welcome'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='welcome'?{ bgcolor:'#F0F4F6' }:{}) }}>
+              <ListItemText primary="Welcome" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='welcome'?700:500 }} />
+            </ListItemButton>
+            <ListItemButton selected={section==='company'} onClick={() => { setSection('company'); setTab(0); setSubsection('profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='company'?{ bgcolor:'#F0F4F6' }:{}) }}>
+              <ListItemText primary="Company" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='company'?700:500 }} />
+            </ListItemButton>
+            <ListItemButton selected={section==='user'} onClick={() => { setSection('user'); setTab(0); setSubsection('user_profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='user'?{ bgcolor:'#F0F4F6' }:{}) }}>
+              <ListItemText primary="User" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='user'?700:500 }} />
+            </ListItemButton>
+            <ListItemButton selected={section==='experiences'} onClick={() => { setSection('experiences'); setTab(0); setSubsection('overview'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='experiences'?{ bgcolor:'#F0F4F6' }:{}) }}>
+              <ListItemText primary="Experiences" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='experiences'?700:500 }} />
+            </ListItemButton>
+            <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='information'?{ bgcolor:'#F0F4F6' }:{}) }}>
+              <ListItemText primary="Information" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='information'?700:500 }} />
+            </ListItemButton>
           </List>
+
+
+          
+
+
+          <Box sx={{ mt: 'auto', pt: 2 }}>
+            <Divider sx={{ mb: 2 }} />
+            <Stack direction="row" spacing={1}>
+              <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 700 }}>Refresh</Button>
+              {isLoggedIn ? (
+                <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 700 }}>Log out</Button>
+              ) : (
+                <Button variant="contained" size="small" fullWidth sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 700 }} onClick={() => { setHasBegun(false); }}>Sign in</Button>
+              )}
+            </Stack>
+          </Box>
         </Paper>
 
         {/* Main content */}
@@ -1754,7 +1805,7 @@ export default function SupplierPortalPage() {
               {sectionLabel}{subsectionLabel ? ` · ${subsectionLabel}` : ''}
             </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="body2" sx={{ color: '#666' }}>App ID: <strong>{appId || '—'}</strong></Typography>
+
               {!isLoggedIn && (
                 <Chip
                   label="Guest Session"
@@ -1777,7 +1828,102 @@ export default function SupplierPortalPage() {
           </Box>
           <Divider sx={{ mt: 1.5, mb: 1.5 }} />
         </Box>
-        {/* Contextual sub-navigation moved to right rail (center segmented removed) */}
+
+        
+        {/* Navigation Tabs */}
+        {section === 'company' && (
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs 
+              value={subsection.startsWith('payouts_') ? 'payouts' : subsection} 
+              onChange={(_, v) => setSubsection(v === 'payouts' ? 'payouts_overview' : v)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
+            >
+              <Tab label="Profile" value="profile" />
+              <Tab label="Billing" value="billing" />
+              <Tab label="Legal" value="legal" />
+              <Tab label="Locations" value="locations" />
+              <Tab label="Payouts" value="payouts" />
+            </Tabs>
+          </Box>
+        )}
+
+        {section === 'user' && (
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs 
+              value={subsection} 
+              onChange={(_, v) => setSubsection(v)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
+            >
+              <Tab label="Profile" value="user_profile" />
+              <Tab label="Security" value="user_security" />
+              <Tab label="API Tokens" value="user_tokens" />
+            </Tabs>
+          </Box>
+        )}
+
+        {section === 'experiences' && (
+          <Box sx={{ mb: 3 }}>
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                 <FormControl size="small" sx={{ minWidth: 240 }}>
+                   <InputLabel id="exp-sel-label" sx={{ fontFamily: 'Nunito, sans-serif' }}>Select Experience</InputLabel>
+                   <Select 
+                    labelId="exp-sel-label" 
+                    label="Select Experience" 
+                    value={selectedExperienceId} 
+                    onChange={(e)=>setSelectedExperienceId(String(e.target.value))} 
+                    sx={{ fontFamily: 'Nunito, sans-serif' }}
+                   >
+                     {activitiesSimple.map((a)=> (
+                        <MenuItem key={a.id} value={a.id} sx={{ fontFamily: 'Nunito, sans-serif' }}>{a.title}</MenuItem>
+                     ))}
+                   </Select>
+                 </FormControl>
+                 {!selectedExperienceId && <Typography variant="caption" color="error">Select an experience to edit.</Typography>}
+            </Stack>
+            {selectedExperienceId && (() => {
+               const c = getSectionChecks();
+               return (
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                  <Tabs 
+                    value={subsection} 
+                    onChange={(_, v) => setSubsection(v)}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
+                  >
+                    <Tab label="Overview" value="overview" />
+                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Details {c.details.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="details" />
+                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Media {mediaOk ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="media" />
+                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Pricing {c.pricing.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="pricing" />
+                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Availability {c.availability.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="availability" />
+                    <Tab label="Policies" value="policies" />
+                    <Tab label="Distribution" value="distribution" />
+                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Validate {c.validation.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : (c.validation.count ? <Typography variant="caption" sx={{color:'warning.main', fontWeight:800}}>{c.validation.count}</Typography> : null)}</Box>} value="validation" />
+                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Sync {c.sync.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="sync" />
+                  </Tabs>
+                </Box>
+               );
+            })()}
+          </Box>
+        )}
+
+        {section === 'information' && (
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs 
+              value={subsection} 
+              onChange={(_, v) => setSubsection(v)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
+            >
+              <Tab label="Resources" value="resources" />
+            </Tabs>
+          </Box>
+        )}
 
         {section === 'welcome' && (
           <Fade in timeout={250}>
@@ -1828,11 +1974,11 @@ export default function SupplierPortalPage() {
         {section === 'company' && subsection === 'profile' && (
           <Fade in timeout={250}>
           <Box>
-            <Alert severity="info" sx={{ mb: 2 }}>Portal ID: <strong>{appId || '—'}</strong></Alert>
+
             {!appId ? (
               <Alert severity="warning">Missing application ID. Please open the signup email link or add <code>?appId=... </code> to the URL.</Alert>
             ) : (
-              <OnboardingForm applicationId={appId} />
+              <OnboardingForm applicationId={appId} initialData={statusData} />
             )}
           </Box>
           </Fade>
@@ -1841,23 +1987,23 @@ export default function SupplierPortalPage() {
         {section === 'company' && subsection.startsWith('payouts_') && (
           <Fade in timeout={250}>
             <Box>
-              <Typography variant="h6" sx={{ mb: 1, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>{subsectionLabel}</Typography>
+              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>{subsectionLabel}</Typography>
               {subsection === 'payouts_overview' && (
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Stack spacing={1.25}>
-                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>
+                <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, borderColor: 'rgba(0,0,0,0.08)' }}>
+                  <Stack spacing={2}>
+                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666', fontSize: '1rem' }}>
                       Connect your payout account to receive earnings. We use Stripe Connect for secure onboarding and payouts.
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <Chip size="small" label={`Status: ${payoutStatus || 'Unknown'}`} color={payoutStatus==='verified'?'success':(payoutStatus==='pending'?'warning':'default')} variant="outlined" />
-                      {stripeAccountId && (<Chip size="small" label={`Acct: ${stripeAccountId}`} variant="outlined" />)}
+                      <Chip size="small" label={`Status: ${payoutStatus || 'Unknown'}`} color={payoutStatus==='verified'?'success':(payoutStatus==='pending'?'warning':'default')} variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif' }} />
+                      {stripeAccountId && (<Chip size="small" label={`Acct: ${stripeAccountId}`} variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif' }} />)}
                     </Stack>
                     <Stack direction="row" spacing={1}>
-                      <Button size="small" variant="outlined" onClick={()=>setSubsection('payouts_connect')}>
+                      <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} onClick={()=>setSubsection('payouts_connect')}>
                         {payoutStatus==='pending' ? 'Resume onboarding' : 'Start onboarding'}
                       </Button>
                       {stripeDashboardUrl && (
-                        <Button size="small" variant="outlined" component="a" href={stripeDashboardUrl} target="_blank" rel="noreferrer">Open Stripe Dashboard</Button>
+                        <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} component="a" href={stripeDashboardUrl} target="_blank" rel="noreferrer">Open Stripe Dashboard</Button>
                       )}
                     </Stack>
                   </Stack>
@@ -1866,13 +2012,14 @@ export default function SupplierPortalPage() {
 
               {subsection === 'payouts_connect' && (
                 <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Stack spacing={1}>
+                  <Stack spacing={2}>
+                    <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Payouts & Onboarding</Typography>
                     <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>
                       Begin Stripe onboarding to add your bank details and business information.
                     </Typography>
                     <Button
                       variant="contained"
-                      sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}
+                      sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3 }}
                       onClick={async ()=>{
                         try {
                           if (!appId) { setToast('Missing application ID'); return; }
@@ -1902,7 +2049,9 @@ export default function SupplierPortalPage() {
           <Fade in timeout={250}>
           <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
+              {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
+                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>Company Billing</Typography>
                 <TextField label="Company name" value={companyBilling.companyName} onChange={(e)=>setCompanyBilling(s=>({ ...s, companyName: e.target.value }))} fullWidth />
                 <TextField label="Billing address" value={companyBilling.address} onChange={(e)=>setCompanyBilling(s=>({ ...s, address: e.target.value }))} fullWidth />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
@@ -1913,7 +2062,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Invoice email" value={companyBilling.invoiceEmail} onChange={(e)=>setCompanyBilling(s=>({ ...s, invoiceEmail: e.target.value }))} fullWidth />
                   <TextField label="Billing currency" value={companyBilling.currency} onChange={(e)=>setCompanyBilling(s=>({ ...s, currency: e.target.value }))} onBlur={(e)=>setCompanyBilling(s=>({ ...s, currency: String(e.target.value||'').toUpperCase() }))} fullWidth />
                 </Stack>
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/billing/save`, {
@@ -1934,7 +2083,9 @@ export default function SupplierPortalPage() {
           <Fade in timeout={250}>
           <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
+              {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
+                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>Legal Entity</Typography>
                 <TextField label="Legal entity name" value={companyLegal.legalName} onChange={(e)=>setCompanyLegal(s=>({ ...s, legalName: e.target.value }))} fullWidth />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Registration number" value={companyLegal.regNumber} onChange={(e)=>setCompanyLegal(s=>({ ...s, regNumber: e.target.value }))} fullWidth />
@@ -1945,7 +2096,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Privacy URL" value={companyLegal.privacyUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, privacyUrl: e.target.value }))} fullWidth />
                 </Stack>
                 <TextField label="Representative" value={companyLegal.representative} onChange={(e)=>setCompanyLegal(s=>({ ...s, representative: e.target.value }))} fullWidth />
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/legal/save`, {
@@ -1967,8 +2118,9 @@ export default function SupplierPortalPage() {
             <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
+                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>Locations</Typography>
                 {companyLocations.map((loc, idx) => (
-                  <Paper key={idx} sx={{ p: 2, borderRadius: 2 }}>
+                  <Box key={idx} sx={{ p: 0, borderRadius: 0 }}>
                     <Stack spacing={1.5}>
                       <TextField label="Location name" value={loc.name} onChange={(e)=>setCompanyLocations(arr=>arr.map((x,i)=>i===idx?{ ...x, name: e.target.value }:x))} fullWidth />
                       <TextField label="Address" value={loc.address} onChange={(e)=>setCompanyLocations(arr=>arr.map((x,i)=>i===idx?{ ...x, address: e.target.value }:x))} fullWidth />
@@ -1978,11 +2130,11 @@ export default function SupplierPortalPage() {
                         <TextField label="Time zone" value={loc.timeZone} onChange={(e)=>setCompanyLocations(arr=>arr.map((x,i)=>i===idx?{ ...x, timeZone: e.target.value }:x))} fullWidth />
                       </Stack>
                     </Stack>
-                  </Paper>
+                  </Box>
                 ))}
                 <Stack direction="row" spacing={1}>
-                  <Button size="small" variant="outlined" onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
-                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
+                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
+                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const res = await fetch(`${N8N_BASE}/supplier/company/locations/save`, {
@@ -2005,9 +2157,10 @@ export default function SupplierPortalPage() {
             <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
-                <TextField label="Display name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} />
-                <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth />
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
+                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>User Profile</Typography>
+                <TextField label="Display name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                <Button variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     if (!userDisplayName.trim()) { setToast('Please enter a display name'); return; }
@@ -2030,11 +2183,12 @@ export default function SupplierPortalPage() {
             <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={2}>
-                <TextField label="Current password" type="password" value={passwordCurrent} onChange={(e)=>setPasswordCurrent(e.target.value)} fullWidth required error={!passwordCurrent.trim()} helperText={!passwordCurrent.trim()?'Required':''} />
-                <TextField label="New password" type="password" value={passwordNew} onChange={(e)=>setPasswordNew(e.target.value)} fullWidth required error={passwordNew.length>0 && passwordNew.length<8} helperText={passwordNew.length>0 && passwordNew.length<8 ? 'Min 8 characters' : ''} />
+                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>Security Settings</Typography>
+                <TextField label="Current password" type="password" value={passwordCurrent} onChange={(e)=>setPasswordCurrent(e.target.value)} fullWidth required error={!passwordCurrent.trim()} helperText={!passwordCurrent.trim()?'Required':''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                <TextField label="New password" type="password" value={passwordNew} onChange={(e)=>setPasswordNew(e.target.value)} fullWidth required error={passwordNew.length>0 && passwordNew.length<8} helperText={passwordNew.length>0 && passwordNew.length<8 ? 'Min 8 characters' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}
+                  sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }}
                   disabled={securitySubmitting}
                   onClick={async ()=>{
                     try {
@@ -2065,17 +2219,17 @@ export default function SupplierPortalPage() {
         {section === 'user' && subsection === 'user_tokens' && (
           <Fade in timeout={250}>
             <Box>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>API Tokens</Typography>
+              <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>API Tokens</Typography>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1}>
                   <TextField size="small" label="Login or Email" value={tokensUser} onChange={(e)=>setTokensUser(e.target.value)} fullWidth />
                   <TextField size="small" label="Current Password" type="password" value={tokensPassword} onChange={(e)=>setTokensPassword(e.target.value)} fullWidth />
-                  <Button size="small" variant="contained" disabled={tokensLoading} onClick={loadTokens}>Load</Button>
+                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
                 </Stack>
 
                 <Stack direction="row" spacing={1} alignItems="center">
                   <TextField size="small" label="Token Name" value={tokenName} onChange={(e)=>setTokenName(e.target.value)} />
-                  <Button size="small" variant="outlined" disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
+                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
                 </Stack>
 
                 {tokensLoading && (<Alert severity="info">Loading tokens…</Alert>)}
@@ -2084,7 +2238,7 @@ export default function SupplierPortalPage() {
                 {apiTokens.map((t)=> (
                   <Stack key={t.uuid} direction="row" spacing={1} alignItems="center">
                     <TextField size="small" value={`${t.name} — ${t.uuid}`} fullWidth />
-                    <Button size="small" disabled={tokenMutating} onClick={()=>deleteToken(t.uuid)}>Remove</Button>
+                    <Button size="small" color="error" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} disabled={tokenMutating} onClick={()=>deleteToken(t.uuid)}>Remove</Button>
                   </Stack>
                 ))}
               </Stack>
@@ -2095,6 +2249,7 @@ export default function SupplierPortalPage() {
         {section === 'experiences' && subsection === 'overview' && (
           <Fade in timeout={250}>
             <Box>
+              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Experience Overview</Typography>
               <Alert severity="info" sx={{ mb: 2 }}>Create draft experiences (title, city, duration). Saving will push to n8n later.</Alert>
             <ActivitiesSkeleton onToast={(m)=>setToast(m)} />
           </Box>
@@ -2104,6 +2259,7 @@ export default function SupplierPortalPage() {
         {section === 'experiences' && subsection === 'media' && (
           <Fade in timeout={250}>
           <Box>
+              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Photos & Video</Typography>
               <Alert severity="info" sx={{ mb: 2 }}>Add Google Drive links for photos/videos, or paste YouTube/Vimeo URLs.</Alert>
               <GridLikeMedia onToast={(m)=>setToast(m)} defaultActivityId={selectedExperienceId} />
           </Box>
@@ -2113,6 +2269,7 @@ export default function SupplierPortalPage() {
         {section === 'experiences' && subsection === 'pricing' && (
           <Fade in timeout={250}>
           <Box>
+            <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Pricing & Rates</Typography>
             <Alert severity="info" sx={{ mb: 2 }}>Add pricing categories and rates. The first row will be used as the base rate for channels that support a single rate.</Alert>
             <Table size="small" sx={{ mb: 1 }}>
               <TableHead>
@@ -2126,10 +2283,10 @@ export default function SupplierPortalPage() {
               <TableBody>
                 {pricingRows.map((r, idx) => (
                   <TableRow key={idx}>
-                    <TableCell><TextField size="small" value={r.category} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, category:e.target.value}:x))} /></TableCell>
-                    <TableCell><TextField size="small" type="number" inputProps={{ min: 0, step: '0.01' }} value={r.amount} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, amount:e.target.value}:x))} /></TableCell>
-                    <TableCell><TextField size="small" value={r.currency} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, currency:e.target.value}:x))} /></TableCell>
-                    <TableCell align="right"><Button size="small" color="error" onClick={()=>setPricingRows(rows=>rows.filter((_,i)=>i!==idx))}>Remove</Button></TableCell>
+                    <TableCell><TextField size="small" value={r.category} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, category:e.target.value}:x))} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} /></TableCell>
+                    <TableCell><TextField size="small" type="number" inputProps={{ min: 0, step: '0.01', style: { fontFamily: 'Nunito, sans-serif' } }} value={r.amount} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, amount:e.target.value}:x))} /></TableCell>
+                    <TableCell><TextField size="small" value={r.currency} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, currency:e.target.value}:x))} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} /></TableCell>
+                    <TableCell align="right"><Button size="small" color="error" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>setPricingRows(rows=>rows.filter((_,i)=>i!==idx))}>Remove</Button></TableCell>
                   </TableRow>
                 ))}
                 {pricingRows.length === 0 && (
@@ -2141,10 +2298,10 @@ export default function SupplierPortalPage() {
               <Alert severity="info" sx={{ mb: 2 }}>Add at least one pricing row (category, amount, currency).</Alert>
             )}
             <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-              <Button size="small" variant="outlined" onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
+              <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
             </Stack>
             <Stack direction="row" spacing={1}>
-              <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
+              <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={async ()=>{
                 const currencies = new Set(pricingRows.map(r=>r.currency).filter(Boolean));
                 if (currencies.size > 1) { setToast('Use a single currency across pricing rows'); return; }
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
@@ -2161,18 +2318,19 @@ export default function SupplierPortalPage() {
         {section === 'experiences' && subsection === 'details' && (
           <Fade in timeout={250}>
           <Stack spacing={2}>
+            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Product Details</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit details.</Alert>)}
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="Title" value={details.title || ''} onChange={(e)=>setDetails(d=>({ ...d, title: e.target.value }))} fullWidth error={showFieldErrors && !String(details.title||'').trim()} helperText={showFieldErrors && !String(details.title||'').trim() ? 'Title is required' : ''} />
+                  <TextField label="Title" value={details.title || ''} onChange={(e)=>setDetails(d=>({ ...d, title: e.target.value }))} fullWidth error={showFieldErrors && !String(details.title||'').trim()} helperText={showFieldErrors && !String(details.title||'').trim() ? 'Title is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <TextField label="Description" value={details.summary || ''} onChange={(e)=>setDetails(d=>({ ...d, summary: e.target.value }))} fullWidth multiline minRows={3} error={showFieldErrors && !String(details.summary||'').trim()} helperText={showFieldErrors && !String(details.summary||'').trim() ? 'Description is required' : ''} />
-                <TextField label="Itinerary (optional)" value={(details as any).itinerary || ''} onChange={(e)=>setDetails(d=>({ ...d, itinerary: e.target.value } as any))} fullWidth multiline minRows={3} />
-                <TextField label="Meeting point (optional)" value={(details as any).meetingPoint || ''} onChange={(e)=>setDetails(d=>({ ...d, meetingPoint: e.target.value } as any))} fullWidth />
+                <TextField label="Description" value={details.summary || ''} onChange={(e)=>setDetails(d=>({ ...d, summary: e.target.value }))} fullWidth multiline minRows={3} error={showFieldErrors && !String(details.summary||'').trim()} helperText={showFieldErrors && !String(details.summary||'').trim() ? 'Description is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                <TextField label="Itinerary (optional)" value={(details as any).itinerary || ''} onChange={(e)=>setDetails(d=>({ ...d, itinerary: e.target.value } as any))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                <TextField label="Meeting point (optional)" value={(details as any).meetingPoint || ''} onChange={(e)=>setDetails(d=>({ ...d, meetingPoint: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="City" value={details.city || ''} onChange={(e)=>setDetails(d=>({ ...d, city: e.target.value }))} fullWidth error={showFieldErrors && !String(details.city||'').trim()} helperText={showFieldErrors && !String(details.city||'').trim() ? 'City is required' : ''} />
-                  <TextField label="Duration (minutes)" type="number" inputProps={{ min: 0, step: 1 }} value={details.durationMinutes || ''} onChange={(e)=>setDetails(d=>({ ...d, durationMinutes: e.target.value }))} fullWidth error={showFieldErrors && !String(details.durationMinutes||'').trim()} helperText={showFieldErrors && !String(details.durationMinutes||'').trim() ? 'Duration is required' : ''} />
+                  <TextField label="City" value={details.city || ''} onChange={(e)=>setDetails(d=>({ ...d, city: e.target.value }))} fullWidth error={showFieldErrors && !String(details.city||'').trim()} helperText={showFieldErrors && !String(details.city||'').trim() ? 'City is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Duration (minutes)" type="number" inputProps={{ min: 0, step: 1, style: { fontFamily: 'Nunito, sans-serif' } }} value={details.durationMinutes || ''} onChange={(e)=>setDetails(d=>({ ...d, durationMinutes: e.target.value }))} fullWidth error={showFieldErrors && !String(details.durationMinutes||'').trim()} helperText={showFieldErrors && !String(details.durationMinutes||'').trim() ? 'Duration is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
                 </Stack>
                 {(() => {
                   const selectedCats = String(details.category || '').split(',').map(s=>s.trim()).filter(Boolean);
@@ -2193,12 +2351,12 @@ export default function SupplierPortalPage() {
                           ))}
                         </Select>
                       </FormControl>
-                      <TextField label="Max participants" type="number" inputProps={{ min: 1, step: 1 }} value={details.maxParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, maxParticipants: e.target.value }))} fullWidth error={showFieldErrors && !String(details.maxParticipants||'').trim()} helperText={showFieldErrors && !String(details.maxParticipants||'').trim() ? 'Capacity is required' : ''} />
-                      <TextField label="Min participants" type="number" inputProps={{ min: 1, step: 1 }} value={details.minParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, minParticipants: e.target.value }))} fullWidth />
+                      <TextField label="Max participants" type="number" inputProps={{ min: 1, step: 1, style: { fontFamily: 'Nunito, sans-serif' } }} value={details.maxParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, maxParticipants: e.target.value }))} fullWidth error={showFieldErrors && !String(details.maxParticipants||'').trim()} helperText={showFieldErrors && !String(details.maxParticipants||'').trim() ? 'Capacity is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
+                      <TextField label="Min participants" type="number" inputProps={{ min: 1, step: 1, style: { fontFamily: 'Nunito, sans-serif' } }} value={details.minParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, minParticipants: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
                     </Stack>
                   );
                 })()}
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={onSaveDetails}>Save Details</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={onSaveDetails}>Save Details</Button>
               </>
             )}
           </Stack>
@@ -2208,16 +2366,17 @@ export default function SupplierPortalPage() {
         {section === 'experiences' && subsection === 'availability' && (
           <Fade in timeout={250}>
           <Stack spacing={2}>
+            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Availability & Schedule</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit availability.</Alert>)}
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="Scheduling mode" value={details.schedulingMode || ''} onChange={(e)=>setDetails(d=>({ ...d, schedulingMode: e.target.value }))} fullWidth error={showFieldErrors && !String(details.schedulingMode||'').trim()} helperText={showFieldErrors && !String(details.schedulingMode||'').trim() ? 'Scheduling mode is required' : ''} />
-                  <TextField label="Start times / hours" value={details.startTimes || ''} onChange={(e)=>setDetails(d=>({ ...d, startTimes: e.target.value }))} fullWidth error={showFieldErrors && !String(details.startTimes||'').trim()} helperText={showFieldErrors && !String(details.startTimes||'').trim() ? 'Start times are required' : ''} />
+                  <TextField label="Scheduling mode" value={details.schedulingMode || ''} onChange={(e)=>setDetails(d=>({ ...d, schedulingMode: e.target.value }))} fullWidth error={showFieldErrors && !String(details.schedulingMode||'').trim()} helperText={showFieldErrors && !String(details.schedulingMode||'').trim() ? 'Scheduling mode is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Start times / hours" value={details.startTimes || ''} onChange={(e)=>setDetails(d=>({ ...d, startTimes: e.target.value }))} fullWidth error={showFieldErrors && !String(details.startTimes||'').trim()} helperText={showFieldErrors && !String(details.startTimes||'').trim() ? 'Start times are required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="Cutoff / Lead time (hours)" value={details.cutoffHours || ''} onChange={(e)=>setDetails(d=>({ ...d, cutoffHours: e.target.value }))} fullWidth error={showFieldErrors && !String((details.cutoffHours||details.bookingLeadTime||'')).trim()} helperText={showFieldErrors && !String((details.cutoffHours||details.bookingLeadTime||'')).trim() ? 'Cutoff/Lead time is required' : ''} />
-                  <TextField label="Max participants" value={details.maxParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, maxParticipants: e.target.value }))} fullWidth error={showFieldErrors && !String(details.maxParticipants||'').trim()} />
+                  <TextField label="Cutoff / Lead time (hours)" value={details.cutoffHours || ''} onChange={(e)=>setDetails(d=>({ ...d, cutoffHours: e.target.value }))} fullWidth error={showFieldErrors && !String((details.cutoffHours||details.bookingLeadTime||'')).trim()} helperText={showFieldErrors && !String((details.cutoffHours||details.bookingLeadTime||'')).trim() ? 'Cutoff/Lead time is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Max participants" value={details.maxParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, maxParticipants: e.target.value }))} fullWidth error={showFieldErrors && !String(details.maxParticipants||'').trim()} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <FormControl fullWidth>
@@ -2226,10 +2385,10 @@ export default function SupplierPortalPage() {
                       {TIME_ZONES.map((tz)=> (<MenuItem key={tz} value={tz}>{tz}</MenuItem>))}
                     </Select>
                   </FormControl>
-                  <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth />
-                  <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth />
+                  <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={onSaveDetails}>Save Availability</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={onSaveDetails}>Save Availability</Button>
               </>
             )}
           </Stack>
@@ -2239,14 +2398,15 @@ export default function SupplierPortalPage() {
         {section === 'experiences' && subsection === 'policies' && (
           <Fade in timeout={250}>
           <Stack spacing={2}>
+            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Policies & Requirements</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit policies.</Alert>)}
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth />
-                  <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth />
+                  <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={onSaveDetails}>Save Policies</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700 }} onClick={onSaveDetails}>Save Policies</Button>
               </>
             )}
           </Stack>
@@ -2256,6 +2416,7 @@ export default function SupplierPortalPage() {
         {section === 'experiences' && subsection === 'distribution' && (
           <Fade in timeout={250}>
           <Stack spacing={2}>
+            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Channel Distribution</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to view distribution.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -2291,7 +2452,7 @@ export default function SupplierPortalPage() {
                       })()}
                     </Box>
                     <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                      <Button size="small" variant="outlined" onClick={() => {
+                      <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} onClick={() => {
                         try {
                           const pre = document.querySelector('[data-preview-payload]') as HTMLElement | null;
                           const text = pre ? pre.innerText : '';
@@ -2300,16 +2461,7 @@ export default function SupplierPortalPage() {
                         } catch { setToast('Copy failed'); }
                       }}>Copy JSON</Button>
                     </Stack>
-                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                      <Button size="small" variant="outlined" onClick={() => {
-                        try {
-                          const pre = document.querySelector('[data-preview-payload]') as HTMLElement | null;
-                          const text = pre ? pre.innerText : '';
-                          navigator.clipboard.writeText(text || '');
-                          alert('Payload copied to clipboard');
-                        } catch {}
-                      }}>Copy JSON</Button>
-                    </Stack>
+
                   </>
                 ); })()}
               </>
@@ -2321,12 +2473,13 @@ export default function SupplierPortalPage() {
         {section === 'experiences' && subsection === 'validation' && (
           <Fade in timeout={250}>
           <Stack spacing={2}>
+            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Data Validation</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to validate.</Alert>)}
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={1} alignItems="center">
-                  <Button variant="outlined" disabled={validating} onClick={runValidation}>{validating ? 'Validating…' : 'Run Validation'}</Button>
-                  <Button variant="outlined" disabled={validating || experiences.length===0} onClick={async ()=>{
+                  <Button variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} disabled={validating} onClick={runValidation}>{validating ? 'Validating…' : 'Run Validation'}</Button>
+                  <Button variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} disabled={validating || experiences.length===0} onClick={async ()=>{
                     const results: Record<string, number> = {} as any;
                     for (const e of experiences) {
                       const issues = await (async ()=>{
@@ -2371,6 +2524,7 @@ export default function SupplierPortalPage() {
         {section === 'experiences' && subsection === 'sync' && (
           <Fade in timeout={250}>
           <Stack spacing={2}>
+            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Channel Sync</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to sync.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -2388,7 +2542,7 @@ export default function SupplierPortalPage() {
                   ) : null; })()}
                 </Stack>
                 <Stack direction="row" spacing={1}>
-                  <Button size="small" variant="outlined" onClick={async ()=>{
+                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)' }} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const a = experiences.find(e=>e.id===selectedExperienceId);
@@ -2400,7 +2554,7 @@ export default function SupplierPortalPage() {
                       setToast(j?.success ? 'Dry-run OK' : (j?.error || 'Dry-run failed'));
                     } catch (e:any) { setToast(e?.message||'Dry-run failed'); }
                   }}>Dry-run</Button>
-                  <Button size="small" variant="outlined" onClick={async ()=>{
+                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)' }} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const a = experiences.find(e=>e.id===selectedExperienceId);
@@ -2435,118 +2589,25 @@ export default function SupplierPortalPage() {
 
         {section === 'user' && (
           <Stack spacing={2}>
-            <Alert severity="info">Choose a background image for your portal (per-user).</Alert>
-            <Stack direction={{ xs:'column', sm:'row' }} spacing={1} alignItems={{ xs:'stretch', sm:'center' }}>
-              <TextField
-                size="small"
-                label="Search photos"
-                value={bgSearch}
-                onChange={(e)=>{
-                  const v = e.target.value;
-                  setBgSearch(v);
-                  if (!v.trim()) { setBgResults([]); setBgPage(1); setBgSeed((s)=>s+1); }
-                }}
-                fullWidth
-                InputProps={{
-                  endAdornment: bgSearch ? (
-                    <IconButton size="small" aria-label="Clear" onClick={()=>{ setBgSearch(''); setBgResults([]); setBgPage(1); setBgSeed((s)=>s+1); }}>
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  ) : null
-                }}
-              />
-              <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} onClick={async ()=>{
-                try {
-                  setBgLoading(true);
-                  const results = await searchUnsplash(bgSearch.trim(), 1, 30);
-                  setBgResults(Array.isArray(results) ? results : []);
-                  setBgPage(1);
-                } catch {
-                  setBgResults([]);
-                } finally { setBgLoading(false); }
-              }}>Search</Button>
-              <Button size="small" onClick={()=>{ setBgSearch(''); setBgResults([]); setBgSeed((s)=>s+1); }}>Clear</Button>
-            </Stack>
-            <Box
-              sx={{ display:'grid', gridTemplateColumns: { xs:'1fr 1fr', sm:'repeat(3, 1fr)' }, gap: 1, maxHeight: 460, overflowY: 'auto' }}
-              onScroll={async (e:any)=>{
-                try {
-                  if (bgLoadingMore) return;
-                  const el = e.currentTarget as HTMLElement;
-                  const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 48;
-                  if (!nearBottom) return;
-                  setBgLoadingMore(true);
-                  const next = bgPage + 1;
-                  const more = bgSearch.trim() ? await searchUnsplash(bgSearch.trim(), next, 30) : [];
-                  const existing = new Set((bgResults||[]).map((x:any)=>x?.id));
-                  const merged = [...bgResults, ...more.filter((x:any)=> !existing.has(x?.id))];
-                  setBgResults(merged);
-                  setBgPage(next);
-                } finally { setBgLoadingMore(false); }
-              }}
-            >
-                {(!bgSearch.trim() && bgResults.length === 0 ? getCuratedBackgrounds().slice().sort(()=>Math.random()-0.5) : []).map((p, idx)=> (
-                  <Paper key={`cur_${idx}`} sx={{ p: 1, borderRadius: 2, overflow: 'hidden' }}>
-                    <Box
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Use curated background"
-                      sx={{ position:'relative', pb: '66%', borderRadius: 1, overflow:'hidden', background:'#e9eef2', cursor: 'pointer' }}
-                      onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
-                      onClick={async ()=>{
-                      const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-                      const next = { url: p.url, thumbUrl: p.thumbUrl } as PortalBackground;
-                      setBg(next);
-                      prefetchBackgroundImage(p.url);
-                      saveCachedBackground(next, 'user');
-                      try { await setUserBackground(token, next); } catch {}
-                      try { trackBackgroundChange('supplier', next); } catch {}
-                      setToast('Background updated');
-                    }}
-                    >
-                    <img src={p.thumbUrl || p.url} alt="" loading="lazy" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', background:'#e9eef2' }} />
-                    </Box>
-                  </Paper>
-                ))}
-                {bgResults.map((p:any)=>{
-                  const id = p?.id;
-                  const authorName = p?.user?.name || '';
-                  const authorUrl = p?.user?.links?.html || p?.user?.portfolio_url || '';
-                      const url = p?.urls?.full || p?.urls?.regular || '';
-                  const thumb = p?.urls?.small || p?.urls?.thumb || '';
-                  return (
-                    <Paper key={id} sx={{ p: 1, borderRadius: 2, overflow: 'hidden' }}>
-                      <Box sx={{ position:'relative', pb: '66%', borderRadius: 1, overflow:'hidden', background:'#e9eef2' }}>
-                        <img src={thumb} alt={`Unsplash: ${p?.alt_description || authorName || 'photo'}`} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }} />
-                      </Box>
-                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                        <Button size="small" variant="outlined" aria-label={`Use image by ${authorName || 'author'}`} onClick={async ()=>{
-                          const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-                          const next = { id, url, thumbUrl: thumb, authorName, authorUrl } as PortalBackground;
-                          setBg(next);
-                          prefetchBackgroundImage(url);
-                          saveCachedBackground(next, 'user');
-                          try { await trackDownload(id); } catch (e) { console.warn('unsplash track failed', e); }
-                          try { await setUserBackground(token, next); } catch {}
-                          try { trackBackgroundChange('supplier', next); } catch {}
-                          setToast('Background updated');
-                        }}>Use</Button>
-                      </Stack>
-                    </Paper>
-                  );
-                })}
-            </Box>
-            {(bgLoading || bgLoadingMore) && (<Skeleton variant="rectangular" height={80} />)}
-            <Stack direction="row" spacing={1}>
-              <Button size="small" color="error" variant="outlined" onClick={async ()=>{
-                const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-                setBg(null);
-                saveCachedBackground(null, 'user');
-                try { await setUserBackground(token, null); } catch {}
-                try { trackBackgroundRemove('supplier'); } catch {}
+            <Alert severity="info" icon={<WallpaperIcon />}>
+              To customize your portal background, use the <strong>Wallpaper Button</strong> in the bottom-right corner of the screen.
+            </Alert>
+            {bg && (
+              <Paper sx={{ p: 2, borderRadius: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontFamily: 'Nunito, sans-serif' }}>Current Background</Typography>
+                <Box sx={{ position: 'relative', pb: '40%', borderRadius: 1, overflow: 'hidden', bgcolor: '#e0e0e0' }}>
+                  <img src={bg.url} alt="Background" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                </Box>
+                {bg.authorName && <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#666' }}>Photo by {bg.authorName} on Unsplash</Typography>}
+              </Paper>
+            )}
+            <Button color="error" variant="outlined" disabled={!bg} onClick={async ()=>{
+                const token = AuthService.getToken();
+                setBg(null); saveCachedBackground(null, 'supplier');
+                try { await setUserBackground(token, null as any); } catch {}
+                try {trackBackgroundRemove('supplier');} catch {}
                 setToast('Background removed');
-              }}>Remove Background</Button>
-            </Stack>
+            }}>Remove Background</Button>
           </Stack>
         )}
 
@@ -2555,10 +2616,11 @@ export default function SupplierPortalPage() {
             {subsection === 'resources' && (
               <>
                 {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
+                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Information & Resources</Typography>
                 <List>
-                  <ListItemButton dense component="a" href="https://experiahub.com/supplier-agreement/" target="_blank"><ListItemText primary="Supplier Agreement" /></ListItemButton>
-                  <ListItemButton dense component="a" href="https://experiahub.com/suppliers/" target="_blank"><ListItemText primary="Supplier Signup Info" /></ListItemButton>
-                  <ListItemButton dense onClick={()=>setSupportOpen(true)}><ListItemText primary="Contact Support" /></ListItemButton>
+                  <ListItemButton dense component="a" href="https://experiahub.com/supplier-agreement/" target="_blank"><ListItemText primary="Supplier Agreement" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', color: '#334155' }} /></ListItemButton>
+                  <ListItemButton dense component="a" href="https://experiahub.com/suppliers/" target="_blank"><ListItemText primary="Supplier Signup Info" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', color: '#334155' }} /></ListItemButton>
+                  <ListItemButton dense onClick={()=>setSupportOpen(true)}><ListItemText primary="Contact Support" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', color: '#334155' }} /></ListItemButton>
                 </List>
               </>
             )}
@@ -2569,72 +2631,153 @@ export default function SupplierPortalPage() {
         )}
         </Paper>
         {/* Right rail */}
-        {section !== 'welcome' && (
-        <Paper sx={{ p: 2, borderRadius: 1, height: 'fit-content', position: 'sticky', top: 24, display: { xs: 'none', md: 'block' }, transition: 'all .3s ease' }}>
-          {section === 'company' && (
-            <List>
-              <ListItemButton selected={subsection==='profile'} onClick={()=>setSubsection('profile')}><ListItemText primary="Profile" /></ListItemButton>
-              <ListItemButton selected={subsection==='billing'} onClick={()=>setSubsection('billing')}><ListItemText primary="Billing" /></ListItemButton>
-              <ListItemButton selected={subsection==='legal'} onClick={()=>setSubsection('legal')}><ListItemText primary="Legal" /></ListItemButton>
-              <ListItemButton selected={subsection==='locations'} onClick={()=>setSubsection('locations')}><ListItemText primary="Locations" /></ListItemButton>
-              <ListItemButton selected={subsection.startsWith('payouts_')} onClick={()=>setSubsection('payouts_overview')}><ListItemText primary="Payouts" /></ListItemButton>
-            </List>
-          )}
-          {section === 'user' && (
-            <List>
-              <ListItemButton selected={subsection==='user_profile'} onClick={()=>setSubsection('user_profile')}><ListItemText primary="Profile" /></ListItemButton>
-              <ListItemButton selected={subsection==='user_security'} onClick={()=>setSubsection('user_security')}><ListItemText primary="Security" /></ListItemButton>
-            </List>
-          )}
-          {section === 'experiences' && (
-            <>
-              <FormControl size="small" fullWidth sx={{ mb: 1.5 }}>
-                <InputLabel id="exp-select-label">Selected Experience</InputLabel>
-                <Select labelId="exp-select-label" label="Selected Experience" value={selectedExperienceId} onChange={(e)=>setSelectedExperienceId(String(e.target.value))}>
-                  {activitiesSimple.map((a)=> (<MenuItem key={a.id} value={a.id}>{a.title}</MenuItem>))}
-                </Select>
-              </FormControl>
-              <List>
-                {(() => { const c = getSectionChecks(); return (
-                  <>
-                    <ListItemButton selected={subsection==='overview'} onClick={()=>setSubsection('overview')}><ListItemText primary="Overview" /></ListItemButton>
-                    <ListItemButton selected={subsection==='details'} onClick={()=>setSubsection('details')}>
-                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Details {c.details.ok ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label="Need" color="warning"/>}</Box>} />
-                    </ListItemButton>
-                    <ListItemButton selected={subsection==='media'} onClick={()=>setSubsection('media')}>
-                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Media {mediaOk ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label="Need" color="warning"/>}</Box>} />
-                    </ListItemButton>
-                    <ListItemButton selected={subsection==='pricing'} onClick={()=>setSubsection('pricing')}>
-                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Pricing {c.pricing.ok ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label="Need" color="warning"/>}</Box>} />
-                    </ListItemButton>
-                    <ListItemButton selected={subsection==='availability'} onClick={()=>setSubsection('availability')}>
-                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Availability {c.availability.ok ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label="Need" color="warning"/>}</Box>} />
-                    </ListItemButton>
-                    <ListItemButton selected={subsection==='policies'} onClick={()=>setSubsection('policies')}><ListItemText primary="Policies" /></ListItemButton>
-                    <ListItemButton selected={subsection==='distribution'} onClick={()=>setSubsection('distribution')}>
-                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Distribution {experiences.find(e=>e.id===selectedExperienceId)?.bokunProductId ? <Chip size="small" label="Linked" color="success"/> : <Chip size="small" label="Unlinked" color="default"/>}</Box>} />
-                    </ListItemButton>
-                    <ListItemButton selected={subsection==='validation'} onClick={()=>setSubsection('validation')}>
-                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Validation {c.validation.ok ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label={`${c.validation.count||0}`} color="warning"/>}</Box>} />
-                    </ListItemButton>
-                    <ListItemButton selected={subsection==='sync'} onClick={()=>setSubsection('sync')}>
-                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Sync {c.sync.ok ? <Chip size="small" label="Done" color="success"/> : <Chip size="small" label="Pending" color="default"/>}</Box>} />
-                    </ListItemButton>
-                  </>
-                ); })()}
-              </List>
-            </>
-          )}
-          {section === 'information' && (
-            <List>
-              <ListItemButton selected={subsection==='resources'} onClick={()=>setSubsection('resources')}><ListItemText primary="Resources" /></ListItemButton>
-            </List>
-        )}
-        </Paper>
-        )}
+
         <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)} message={toast || ''} />
       </Box>
       <SupportDialog open={supportOpen} onClose={()=>setSupportOpen(false)} defaultRole={'supplier'} appId={appId} />
+      
+      <Popover
+          open={Boolean(bgAnchorEl)}
+          anchorEl={bgAnchorEl}
+          onClose={() => { setBgAnchorEl(null); setBgSeed(0); }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Paper
+            sx={{ p: 2, width: 360, maxHeight: 420, overflowY: 'auto' }}
+            onScroll={async (e:any)=>{
+              try {
+                if (!bgSearch.trim() || bgLoadingMore) return;
+                const el = e.currentTarget as HTMLElement;
+                const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 48;
+                if (!nearBottom) return;
+                setBgLoadingMore(true);
+                const next = bgPage + 1;
+                const more = await searchUnsplash(bgSearch.trim(), next, 30);
+                const existing = new Set((bgResults||[]).map((x:any)=>x?.id));
+                const merged = [...bgResults, ...more.filter((x:any)=> !existing.has(x?.id))];
+                setBgResults(merged);
+                setBgPage(next);
+              } finally { setBgLoadingMore(false); }
+            }}
+          >
+            <Stack spacing={1}>
+              <Stack direction="row" spacing={1}>
+                <TextField
+                  size="small"
+                  label="Search photos"
+                  value={bgSearch}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setBgSearch(v);
+                    if (!v.trim()) { setBgResults([]); setBgPage(1); setBgSeed(s => s + 1); }
+                  }}
+                  fullWidth
+                  InputProps={{
+                    endAdornment: bgSearch ? (
+                      <IconButton size="small" aria-label="Clear" onClick={() => { setBgSearch(''); setBgResults([]); setBgPage(1); setBgSeed(s => s + 1); }}>
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    ) : null
+                  }}
+                  onKeyDown={async (e) => { if (e.key === 'Enter') { 
+                    try {
+                      setBgLoading(true);
+                      const results = await searchUnsplash(bgSearch.trim(), 1, 30);
+                      setBgResults(Array.isArray(results)?results:[]);
+                      setBgPage(1);
+                    } finally { setBgLoading(false); }
+                  }}}
+                />
+                <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 700 }} onClick={async ()=>{
+                  try {
+                    setBgLoading(true);
+                    const results = await searchUnsplash(bgSearch.trim(), 1, 30);
+                    setBgResults(Array.isArray(results)?results:[]);
+                    setBgPage(1);
+                  } finally { setBgLoading(false); }
+                }}>Go</Button>
+              </Stack>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
+                {/* Fallback to Curated if NO results */}
+                {(!bgSearch.trim() && bgResults.length === 0 ? getCuratedBackgrounds().slice().sort(()=>Math.random()-0.5) : []).map((p, idx)=> (
+                  <Box
+                    key={`cur_${idx}`}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Use curated background"
+                    sx={{ cursor: 'pointer', borderRadius: 1, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
+                    onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
+                    onClick={async () => {
+                      const token = AuthService.getToken();
+                      const next = { url: p.url, thumbUrl: p.thumbUrl } as PortalBackground;
+                      setBg(next);
+                      prefetchBackgroundImage(p.url);
+                      saveCachedBackground(next, 'supplier');
+                      try { await setUserBackground(token, next); } catch {}
+                      try {trackBackgroundChange('supplier', next);} catch {}
+                      setBgAnchorEl(null);
+                    }}
+                  >
+                    <img src={p.thumbUrl || p.url} alt="" loading="lazy" style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block', background:'#e9eef2' }} />
+                  </Box>
+                ))}
+                {bgResults.map((p:any)=>{
+                  const id = p?.id; const url = p?.urls?.full || p?.urls?.regular || ''; const thumb = p?.urls?.small || p?.urls?.thumb || '';
+                  const authorName = p?.user?.name || ''; const authorUrl = p?.user?.links?.html || p?.user?.portfolio_url || '';
+                  return (
+                    <Box
+                      key={id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Use image by ${authorName || 'author'}`}
+                      sx={{ cursor: 'pointer', borderRadius: 1, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
+                      onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
+                      onClick={async ()=>{
+                        const token = AuthService.getToken();
+                        const next = { id, url, thumbUrl: thumb, authorName, authorUrl } as PortalBackground;
+                        setBg(next);
+                        prefetchBackgroundImage(url);
+                        saveCachedBackground(next, 'supplier');
+                        try { await trackDownload(id); } catch (e) { console.warn('unsplash track failed', e); }
+                        try { await setUserBackground(token, next); } catch {}
+                        try {trackBackgroundChange('supplier', next);} catch {}
+                        setBgAnchorEl(null);
+                      }}
+                    >
+                      <img src={thumb} alt={`Unsplash: ${p?.alt_description || authorName || 'photo'}`} style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }} />
+                    </Box>
+                  );
+                })}
+
+              </Box>
+              {(bgLoading || bgLoadingMore) && (<Skeleton variant="rectangular" height={60} />)}
+              <Button size="small" color="error" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} onClick={async ()=>{
+                const token = AuthService.getToken();
+                setBg(null); saveCachedBackground(null, 'supplier');
+                try { await setUserBackground(token, null as any); } catch {}
+                try {trackBackgroundRemove('supplier');} catch {}
+                setBgAnchorEl(null);
+              }}>Remove Background</Button>
+            </Stack>
+          </Paper>
+        </Popover>
+        <Fab
+          color="primary"
+          aria-label="Contact support"
+          onClick={()=>setSupportOpen(true)}
+          sx={{ position: 'fixed', right: 20, bottom: 24, zIndex: 2000, bgcolor: 'rgba(74,124,140,0.9)', '&:hover': { bgcolor: 'rgba(74,124,140,1)' } }}
+        >
+          <SupportAgentIcon />
+        </Fab>
+        <Fab
+          color="default"
+          aria-label="Background"
+          onClick={(e)=>{ setBgSeed((s)=>s+1); setBgAnchorEl(e.currentTarget); }}
+          sx={{ position: 'fixed', right: 20, bottom: 92, zIndex: 2000, bgcolor: 'rgba(255,255,255,0.9)', color: '#4a7c8c' }}
+        >
+          <WallpaperIcon />
+        </Fab>
     </Box>
     </BackgroundImage>
   );
