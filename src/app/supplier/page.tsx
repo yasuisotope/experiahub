@@ -27,7 +27,12 @@ import BackgroundImage from '@/components/BackgroundImage';
 import { getUserBackground, setUserBackground, searchUnsplash, trackDownload, loadCachedBackground, saveCachedBackground, getCuratedBackgrounds, prefetchBackgroundImage, type PortalBackground } from '@/services/backgroundService';
 import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
 
-const N8N_BASE = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
+const getBaseUrl = () => {
+  const envUrl = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
+  if (envUrl.includes('/webhook')) return envUrl;
+  return `${envUrl.replace(/\/$/, '')}/webhook`;
+};
+const N8N_BASE = getBaseUrl();
 // Removed exposed TOKENS_API_KEY. Now handled in /api/supplier/tokens
 
 function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) => void; defaultActivityId?: string }) {
@@ -1123,11 +1128,12 @@ export default function SupplierPortalPage() {
                 <Typography variant="h2" sx={{ 
                   color: '#010057', 
                   fontFamily: 'Agrandir, serif', 
-                  fontWeight: 700, 
+                  fontWeight: 800, 
                   mb: 2,
-                  fontSize: { xs: '2.5rem', md: '3.5rem' }
+                  fontSize: { xs: '2.5rem', md: '3.8rem' },
+                  letterSpacing: '-0.02em'
                 }}>
-                  {companyBilling.companyName ? `Welcome, ${companyBilling.companyName}` : (appId ? `Welcome: ${appId}` : 'Welcome to the Portfolio')}
+                  {companyBilling.companyName ? `Welcome, ${companyBilling.companyName}` : 'Welcome to the Portfolio'}
                 </Typography>
                 <Typography variant="h6" sx={{ 
                   color: '#475569', 
@@ -1164,22 +1170,21 @@ export default function SupplierPortalPage() {
                     variant="contained" 
                     size="large"
                     sx={{ 
-                      bgcolor: '#C5A059', // Changed to Gold for the primary CTA
+                      bgcolor: '#010057', 
                       color: '#fff', 
                       px: 8, 
-                      py: 2.5, 
+                      py: 2.2, 
                       borderRadius: '4px',
-                      fontSize: '1.2rem',
+                      fontSize: '1.1rem',
                       fontWeight: 700,
                       fontFamily: 'Agrandir, serif',
-                      textTransform: 'uppercase', // More premium look
-                      letterSpacing: '1px',
-                      boxShadow: '0 10px 30px rgba(197, 160, 89, 0.3)',
-                      transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                      textTransform: 'none',
+                      boxShadow: '0 10px 30px rgba(1, 0, 87, 0.2)',
+                      transition: 'all 0.4s ease',
                       width: { xs: '100%', sm: 'auto' },
                       '&:hover': { 
-                        bgcolor: '#010057', // Flip to Dark Blue on hover
-                        transform: 'translateY(-3px)', 
+                        bgcolor: '#0A0A8E',
+                        transform: 'translateY(-2px)', 
                         boxShadow: '0 15px 35px rgba(1, 0, 87, 0.3)' 
                       },
                     }}
@@ -1318,7 +1323,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.5 }}>
-              Build: 2026.01.11.2205 | Trace: {appId || 'NONE'}
+              Build: 2026.01.12.0810 | Trace: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
