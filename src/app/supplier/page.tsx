@@ -1031,6 +1031,10 @@ export default function SupplierPortalPage() {
                 ? [{ ...prev[0], city: statusData.city, country: statusData.country || prev[0].country }]
                 : prev);
             }
+            if (statusData.businessName) {
+              const safeUser = statusData.businessName.replace(/[^a-zA-Z0-9]/g, '');
+              setSuUsername(safeUser);
+            }
           } else {
             console.warn(`[SupplierPortal] No Supabase record found for ID: ${appId}`);
             setSuEmail("ID Not Found"); // Visual feedback
@@ -1568,7 +1572,7 @@ export default function SupplierPortalPage() {
                { step: '03', title: 'Portfolio Sync', desc: 'Connect inventory.' },
             ].map((item, i) => (
               <Grid item xs={12} sm={4} key={i} sx={{ display: 'flex' }}>
-                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'rgba(255,255,255,0.6)', borderRadius: '0 4px 4px 0', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'transparent', borderRadius: '0 4px 4px 0', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
                   <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
                   <Typography variant="subtitle2" sx={{ color: '#010057', fontWeight: 700, lineHeight: 1.2 }}>{item.title}</Typography>
                   <Typography variant="caption" sx={{ color: '#64748B', lineHeight: 1.1 }}>{item.desc}</Typography>
@@ -1662,7 +1666,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1100_REAL_FIX
+              Build: 2026.01.12.1110_UI_TWEAKS
             </Typography>
           </Box>
         </Paper>
