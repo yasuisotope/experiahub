@@ -798,6 +798,13 @@ export default function SupplierPortalPage() {
   const [showAuth, setShowAuth] = React.useState(false);
   const [authTab, setAuthTab] = React.useState<'login' | 'signup'>('login');
   const [username, setUsername] = React.useState('');
+  
+  // Force 'signup' tab if we have an appId (Onboarding Flow)
+  React.useEffect(() => {
+    if (appId && !isLoggedIn) {
+      setAuthTab('signup');
+    }
+  }, [appId, isLoggedIn]);
   const [password, setPassword] = React.useState('');
   const [suUsername, setSuUsername] = React.useState('');
   const [suEmail, setSuEmail] = React.useState('');
@@ -1514,7 +1521,7 @@ export default function SupplierPortalPage() {
           zIndex: -1
         }
       }}>
-      <Container maxWidth="md">
+      <Container maxWidth="sm">
         <Paper elevation={0} sx={{
           p: { xs: 4, md: 6 },
           borderRadius: 4,
@@ -1525,17 +1532,18 @@ export default function SupplierPortalPage() {
           textAlign: 'center',
           transition: 'all 0.4s ease-in-out',
         }}>
-          <Typography variant="overline" sx={{ color: '#4A7C8C', fontWeight: 700, letterSpacing: 3, mb: 1, display: 'block' }}>
-            {authTab === 'login' ? 'PARTNER LOGIN' : 'PARTNERSHIP APPROVED'}
+          <Typography variant="overline" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 3, mb: 2, display: 'block' }}>
+            {authTab === 'login' ? 'PARTNER PORTAL' : 'PARTNERSHIP APPROVED'}
           </Typography>
           
           <Typography variant="h3" sx={{ 
             color: '#010057', 
             fontFamily: 'Agrandir, serif', 
             fontWeight: 800, 
-            mb: 1,
+            mb: 2,
             fontSize: { xs: '2rem', md: '2.5rem' },
-            letterSpacing: '-0.02em'
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1
           }}>
             {authTab === 'login' ? 'Welcome Back' : (companyBilling.companyName || 'Welcome to the Portfolio')}
           </Typography>
@@ -1546,17 +1554,15 @@ export default function SupplierPortalPage() {
               : 'Finalize your credentials to activate your supplier access.'}
           </Typography>
 
-          {authError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{authError}</Alert>}
-
-          {/* Steps Grid - Restored for Context */}
-          <Grid container spacing={2} sx={{ mb: 4, textAlign: 'left', display: { xs: 'none', md: 'flex' } }}>
+          {/* Steps Grid - Always Visible for Context */}
+          <Grid container spacing={2} sx={{ mb: 4, textAlign: 'left', px: 2 }}>
             {[
                { step: '01', title: 'Secure Access', desc: 'Create partner login.' },
                { step: '02', title: 'Direct Profile', desc: 'Verify business details.' },
                { step: '03', title: 'Portfolio Sync', desc: 'Connect inventory.' },
             ].map((item, i) => (
-              <Grid item xs={12} md={4} key={i}>
-                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'rgba(255,255,255,0.5)', borderRadius: '0 4px 4px 0' }}>
+              <Grid item xs={12} sm={4} key={i}>
+                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'rgba(255,255,255,0.6)', borderRadius: '0 4px 4px 0' }}>
                   <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
                   <Typography variant="subtitle2" sx={{ color: '#010057', fontWeight: 700, lineHeight: 1.2 }}>{item.title}</Typography>
                   <Typography variant="caption" sx={{ color: '#64748B', lineHeight: 1.1 }}>{item.desc}</Typography>
