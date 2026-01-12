@@ -917,6 +917,7 @@ export default function SupplierPortalPage() {
   const [autoSaving, setAutoSaving] = React.useState<boolean>(false);
   const autoSaveTimerRef = React.useRef<any>(null);
   const [mediaOk, setMediaOk] = React.useState<boolean>(false);
+  const [showForm, setShowForm] = React.useState<boolean>(false);
   
   // User forms placeholders
   const [userDisplayName, setUserDisplayName] = React.useState<string>('');
@@ -1094,258 +1095,7 @@ export default function SupplierPortalPage() {
 
   const heroImage = '/images/supplier-hero.png';
 
-  const loadingView = (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
-      <Stack spacing={2} alignItems="center">
-        <CircularProgress sx={{ color: '#C5A059' }} />
-        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
-      </Stack>
-    </Box>
-  );
-
-  const LoggedOutView = () => {
-    return (
-      <Box sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-      overflow: 'hidden',
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0, left: 0, right: 0, bottom: 0,
-        backgroundImage: `url(${heroImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        filter: 'brightness(0.75) saturate(1.1)',
-        zIndex: -1
-      }
-    }}>
-      <Container maxWidth="md">
-        <Paper elevation={0} sx={{
-          p: { xs: 4, md: 6 },
-          borderRadius: 4,
-          bgcolor: 'rgba(255, 255, 255, 0.85)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          textAlign: 'center',
-          transition: 'all 0.4s ease-in-out',
-          minHeight: showAuth ? '550px' : 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
-        }}>
-          {!showAuth ? (
-            <Fade in={!showAuth}>
-              <Box>
-                <Typography variant="overline" sx={{ color: '#4A7C8C', fontWeight: 700, letterSpacing: 3, mb: 1, display: 'block' }}>
-                  PARTNERSHIP APPROVED
-                </Typography>
-                <Typography variant="h2" sx={{ 
-                  color: '#010057', 
-                  fontFamily: 'Agrandir, serif', 
-                  fontWeight: 800, 
-                  mb: 2,
-                  fontSize: { xs: '2.5rem', md: '3.8rem' },
-                  letterSpacing: '-0.02em'
-                }}>
-                  {companyBilling.companyName ? `Welcome, ${companyBilling.companyName}` : 'Welcome to the Portfolio'}
-                </Typography>
-                <Grid container spacing={4} sx={{ mb: 6, textAlign: 'left' }}>
-                  {[
-                    { step: '01', title: 'Secure Access', desc: 'Create your partner login credentials.' },
-                    { step: '02', title: 'Direct Profile', desc: 'Verify business details and compliance.' },
-                    { step: '03', title: 'Portfolio Sync', desc: 'Connect your inventory or upload experiences.' },
-                  ].map((item, i) => (
-                    <Grid item xs={12} md={4} key={i}>
-                      <Box sx={{ 
-                        p: 3, 
-                        borderLeft: '2px solid #C5A059',
-                        transition: 'all 0.3s ease',
-                        '&:hover': { bgcolor: 'rgba(255,255,255,0.05)', transform: 'translateY(-2px)' }
-                        }}>
-                        <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1 }}>STEP {item.step}</Typography>
-                        <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 0.5 }}>{item.title}</Typography>
-                        <Typography variant="body2" sx={{ color: '#90A4AE', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-
-                <Stack spacing={3} alignItems="center">
-                  <Button 
-                    onClick={() => setShowForm(true)}
-                    variant="contained" 
-                    size="large"
-                    sx={{ 
-                      bgcolor: '#fff', 
-                      color: '#010057', 
-                      px: 8, 
-                      py: 2,
-                      fontSize: '1.1rem',
-                      fontWeight: 700,
-                      textTransform: 'none',
-                      fontFamily: 'Agrandir, serif',
-                      '&:hover': { bgcolor: '#C5A059', color: '#fff' }
-                    }}
-                  >
-                    Begin Onboarding
-                  </Button>
-                  
-                  <Button 
-                    component="a" 
-                    href="/login" 
-                    sx={{ 
-                      color: '#B0BEC5', 
-                      fontWeight: 600, 
-                      textTransform: 'none', 
-                      '&:hover': { color: '#fff' } 
-                    }}
-                  >
-                    Already have an account? Sign In
-                  </Button>
-                </Stack>
-                </Stack>
-              </Box>
-            ) : (
-              <Box sx={{ maxWidth: 400, mx: 'auto', width: '100%' }}>
-                <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 1 }}>
-                  {authTab === 'login' ? 'Partner Login' : 'Finalize Your Access'}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
-                  {authTab === 'login' 
-                    ? 'Enter your credentials to access your dashboard.' 
-                    : 'Set up your secure portal credentials to complete approval.'}
-                </Typography>
-                {appId && (
-                  <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2, fontStyle: 'italic' }}>
-                    Portal ID: {appId}
-                  </Typography>
-                )}
-
-                {authError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{authError}</Alert>}
-
-                <Box component="form" onSubmit={authTab === 'login' ? handleLoginSubmit : handleSignupSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                  {authTab === 'signup' && (
-                    <TextField 
-                      fullWidth label="Choose Username" variant="outlined" 
-                      value={suUsername} onChange={(e) => setSuUsername(e.target.value)}
-                      required disabled={authLoading}
-                    />
-                  )}
-                  <TextField 
-                    fullWidth label={authTab === 'login' ? "Username or Email" : "Email Address"} 
-                    variant="outlined" 
-                    value={authTab === 'login' ? username : suEmail}
-                    onChange={(e) => authTab === 'login' ? setUsername(e.target.value) : setSuEmail(e.target.value)}
-                    required disabled={authLoading}
-                  />
-                  <TextField 
-                    fullWidth label="Pick a Password" type="password" variant="outlined" 
-                    value={authTab === 'login' ? password : suPassword}
-                    onChange={(e) => authTab === 'login' ? setPassword(e.target.value) : setSuPassword(e.target.value)}
-                    required disabled={authLoading}
-                  />
-                  
-                  <Button 
-                    type="submit" 
-                    variant="contained" 
-                    size="large"
-                    disabled={authLoading}
-                    sx={{ 
-                      bgcolor: '#010057', // DARK BLUE
-                      color: '#fff',
-                      py: 2, 
-                      borderRadius: '4px',
-                      fontWeight: 700,
-                      fontSize: '1.1rem',
-                      mt: 1,
-                      fontFamily: 'Agrandir, serif',
-                      textTransform: 'none', // FIXED: Removed Uppercase
-                      letterSpacing: '1px',
-                      transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                      '&:hover': { 
-                        bgcolor: '#C5A059', // GOLD
-                        boxShadow: '0 10px 30px rgba(197, 160, 89, 0.3)',
-                        transform: 'translateY(-2px)'
-                      }
-                    }}
-                  >
-                    {authLoading ? <CircularProgress size={26} color="inherit" /> : (authTab === 'login' ? 'Enter Portal' : 'Finalize Approval')}
-                  </Button>
-
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Button 
-                      variant="text" 
-                      onClick={() => setShowAuth(false)}
-                      sx={{ color: '#64748B', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
-                    >
-                      Back
-                    </Button>
-                    <Button 
-                      variant="text" 
-                      onClick={() => setAuthTab(authTab === 'login' ? 'signup' : 'login')}
-                      sx={{ color: '#010057', fontWeight: 700, textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
-                    >
-                      {authTab === 'login' ? 'Setup New Access' : 'Sign In'}
-                    </Button>
-                  </Stack>
-                </Box>
-              </Box>
-            )}
-
-          <Box sx={{ mt: 10, pt: 4, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="center" spacing={4} sx={{ mb: 3 }}>
-              <Typography variant="caption" sx={{ color: '#94A3B8', fontFamily: 'Nunito, sans-serif', letterSpacing: 1 }}>
-                PORTAL ID: <Typography component="span" variant="caption" sx={{ color: '#64748B', fontWeight: 700 }}>{appId || 'NEW_APPLICATION'}</Typography>
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#94A3B8', fontFamily: 'Nunito, sans-serif', letterSpacing: 1 }}>
-                STATUS: <Typography component="span" variant="caption" sx={{ color: companyBilling.companyName ? '#4CAF50' : '#010057', fontWeight: 800 }}>
-                  {companyBilling.companyName ? 'CONNECTED' : (appId ? 'READY TO START' : 'WAITING')}
-                </Typography>
-              </Typography>
-            </Stack>
-            
-            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.6 }}>
-              Build: 2026.01.12.0975_FIX_NAV_FINAL | Portal ID: {appId || 'NONE'}
-            </Typography>
-            
-            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
-              Need help? Contact <a href="mailto:support@experiahub.com" style={{ color: 'inherit', fontWeight: 600 }}>Partner Relations</a>
-            </Typography>
-            
-            {!appId && (
-              <Box sx={{ mt: 2, maxWidth: 300, mx: 'auto' }}>
-                <TextField 
-                  fullWidth
-                  size="small" 
-                  placeholder="Enter Portal ID manually" 
-                  value={tempAppId} 
-                  onChange={(e)=>setTempAppId(e.target.value)}
-                  InputProps={{
-                    sx: { fontFamily: 'Nunito, sans-serif', fontSize: '0.875rem' },
-                    endAdornment: (
-                      <Button size="small" sx={{ ml: 1, color: '#4A7C8C', fontWeight: 700 }} onClick={()=>{
-                        const id = (tempAppId||'').trim();
-                        if (!id) return;
-                        try { localStorage.setItem('supplier_application_id', id); } catch {}
-                        window.location.href = `/supplier?appId=${encodeURIComponent(id)}`;
-                      }}>Set</Button>
-                    )
-                  }}
-                />
-              </Box>
-            )}
-          </Box>
-        </Paper>
-      </Container>
-      </Box>
-    );
-  };
+  // View definitions moved inline to main render
 
   React.useEffect(() => {
     const load = async () => {
@@ -1731,8 +1481,260 @@ export default function SupplierPortalPage() {
   };
 
   // Decide top-level view without affecting hooks order
-  if (isLoading) return loadingView;
-  if (!isLoggedIn && !hasBegun) return <LoggedOutView />;
+  if (isLoading) {
+    return (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
+      <Stack spacing={2} alignItems="center">
+        <CircularProgress sx={{ color: '#C5A059' }} />
+        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
+      </Stack>
+    </Box>
+    );
+  }
+
+  if (!isLoggedIn) {
+     return (
+      <Box sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+      overflow: 'hidden',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: `url(${heroImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        filter: 'brightness(0.75) saturate(1.1)',
+        zIndex: -1
+      }
+    }}>
+      <Container maxWidth="md">
+        <Paper elevation={0} sx={{
+          p: { xs: 4, md: 6 },
+          borderRadius: 4,
+          bgcolor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          textAlign: 'center',
+          transition: 'all 0.4s ease-in-out',
+          minHeight: showForm ? '550px' : 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center'
+        }}>
+          {!showForm ? (
+            <Fade in={!showForm}>
+              <Box>
+                <Typography variant="overline" sx={{ color: '#4A7C8C', fontWeight: 700, letterSpacing: 3, mb: 1, display: 'block' }}>
+                  PARTNERSHIP APPROVED
+                </Typography>
+                <Typography variant="h2" sx={{ 
+                  color: '#010057', 
+                  fontFamily: 'Agrandir, serif', 
+                  fontWeight: 800, 
+                  mb: 2,
+                  fontSize: { xs: '2.5rem', md: '3.8rem' },
+                  letterSpacing: '-0.02em'
+                }}>
+                  {companyBilling.companyName ? `Welcome, ${companyBilling.companyName}` : 'Welcome to the Portfolio'}
+                </Typography>
+                <Grid container spacing={4} sx={{ mb: 6, textAlign: 'left' }}>
+                  {[
+                    { step: '01', title: 'Secure Access', desc: 'Create your partner login credentials.' },
+                    { step: '02', title: 'Direct Profile', desc: 'Verify business details and compliance.' },
+                    { step: '03', title: 'Portfolio Sync', desc: 'Connect your inventory or upload experiences.' },
+                  ].map((item, i) => (
+                    <Grid item xs={12} md={4} key={i}>
+                      <Box sx={{ 
+                        p: 3, 
+                        borderLeft: '2px solid #C5A059',
+                        transition: 'all 0.3s ease',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.05)', transform: 'translateY(-2px)' }
+                        }}>
+                        <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1 }}>STEP {item.step}</Typography>
+                        <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 0.5 }}>{item.title}</Typography>
+                        <Typography variant="body2" sx={{ color: '#90A4AE', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <Stack spacing={3} alignItems="center">
+                  <Button 
+                    onClick={() => setShowForm(true)}
+                    variant="contained" 
+                    size="large"
+                    sx={{ 
+                      bgcolor: '#fff', 
+                      color: '#010057', 
+                      px: 8, 
+                      py: 2,
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      textTransform: 'none',
+                      fontFamily: 'Agrandir, serif',
+                      '&:hover': { bgcolor: '#C5A059', color: '#fff' }
+                    }}
+                  >
+                    Begin Onboarding
+                  </Button>
+                  
+                  <Button 
+                    component="a" 
+                    href="/login" 
+                    sx={{ 
+                      color: '#B0BEC5', 
+                      fontWeight: 600, 
+                      textTransform: 'none', 
+                      '&:hover': { color: '#fff' } 
+                    }}
+                  >
+                    Already have an account? Sign In
+                  </Button>
+                </Stack>
+              </Box>
+            </Fade>
+            ) : (
+              <Box sx={{ maxWidth: 400, mx: 'auto', width: '100%' }}>
+                <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 1 }}>
+                  {authTab === 'login' ? 'Partner Login' : 'Finalize Your Access'}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
+                  {authTab === 'login' 
+                    ? 'Enter your credentials to access your dashboard.' 
+                    : 'Set up your secure portal credentials to complete approval.'}
+                </Typography>
+                {appId && (
+                  <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2, fontStyle: 'italic' }}>
+                    Portal ID: {appId}
+                  </Typography>
+                )}
+
+                {authError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{authError}</Alert>}
+
+                <Box component="form" onSubmit={authTab === 'login' ? handleLoginSubmit : handleSignupSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  {authTab === 'signup' && (
+                    <TextField 
+                      fullWidth label="Choose Username" variant="outlined" 
+                      value={suUsername} onChange={(e) => setSuUsername(e.target.value)}
+                      required disabled={authLoading}
+                    />
+                  )}
+                  <TextField 
+                    fullWidth label={authTab === 'login' ? "Username or Email" : "Email Address"} 
+                    variant="outlined" 
+                    value={authTab === 'login' ? username : suEmail}
+                    onChange={(e) => authTab === 'login' ? setUsername(e.target.value) : setSuEmail(e.target.value)}
+                    required disabled={authLoading}
+                  />
+                  <TextField 
+                    fullWidth label="Pick a Password" type="password" variant="outlined" 
+                    value={authTab === 'login' ? password : suPassword}
+                    onChange={(e) => authTab === 'login' ? setPassword(e.target.value) : setSuPassword(e.target.value)}
+                    required disabled={authLoading}
+                  />
+                  
+                  <Button 
+                    type="submit" 
+                    variant="contained" 
+                    size="large"
+                    disabled={authLoading}
+                    sx={{ 
+                      bgcolor: '#010057', // DARK BLUE
+                      color: '#fff',
+                      py: 2, 
+                      borderRadius: '4px',
+                      fontWeight: 700,
+                      fontSize: '1.1rem',
+                      mt: 1,
+                      fontFamily: 'Agrandir, serif',
+                      textTransform: 'none',
+                      letterSpacing: '1px',
+                      transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                      '&:hover': { 
+                        bgcolor: '#C5A059', // GOLD
+                        boxShadow: '0 10px 30px rgba(197, 160, 89, 0.3)',
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
+                  >
+                    {authLoading ? <CircularProgress size={26} color="inherit" /> : (authTab === 'login' ? 'Enter Portal' : 'Finalize Approval')}
+                  </Button>
+
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Button 
+                      variant="text" 
+                      onClick={() => setShowForm(false)}
+                      sx={{ color: '#64748B', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      variant="text" 
+                      onClick={() => setAuthTab(authTab === 'login' ? 'signup' : 'login')}
+                      sx={{ color: '#010057', fontWeight: 700, textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
+                    >
+                      {authTab === 'login' ? 'Setup New Access' : 'Sign In'}
+                    </Button>
+                  </Stack>
+                </Box>
+              </Box>
+            )}
+
+          <Box sx={{ mt: 10, pt: 4, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="center" spacing={4} sx={{ mb: 3 }}>
+              <Typography variant="caption" sx={{ color: '#94A3B8', fontFamily: 'Nunito, sans-serif', letterSpacing: 1 }}>
+                PORTAL ID: <Typography component="span" variant="caption" sx={{ color: '#64748B', fontWeight: 700 }}>{appId || 'NEW_APPLICATION'}</Typography>
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#94A3B8', fontFamily: 'Nunito, sans-serif', letterSpacing: 1 }}>
+                STATUS: <Typography component="span" variant="caption" sx={{ color: companyBilling.companyName ? '#4CAF50' : '#010057', fontWeight: 800 }}>
+                  {companyBilling.companyName ? 'CONNECTED' : (appId ? 'READY TO START' : 'WAITING')}
+                </Typography>
+              </Typography>
+            </Stack>
+            
+            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.7 }}>
+              Build: 2026.01.12.0985_FIX_INLINE_ALL | Portal ID: {appId || 'NONE'}
+            </Typography>
+            
+            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
+              Need help? Contact <a href="mailto:support@experiahub.com" style={{ color: 'inherit', fontWeight: 600 }}>Partner Relations</a>
+            </Typography>
+            
+            {!appId && (
+              <Box sx={{ mt: 2, maxWidth: 300, mx: 'auto' }}>
+                <TextField 
+                  fullWidth
+                  size="small" 
+                  placeholder="Enter Portal ID manually" 
+                  value={tempAppId} 
+                  onChange={(e)=>setTempAppId(e.target.value)}
+                  InputProps={{
+                    sx: { fontFamily: 'Nunito, sans-serif', fontSize: '0.875rem' },
+                    endAdornment: (
+                      <Button size="small" sx={{ ml: 1, color: '#4A7C8C', fontWeight: 700 }} onClick={()=>{
+                        const id = (tempAppId||'').trim();
+                        if (!id) return;
+                        try { localStorage.setItem('supplier_application_id', id); } catch {}
+                        window.location.href = `/supplier?appId=${encodeURIComponent(id)}`;
+                      }}>Set</Button>
+                    )
+                  }}
+                />
+              </Box>
+            )}
+          </Box>
+        </Paper>
+      </Container>
+      </Box>
+    );
+  }
 
   // Logged-in view with left sidebar
   return (
