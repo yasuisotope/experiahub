@@ -133,7 +133,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
   React.useEffect(() => {
     // Validate basic fields
     const next: Record<string, string> = {};
-    if (!state.applicationId?.trim()) next.applicationId = 'Application ID is required';
+    if (!state.applicationId?.trim()) next.applicationId = 'Portal ID is required';
     const email = state.contactEmail?.trim();
     if (email && !/^([^\s@]+)@([^\s@]+)\.[^\s@]+$/.test(email)) next.contactEmail = 'Invalid email format';
     const url = state.bookingLink?.trim();
@@ -149,7 +149,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
     if (!state.experienceNames?.trim()) next.experienceNames = 'Please enter at least one experience name';
     if (!state.briefDescriptions?.trim()) next.briefDescriptions = 'Please provide a brief description';
     if (!state.bookingSystem?.trim()) next.bookingSystem = 'Please specify your booking system';
-    if (!state.bookingLink?.trim()) next.bookingLink = 'Booking link is required';
+    if (!state.bookingLink?.trim()) next.bookingLink = 'Portal booking link is required';
     if (!state.cancellationPolicy?.trim()) next.cancellationPolicy = 'Cancellation policy is required';
     setErrors(next);
   }, [state.applicationId, state.contactEmail, state.bookingLink, state.legalBusinessName, state.contactName, state.contactPhone, state.primaryLocations, state.experienceNames, state.briefDescriptions, state.bookingSystem, state.cancellationPolicy]);
@@ -165,13 +165,13 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
         if (!abort) {
           if (json?.success) {
             setStatusInfo({ exists: json.exists, status: json.status ?? null, approved: !!json.approved });
-            // Pre-fill fields from Supabase if currently empty
+            // Pre-fill fields from Supabase (matching n8n v3 fields)
             setState(prev => ({
               ...prev,
               contactEmail: prev.contactEmail || json.email || '',
               legalBusinessName: prev.legalBusinessName || json.businessName || '',
               contactName: prev.contactName || json.fullName || '',
-              contactPhone: prev.contactPhone || json.phone || json.contactPhone || '',
+              contactPhone: prev.contactPhone || json.phone || '',
               primaryLocations: prev.primaryLocations || (json.city && json.country ? `${json.city}, ${json.country}` : json.city || json.country || '')
             }));
           } else {
@@ -265,7 +265,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
           <Divider sx={{ mb: 2 }} />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <TextField label="Application ID" value={state.applicationId} onChange={onChange('applicationId')} fullWidth disabled={!state.applicationId}
+          <TextField label="Portal ID" value={state.applicationId} onChange={onChange('applicationId')} fullWidth disabled={!state.applicationId}
             error={!!errors.applicationId} helperText={errors.applicationId || ''} />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -381,24 +381,49 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
       </Box>
 
       {/* Sticky Action Bar */}
-      <Box sx={{ position: 'sticky', bottom: 12, mt: 3, ml: 'auto', width: 'fit-content' }}>
-        <Typography variant="caption" sx={{ color: '#666', mb: 0.5, textAlign: 'right', fontFamily: 'Inter' }}>
+      <Box sx={{ position: 'sticky', bottom: 12, mt: 3, ml: 'auto', width: 'fit-content', zIndex: 10 }}>
+        <Typography variant="caption" sx={{ color: '#666', mb: 0.5, textAlign: 'right', display: 'block', fontFamily: 'Inter', pr: 1 }}>
           {dirty ? 'Unsaved changes' : (lastSavedAt ? `Last saved: ${lastSavedAt}` : '')}
         </Typography>
-        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, p: 0.5, pr: 0.5, pl: 0.5, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 10px rgba(0,0,0,0.06)' }}>
-          <Button onClick={handleSave} disabled={saving} sx={{ px: 3, py: 1, borderRadius: 1, bgcolor: '#010057', color: '#fff', fontWeight: 700, fontFamily: 'Inter', letterSpacing: '.2px', boxShadow: '0 8px 18px rgba(1, 0, 87, 0.22)', '&:hover': { bgcolor: '#020080' } }} startIcon={!saving ? <CheckCircleOutlineIcon /> : undefined}>
-            {saving ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Save Changes'}
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, p: 1, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+          <Button 
+            onClick={handleSave} 
+            disabled={saving} 
+            sx={{ 
+              px: 4, py: 1.5, borderRadius: 2, 
+              bgcolor: '#010057', color: '#fff', 
+              fontWeight: 800, fontFamily: 'Agrandir, serif', 
+              textTransform: 'uppercase', letterSpacing: '1px',
+              transition: 'all 0.3s ease',
+              '&:hover': { 
+                bgcolor: '#C5A059', 
+                boxShadow: '0 8px 25px rgba(197, 160, 89, 0.4)',
+                transform: 'translateY(-2px)'
+              } 
+            }} 
+            startIcon={!saving ? <CheckCircleOutlineIcon /> : undefined}
+          >
+            {saving ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Save Draft'}
           </Button>
           <Button
             variant="outlined"
             onClick={async ()=>{
-              // block submit if any required errors
               if (Object.keys(errors).length > 0 || completeness < 100) { setError('Please complete all required fields before submitting.'); return; }
               await handleSubmit();
             }}
-            sx={{ borderRadius: 1, px: 2.25, py: 1, fontFamily: 'Inter', color: '#010057', borderColor: '#010057' }}
+            sx={{ 
+              borderRadius: 2, px: 3, py: 1.5, 
+              fontFamily: 'Agrandir, serif', fontWeight: 800,
+              color: '#010057', borderColor: '#010057',
+              textTransform: 'uppercase', letterSpacing: '1px',
+              '&:hover': {
+                bgcolor: 'rgba(1, 0, 87, 0.05)',
+                borderColor: '#C5A059',
+                color: '#C5A059'
+              }
+            }}
           >
-            Submit for Review
+            Submit Portal
           </Button>
         </Box>
       </Box>

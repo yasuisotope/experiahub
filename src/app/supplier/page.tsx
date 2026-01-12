@@ -994,17 +994,15 @@ export default function SupplierPortalPage() {
         
         if (statusRes.ok) {
           const statusData = await parseJsonSafe(statusRes);
-          console.log(`[SupplierPortal] Onboarding status result:`, statusData);
-          
+          console.log(`[SupplierPortal] Handshake - Mapping Data:`, statusData);
           if (statusData && statusData.exists) {
-            // Priority 1: Populate from Supabase
+            // Field mapping MUST match n8n version 3 output
             const primaryEmail = statusData.email || statusData.contactEmail || statusData.supplierEmail || '';
-            const primaryName = statusData.fullName || statusData.businessName || statusData.contactName || '';
-            const primaryPhone = statusData.phone || statusData.contact_phone || '';
-
+            const primaryName = statusData.fullName || statusData.businessName || '';
+            
             if (primaryEmail) setSuEmail(String(primaryEmail));
             if (primaryName) setUserDisplayName(String(primaryName));
-            if (primaryPhone) setUserPhone(String(primaryPhone));
+            if (statusData.phone) setUserPhone(String(statusData.phone));
             
             setCompanyBilling(prev => ({
               ...prev,
@@ -1094,9 +1092,14 @@ export default function SupplierPortalPage() {
     return `https://app.experiahub.com/login?next=${enc}`;
   }, [appId]);
 
+  const heroImage = '/images/supplier-hero.png';
+
   const loadingView = (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-      <Typography sx={{ fontFamily: 'Nunito, sans-serif' }}>Loading…</Typography>
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
+      <Stack spacing={2} alignItems="center">
+        <CircularProgress sx={{ color: '#C5A059' }} />
+        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
+      </Stack>
     </Box>
   );
 
@@ -1112,11 +1115,11 @@ export default function SupplierPortalPage() {
         content: '""',
         position: 'absolute',
         top: 0, left: 0, right: 0, bottom: 0,
-        backgroundImage: 'url(/images/supplier-hero.png)',
+        backgroundImage: `url(${heroImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        filter: 'brightness(0.85)',
+        filter: 'brightness(0.75) saturate(1.1)',
         zIndex: -1
       }
     }}>
@@ -1199,9 +1202,9 @@ export default function SupplierPortalPage() {
                       transition: 'all 0.4s ease',
                       width: { xs: '100%', sm: 'auto' },
                       '&:hover': { 
-                        bgcolor: '#0A0A8E',
+                        bgcolor: '#C5A059', // GOLD on hover
                         transform: 'translateY(-2px)', 
-                        boxShadow: '0 15px 35px rgba(1, 0, 87, 0.3)' 
+                        boxShadow: '0 15px 35px rgba(197, 160, 89, 0.3)' 
                       },
                     }}
                   >
@@ -1250,7 +1253,7 @@ export default function SupplierPortalPage() {
                 </Typography>
                 {appId && (
                   <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2, fontStyle: 'italic' }}>
-                    Application ID: {appId}
+                    Portal ID: {appId}
                   </Typography>
                 )}
 
@@ -1284,7 +1287,7 @@ export default function SupplierPortalPage() {
                     size="large"
                     disabled={authLoading}
                     sx={{ 
-                      bgcolor: '#C5A059', // Secondary CTA also Gold
+                      bgcolor: '#010057', // DARK BLUE
                       color: '#fff',
                       py: 2, 
                       borderRadius: '4px',
@@ -1296,13 +1299,13 @@ export default function SupplierPortalPage() {
                       letterSpacing: '1px',
                       transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                       '&:hover': { 
-                        bgcolor: '#010057', 
-                        boxShadow: '0 10px 30px rgba(1, 0, 87, 0.3)',
+                        bgcolor: '#C5A059', // GOLD
+                        boxShadow: '0 10px 30px rgba(197, 160, 89, 0.3)',
                         transform: 'translateY(-2px)'
                       }
                     }}
                   >
-                    {authLoading ? <CircularProgress size={26} color="inherit" /> : (authTab === 'login' ? 'Sign In' : 'Finalize Access')}
+                    {authLoading ? <CircularProgress size={26} color="inherit" /> : (authTab === 'login' ? 'Enter Portal' : 'Finalize Approval')}
                   </Button>
 
                   <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -1339,7 +1342,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.5 }}>
-              Build: 2026.01.12.0852 | REACTIVE UI RESTORED | Trace: {appId || 'NONE'}
+              Build: 2026.01.12.0900 | Portal ID: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
