@@ -1354,7 +1354,7 @@ export default function SupplierPortalPage() {
                 <TextField 
                   fullWidth
                   size="small" 
-                  placeholder="Enter Application ID manually" 
+                  placeholder="Enter Portal ID manually" 
                   value={tempAppId} 
                   onChange={(e)=>setTempAppId(e.target.value)}
                   InputProps={{
@@ -1917,7 +1917,7 @@ export default function SupplierPortalPage() {
         {section === 'company' && subsection === 'profile' && (
           <Fade in timeout={250}>
           <Box>
-            <Alert severity="info" sx={{ mb: 2 }}>Application ID: <strong>{appId || '—'}</strong></Alert>
+            <Alert severity="info" sx={{ mb: 2 }}>Portal ID: <strong>{appId || '—'}</strong></Alert>
             {!appId ? (
               <Alert severity="warning">Missing application ID. Please open the signup email link or add <code>?appId=... </code> to the URL.</Alert>
             ) : (
