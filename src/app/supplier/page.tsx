@@ -1111,17 +1111,11 @@ export default function SupplierPortalPage() {
       justifyContent: 'center',
       position: 'relative',
       overflow: 'hidden',
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0, left: 0, right: 0, bottom: 0,
-        backgroundImage: `url(${heroImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        filter: 'brightness(0.75) saturate(1.1)',
-        zIndex: -1
-      }
+      backgroundImage: `linear-gradient(rgba(1, 0, 87, 0.4), rgba(1, 0, 87, 0.4)), url(${heroImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      transition: 'all 0.5s ease-in-out'
     }}>
       <Container maxWidth="md">
         <Paper elevation={0} sx={{
@@ -1342,7 +1336,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.5 }}>
-              Build: 2026.01.12.0900 | Portal ID: {appId || 'NONE'}
+              Build: 2026.01.12.0916 | Portal ID: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>

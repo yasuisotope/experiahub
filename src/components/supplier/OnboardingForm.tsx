@@ -406,7 +406,7 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
             {saving ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Save Draft'}
           </Button>
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={async ()=>{
               if (Object.keys(errors).length > 0 || completeness < 100) { setError('Please complete all required fields before submitting.'); return; }
               await handleSubmit();
@@ -414,12 +414,13 @@ export default function OnboardingForm({ applicationId }: { applicationId: strin
             sx={{ 
               borderRadius: 2, px: 3, py: 1.5, 
               fontFamily: 'Agrandir, serif', fontWeight: 800,
-              color: '#010057', borderColor: '#010057',
+              bgcolor: '#010057', color: '#fff',
               textTransform: 'uppercase', letterSpacing: '1px',
+              transition: 'all 0.3s ease',
               '&:hover': {
-                bgcolor: 'rgba(1, 0, 87, 0.05)',
-                borderColor: '#C5A059',
-                color: '#C5A059'
+                bgcolor: '#C5A059',
+                boxShadow: '0 8px 25px rgba(197, 160, 89, 0.4)',
+                transform: 'translateY(-2px)'
               }
             }}
           >
