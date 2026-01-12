@@ -1092,119 +1092,166 @@ export default function SupplierPortalPage() {
     return `https://app.experiahub.com/login?next=${enc}`;
   }, [appId]);
 
-const heroImage = '/images/supplier-hero.png';
+  const heroImage = '/images/supplier-hero.png';
 
-const loadingView = (
-  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
-    <Stack spacing={2} alignItems="center">
-      <CircularProgress sx={{ color: '#C5A059' }} />
-      <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
-    </Stack>
-  </Box>
-);
+  const loadingView = (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
+      <Stack spacing={2} alignItems="center">
+        <CircularProgress sx={{ color: '#C5A059' }} />
+        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
+      </Stack>
+    </Box>
+  );
 
-// Simplified LoggedOutView - Robust Dark Theme
   const LoggedOutView = () => (
     <Box sx={{
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      bgcolor: '#010057', // Deep Brand Blue (Solid)
-      backgroundImage: `linear-gradient(rgba(1, 0, 87, 0.85), rgba(1, 0, 87, 0.6)), url("${heroImage}")`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      color: '#fff',
-      p: 2
+      position: 'relative',
+      overflow: 'hidden',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: `url(${heroImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        filter: 'brightness(0.75) saturate(1.1)',
+        zIndex: -1
+      }
     }}>
       <Container maxWidth="md">
-        <Box sx={{ textAlign: 'center', mb: 8 }}>
-           <Typography variant="overline" sx={{ letterSpacing: 3, color: '#C5A059', fontWeight: 700, display: 'block', mb: 2 }}>
-            PARTNERSHIP APPROVED
-          </Typography>
-          
-          <Typography variant="h1" sx={{ 
-            fontSize: { xs: '2.5rem', md: '4rem' },
-            fontFamily: 'Agrandir, sans-serif',
-            fontWeight: 700,
-            mb: 3,
-            color: '#fff'
-          }}>
-            {businessName ? `Welcome, ${businessName}` : 'Welcome to the Portfolio'}
-          </Typography>
-
-          <Typography variant="body1" sx={{ fontSize: '1.2rem', color: '#B0BEC5', mb: 6, maxWidth: 660, mx: 'auto', lineHeight: 1.6 }}>
-            Your application to join ExperiaHub's exclusive supplier network has been approved. Finalize your access below to begin showcasing your experiences.
-          </Typography>
-        </Box>
-
         <Paper elevation={0} sx={{
           p: { xs: 4, md: 6 },
-          borderRadius: 2,
-          bgcolor: 'rgba(255, 255, 255, 0.05)', // Very subtle white tint
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.1)'
+          borderRadius: 4,
+          bgcolor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          textAlign: 'center',
+          transition: 'all 0.4s ease-in-out',
+          minHeight: showAuth ? '550px' : 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center'
         }}>
-          {!showForm ? (
-              <Stack spacing={4} alignItems="center">
-                 <Button 
-                  variant="contained" 
-                  size="large"
-                  onClick={() => setShowForm(true)}
-                  sx={{ 
-                    bgcolor: '#fff', 
-                    color: '#010057', 
-                    px: 6, 
-                    py: 2,
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    fontFamily: 'Agrandir, sans-serif',
-                    '&:hover': { bgcolor: '#C5A059', color: '#fff' }
-                  }}
-                >
-                  Begin Onboarding
-                </Button>
-                
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="body2" sx={{ color: '#90A4AE' }}>Already have an account?</Typography>
-                  <Button component="a" href="/login" sx={{ color: '#fff', fontWeight: 700, textTransform: 'none', minWidth: 'auto', p: 0, '&:hover': { color: '#C5A059' } }}>
-                    Sign In
+          {!showAuth ? (
+            <Fade in={!showAuth}>
+              <Box>
+                <Typography variant="overline" sx={{ color: '#4A7C8C', fontWeight: 700, letterSpacing: 3, mb: 1, display: 'block' }}>
+                  PARTNERSHIP APPROVED
+                </Typography>
+                <Typography variant="h2" sx={{ 
+                  color: '#010057', 
+                  fontFamily: 'Agrandir, serif', 
+                  fontWeight: 800, 
+                  mb: 2,
+                  fontSize: { xs: '2.5rem', md: '3.8rem' },
+                  letterSpacing: '-0.02em'
+                }}>
+                  {companyBilling.companyName ? `Welcome, ${companyBilling.companyName}` : 'Welcome to the Portfolio'}
+                </Typography>
+                <Typography variant="h6" sx={{ 
+                  color: '#475569', 
+                  fontFamily: 'Nunito, sans-serif', 
+                  fontWeight: 400, 
+                  maxWidth: '600px', 
+                  mx: 'auto', 
+                  mb: 6,
+                  lineHeight: 1.6
+                }}>
+                  Your application to join ExperiaHub's exclusive supplier network has been approved. 
+                  Finalize your access to showcase your signature experiences to our global audience.
+                </Typography>
+
+                <Grid container spacing={4} sx={{ mb: 6, textAlign: 'left' }}>
+                  {[
+                    { step: '01', title: 'Secure Access', desc: 'Create your partner login credentials.' },
+                    { step: '02', title: 'Direct Profile', desc: 'Verify business details and compliance.' },
+                    { step: '03', title: 'Portfolio Sync', desc: 'Connect your inventory or upload experiences.' },
+                  ].map((item, i) => (
+                    <Grid item xs={12} md={4} key={i}>
+                      <Box sx={{ p: 2, borderLeft: '2px solid #C5A059' }}>
+                        <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1 }}>STEP {item.step}</Typography>
+                        <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 0.5 }}>{item.title}</Typography>
+                        <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <Stack direction="column" spacing={3} justifyContent="center" alignItems="center">
+                  <Button 
+                    onClick={() => { setAuthTab('signup'); setShowAuth(true); }}
+                    variant="contained" 
+                    size="large"
+                    sx={{ 
+                      bgcolor: '#010057', 
+                      color: '#fff', 
+                      px: 8, 
+                      py: 2.2, 
+                      borderRadius: '4px',
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      fontFamily: 'Agrandir, serif',
+                      textTransform: 'none',
+                      boxShadow: '0 10px 30px rgba(1, 0, 87, 0.2)',
+                      transition: 'all 0.4s ease',
+                      width: { xs: '100%', sm: 'auto' },
+                      '&:hover': { 
+                        bgcolor: '#C5A059', // GOLD on hover
+                        transform: 'translateY(-2px)', 
+                        boxShadow: '0 15px 35px rgba(197, 160, 89, 0.3)' 
+                      },
+                    }}
+                  >
+                    Begin Onboarding
+                  </Button>
+                  
+                  <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>
+                    Already set up your password? <Button 
+                      onClick={() => { setAuthTab('login'); setShowAuth(true); }}
+                      variant="text" 
+                      size="small" 
+                      sx={{ 
+                        color: '#010057', 
+                        textTransform: 'none', 
+                        fontWeight: 700,
+                        p: 0,
+                        minWidth: 'auto',
+                        verticalAlign: 'baseline',
+                        fontFamily: 'Nunito, sans-serif',
+                        '&:hover': { background: 'none', textDecoration: 'underline' }
+                      }}
+                    >Sign In</Button>
+                  </Typography>
+
+                  <Button 
+                    variant="text" 
+                    size="small"
+                    onClick={() => { setHasBegun(true); setSection('welcome'); }}
+                    sx={{ color: '#94A3B8', textTransform: 'none', fontWeight: 400, opacity: 0.7, '&:hover': { opacity: 1, background: 'none' } }}
+                  >
+                    Continue as Guest (No login)
                   </Button>
                 </Stack>
-              </Stack>
-            ) : (
-             <Box sx={{ textAlign: 'left' }}>
-               <Button onClick={() => setShowForm(false)} sx={{ color: '#90A4AE', mb: 2, textTransform: 'none' }}>&larr; Back</Button>
-               <OnboardingForm 
-                 appId={appId || ''} 
-                 baseInfo={{ 
-                   email: email || '', 
-                   businessName: businessName || '', 
-                   fullName: supplierName || ''
-                 }} 
-               />
-             </Box>
-            )}
-        </Paper>
-
-        <Box sx={{ mt: 6, textAlign: 'center' }}>
-          <Stack direction="row" spacing={3} justifyContent="center" sx={{ mb: 2 }}> 
-            <Typography variant="caption" sx={{ color: '#546E7A', fontWeight: 600, letterSpacing: 1 }}>
-              PORTAL ID: <span style={{ color: '#90A4AE' }}>{appId || 'PENDING'}</span>
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#546E7A', fontWeight: 600, letterSpacing: 1 }}>
-              STATUS: <span style={{ color: '#C5A059' }}>{status || 'READY TO START'}</span>
-            </Typography>
-          </Stack>
-          
-          <Typography variant="caption" sx={{ display: 'block', color: '#455A64', mt: 1 }}>
-            Build: 2026.01.12.0935_FIX | Portal ID: {appId || 'NONE'}
-          </Typography>
-        </Box>
-      </Container>
-    </Box>
-  );
+              </Box>
+            </Fade>
+          ) : (
+            <Fade in={showAuth}>
+              <Box sx={{ maxWidth: 400, mx: 'auto', width: '100%' }}>
+                <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 1 }}>
+                  {authTab === 'login' ? 'Partner Login' : 'Finalize Your Access'}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
+                  {authTab === 'login' 
+                    ? 'Enter your credentials to access your dashboard.' 
+                    : 'Set up your secure portal credentials to complete approval.'}
+                </Typography>
+                {appId && (
                   <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2, fontStyle: 'italic' }}>
                     Portal ID: {appId}
                   </Typography>
@@ -1253,7 +1300,82 @@ const loadingView = (
                       transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                       '&:hover': { 
                         bgcolor: '#C5A059', // GOLD
+                        boxShadow: '0 10px 30px rgba(197, 160, 89, 0.3)',
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
+                  >
+                    {authLoading ? <CircularProgress size={26} color="inherit" /> : (authTab === 'login' ? 'Enter Portal' : 'Finalize Approval')}
+                  </Button>
 
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Button 
+                      variant="text" 
+                      onClick={() => setShowAuth(false)}
+                      sx={{ color: '#64748B', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      variant="text" 
+                      onClick={() => setAuthTab(authTab === 'login' ? 'signup' : 'login')}
+                      sx={{ color: '#010057', fontWeight: 700, textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
+                    >
+                      {authTab === 'login' ? 'Setup New Access' : 'Sign In'}
+                    </Button>
+                  </Stack>
+                </Box>
+              </Box>
+            </Fade>
+          )}
+
+          <Box sx={{ mt: 10, pt: 4, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="center" spacing={4} sx={{ mb: 3 }}>
+              <Typography variant="caption" sx={{ color: '#94A3B8', fontFamily: 'Nunito, sans-serif', letterSpacing: 1 }}>
+                PORTAL ID: <Typography component="span" variant="caption" sx={{ color: '#64748B', fontWeight: 700 }}>{appId || 'NEW_APPLICATION'}</Typography>
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#94A3B8', fontFamily: 'Nunito, sans-serif', letterSpacing: 1 }}>
+                STATUS: <Typography component="span" variant="caption" sx={{ color: companyBilling.companyName ? '#4CAF50' : '#010057', fontWeight: 800 }}>
+                  {companyBilling.companyName ? 'CONNECTED' : (appId ? 'READY TO START' : 'WAITING')}
+                </Typography>
+              </Typography>
+            </Stack>
+            
+            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.5 }}>
+              Build: 2026.01.12.0940_RESTORED | Portal ID: {appId || 'NONE'}
+            </Typography>
+            
+            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
+              Need help? Contact <a href="mailto:support@experiahub.com" style={{ color: 'inherit', fontWeight: 600 }}>Partner Relations</a>
+            </Typography>
+            
+            {!appId && (
+              <Box sx={{ mt: 2, maxWidth: 300, mx: 'auto' }}>
+                <TextField 
+                  fullWidth
+                  size="small" 
+                  placeholder="Enter Portal ID manually" 
+                  value={tempAppId} 
+                  onChange={(e)=>setTempAppId(e.target.value)}
+                  InputProps={{
+                    sx: { fontFamily: 'Nunito, sans-serif', fontSize: '0.875rem' },
+                    endAdornment: (
+                      <Button size="small" sx={{ ml: 1, color: '#4A7C8C', fontWeight: 700 }} onClick={()=>{
+                        const id = (tempAppId||'').trim();
+                        if (!id) return;
+                        try { localStorage.setItem('supplier_application_id', id); } catch {}
+                        window.location.href = `/supplier?appId=${encodeURIComponent(id)}`;
+                      }}>Set</Button>
+                    )
+                  }}
+                />
+              </Box>
+            )}
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
+  );
 
   React.useEffect(() => {
     const load = async () => {
