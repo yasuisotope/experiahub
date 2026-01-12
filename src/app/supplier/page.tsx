@@ -1103,13 +1103,14 @@ export default function SupplierPortalPage() {
     </Box>
   );
 
-  const LoggedOutView = () => (
-    <Box sx={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
+  const LoggedOutView = () => {
+    return (
+      <Box sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
       overflow: 'hidden',
       '&::before': {
         content: '""',
@@ -1209,6 +1210,21 @@ export default function SupplierPortalPage() {
                   </Button>
                 </Stack>
               </Box>
+            </Fade>
+          ) : (
+            <Fade in={showAuth}>
+              <Box sx={{ maxWidth: 400, mx: 'auto', width: '100%' }}>
+                <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 1 }}>
+                  {authTab === 'login' ? 'Partner Login' : 'Finalize Your Access'}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
+                  {authTab === 'login' 
+                    ? 'Enter your credentials to access your dashboard.' 
+                    : 'Set up your secure portal credentials to complete approval.'}
+                </Typography>
+                {appId && (
+                  <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2, fontStyle: 'italic' }}>
+                    Portal ID: {appId}
                   </Typography>
                 )}
 
@@ -1297,7 +1313,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.6 }}>
-              Build: 2026.01.12.0960_FIX_SYNTAX | Portal ID: {appId || 'NONE'}
+              Build: 2026.01.12.0970_FIX_CRITICAL_LOGIC | Portal ID: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
@@ -1329,8 +1345,9 @@ export default function SupplierPortalPage() {
           </Box>
         </Paper>
       </Container>
-    </Box>
-  );
+      </Box>
+    );
+  };
 
   React.useEffect(() => {
     const load = async () => {
