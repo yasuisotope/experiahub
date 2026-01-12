@@ -1662,7 +1662,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1090_FIX_CRASH
+              Build: 2026.01.12.1100_REAL_FIX
             </Typography>
           </Box>
         </Paper>
