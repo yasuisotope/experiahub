@@ -38,6 +38,17 @@ const getBaseUrl = () => {
 const N8N_BASE = getBaseUrl();
 // Removed exposed TOKENS_API_KEY. Now handled in /api/supplier/tokens
 
+async function parseJsonSafe(res: Response): Promise<any | null> {
+  try {
+    const text = await res.text();
+    if (!text) return null;
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("[SupplierPortal] JSON Parse Error:", e);
+    return null;
+  }
+}
+
 function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) => void; defaultActivityId?: string }) {
   const [photos, setPhotos] = React.useState<string>('');
   const [videoDrive, setVideoDrive] = React.useState<string>('');
@@ -982,10 +993,10 @@ export default function SupplierPortalPage() {
         const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status?applicationId=${encodeURIComponent(appId)}`);
         
         if (statusRes.ok) {
-          const statusData = await statusRes.json();
+          const statusData = await parseJsonSafe(statusRes);
           console.log(`[SupplierPortal] Onboarding status result:`, statusData);
           
-          if (statusData.exists) {
+          if (statusData && statusData.exists) {
             // Priority 1: Populate from Supabase
             const primaryEmail = statusData.email || statusData.contactEmail || statusData.supplierEmail || '';
             const primaryName = statusData.fullName || statusData.businessName || statusData.contactName || '';
@@ -1022,16 +1033,18 @@ export default function SupplierPortalPage() {
         // B. Fetch WP Profile (Verified Account Data - may overwrite with more 'official' info)
         const profileRes = await fetch(`${N8N_BASE}/supplier/user/profile/get?applicationId=${encodeURIComponent(appId)}`);
         if (profileRes.ok) {
-          const profileJson = await profileRes.json();
-          const p = profileJson.profile || profileJson.user || profileJson;
-          if (p && (p.email || p.user_email)) {
-            console.log("[SupplierPortal] WP Profile found, applying overrides:", p);
-            const wpEmail = p.email || p.user_email || p.contactEmail;
-            if (wpEmail) setSuEmail(String(wpEmail));
-            if (p.display_name || p.displayName || p.full_name) {
-              setUserDisplayName(String(p.display_name || p.displayName || p.full_name));
+          const profileJson = await parseJsonSafe(profileRes);
+          if (profileJson) {
+            const p = profileJson.profile || profileJson.user || profileJson;
+            if (p && (p.email || p.user_email)) {
+              console.log("[SupplierPortal] WP Profile found, applying overrides:", p);
+              const wpEmail = p.email || p.user_email || p.contactEmail;
+              if (wpEmail) setSuEmail(String(wpEmail));
+              if (p.display_name || p.displayName || p.full_name) {
+                setUserDisplayName(String(p.display_name || p.displayName || p.full_name));
+              }
+              if (p.phone || p.phoneNumber) setUserPhone(String(p.phone || p.phoneNumber));
             }
-            if (p.phone || p.phoneNumber) setUserPhone(String(p.phone || p.phoneNumber));
           }
         }
 
