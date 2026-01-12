@@ -1,5 +1,8 @@
 'use client';
 
+// Build Trace: 2026.01.12.0815 - Ensuring reactive patterns are live
+export const buildId = "2026.01.12.0815";
+
 // Disable static prerendering — this page depends on search params/localStorage.
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -1323,7 +1326,7 @@ export default function SupplierPortalPage() {
             </Stack>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.5 }}>
-              Build: 2026.01.12.0810 | Trace: {appId || 'NONE'}
+              Build: 2026.01.12.0815 | Trace: {appId || 'NONE'}
             </Typography>
             
             <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
