@@ -1103,144 +1103,48 @@ const loadingView = (
   </Box>
 );
 
-const LoggedOutView = () => (
-  <Box sx={{
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    bgcolor: '#f5f5f5', // Fallback color
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0, left: 0, right: 0, bottom: 0,
-      backgroundImage: `url("${heroImage}")`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      zIndex: 0
-    },
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      top: 0, left: 0, right: 0, bottom: 0,
-      background: 'linear-gradient(rgba(1, 0, 87, 0.45), rgba(1, 0, 87, 0.45))', // Overlay
-      zIndex: 0
-    }
-  }}>
-      <Container maxWidth="md">
+  const LoggedOutView = () => (
+    <Box sx={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      overflow: 'hidden',
+      bgcolor: '#010057', // Deep Brand Blue (Safety Fallback)
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: `url("${heroImage}")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        opacity: 0.5, // Allow the deep blue to show through
+        zIndex: 0
+      },
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: 'linear-gradient(135deg, rgba(1, 0, 87, 0.9) 0%, rgba(1, 0, 87, 0.4) 100%)', // Premium Gradient Overlay
+        zIndex: 1
+      }
+    }}>
+      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 2 }}>
         <Paper elevation={0} sx={{
           p: { xs: 4, md: 6 },
-          borderRadius: 4,
-          bgcolor: 'rgba(255, 255, 255, 0.85)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          borderRadius: 2,
           textAlign: 'center',
-          transition: 'all 0.4s ease-in-out',
-          minHeight: showAuth ? '550px' : 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
+          background: 'rgba(255, 255, 255, 0.95)', // Glassy White Card
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
         }}>
-          {!showAuth ? (
-            <Fade in={!showAuth}>
-              <Box>
-                <Typography variant="overline" sx={{ color: '#4A7C8C', fontWeight: 700, letterSpacing: 3, mb: 1, display: 'block' }}>
-                  PARTNERSHIP APPROVED
-                </Typography>
-                <Typography variant="h2" sx={{ 
-                  color: '#010057', 
-                  fontFamily: 'Agrandir, serif', 
-                  fontWeight: 800, 
-                  mb: 2,
-                  fontSize: { xs: '2.5rem', md: '3.8rem' },
-                  letterSpacing: '-0.02em'
-                }}>
-                  {companyBilling.companyName ? `Welcome, ${companyBilling.companyName}` : 'Welcome to the Portfolio'}
-                </Typography>
-                <Typography variant="h6" sx={{ 
-                  color: '#475569', 
-                  fontFamily: 'Nunito, sans-serif', 
-                  fontWeight: 400, 
-                  maxWidth: '600px', 
-                  mx: 'auto', 
-                  mb: 6,
-                  lineHeight: 1.6
-                }}>
-                  Your application to join ExperiaHub's exclusive supplier network has been approved. 
-                  Finalize your access to showcase your signature experiences to our global audience.
-                </Typography>
-
-                <Grid container spacing={4} sx={{ mb: 6, textAlign: 'left' }}>
-                  {[
-                    { step: '01', title: 'Secure Access', desc: 'Create your partner login credentials.' },
-                    { step: '02', title: 'Direct Profile', desc: 'Verify business details and compliance.' },
-                    { step: '03', title: 'Portfolio Sync', desc: 'Connect your inventory or upload experiences.' },
-                  ].map((item, i) => (
-                    <Grid item xs={12} md={4} key={i}>
-                      <Box sx={{ p: 2, borderLeft: '2px solid #C5A059' }}>
-                        <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1 }}>STEP {item.step}</Typography>
-                        <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 0.5 }}>{item.title}</Typography>
-                        <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-
-                <Stack direction="column" spacing={3} justifyContent="center" alignItems="center">
-                  <Button 
-                    onClick={() => { setAuthTab('signup'); setShowAuth(true); }}
-                    variant="contained" 
-                    size="large"
-                    sx={{ 
-                      bgcolor: '#010057', 
-                      color: '#fff', 
-                      px: 8, 
-                      py: 2.2, 
-                      borderRadius: '4px',
-                      fontSize: '1.1rem',
-                      fontWeight: 700,
-                      fontFamily: 'Agrandir, serif',
-                      textTransform: 'none',
-                      boxShadow: '0 10px 30px rgba(1, 0, 87, 0.2)',
-                      transition: 'all 0.4s ease',
-                      width: { xs: '100%', sm: 'auto' },
-                      '&:hover': { 
-                        bgcolor: '#C5A059', // GOLD on hover
-                        transform: 'translateY(-2px)', 
-                        boxShadow: '0 15px 35px rgba(197, 160, 89, 0.3)' 
-                      },
-                    }}
-                  >
-                    Begin Onboarding
-                  </Button>
-                  
-                  <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>
-                    Already set up your password? <Button 
-                      onClick={() => { setAuthTab('login'); setShowAuth(true); }}
-                      variant="text" 
-                      size="small" 
-                      sx={{ 
-                        color: '#010057', 
-                        textTransform: 'none', 
-                        fontWeight: 700,
-                        p: 0,
-                        minWidth: 'auto',
-                        verticalAlign: 'baseline',
-                        fontFamily: 'Nunito, sans-serif',
-                        '&:hover': { background: 'none', textDecoration: 'underline' }
-                      }}
-                    >Sign In</Button>
-                  </Typography>
-
                   <Button 
                     variant="text" 
                     size="small"
-                    onClick={() => { setHasBegun(true); setSection('welcome'); }}
-                    sx={{ color: '#94A3B8', textTransform: 'none', fontWeight: 400, opacity: 0.7, '&:hover': { opacity: 1, background: 'none' } }}
+                    onClick={() => { setAuthTab('login'); setShowAuth(false); }} // Guest mode logic? Actually wait, guest mode needs logic.
+                    sx={{ color: '#94a3b8', fontSize: '0.85rem', mt: 2, textTransform: 'none', '&:hover': { color: '#010057' } }}
                   >
                     Continue as Guest (No login)
                   </Button>
@@ -1249,16 +1153,32 @@ const LoggedOutView = () => (
             </Fade>
           ) : (
             <Fade in={showAuth}>
-              <Box sx={{ maxWidth: 400, mx: 'auto', width: '100%' }}>
-                <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 1 }}>
-                  {authTab === 'login' ? 'Partner Login' : 'Finalize Your Access'}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
-                  {authTab === 'login' 
-                    ? 'Enter your credentials to access your dashboard.' 
-                    : 'Set up your secure portal credentials to complete approval.'}
-                </Typography>
-                {appId && (
+              <Box>
+                <AuthForm 
+                  mode={authTab} 
+                  appId={appId || 'PENDING'} 
+                  email={email} 
+                  onSuccess={() => { window.location.href = `/onboarding?appId=${appId}`; }}
+                  onCancel={() => setShowAuth(false)}
+                />
+              </Box>
+            </Fade>
+          )}
+
+          {/* Footer inside the card */}
+          <Box sx={{ mt: 6, py: 2, borderTop: '1px solid #f1f5f9' }}>
+            <Stack direction="row" spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 1 }}>
+              <Chip label={status || 'READY TO START'} size="small" sx={{ bgcolor: status === 'APPROVED' ? '#dcfce7' : '#e2e8f0', color: status === 'APPROVED' ? '#166534' : '#475569', fontWeight: 700, fontSize: '0.7rem' }} />
+              <Typography variant="caption" sx={{ color: '#94a3b8', fontFamily: 'monospace' }}>ID: {appId || 'PENDING'}</Typography>
+            </Stack>
+            <Typography variant="caption" sx={{ color: '#cbd5e1', fontSize: '0.7rem' }}>
+              Build: 2026.01.12.0922 | Secure Environment
+            </Typography>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
+  );
                   <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2, fontStyle: 'italic' }}>
                     Portal ID: {appId}
                   </Typography>
