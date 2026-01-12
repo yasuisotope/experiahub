@@ -1659,10 +1659,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1010_UNIFIED_LANDING
-            </Typography>
-            <Typography variant="caption" sx={{ display: 'none', color: 'red' }}>
-                Debug: Email={suEmail || 'null'}, Name={userDisplayName || 'null'}
+              Build: 2026.01.12.1060_UI_DEPLOYED
             </Typography>
           </Box>
         </Paper>
