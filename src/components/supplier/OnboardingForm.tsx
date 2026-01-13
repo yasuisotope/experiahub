@@ -243,7 +243,7 @@ export default function OnboardingForm({ applicationId, initialData }: { applica
           disabled={saving} 
           variant="contained"
           sx={{ 
-            px: 4, py: 1.2, borderRadius: 2, 
+            px: 3, py: 0.8, borderRadius: 3, 
             bgcolor: '#010057', color: '#fff', 
             fontWeight: 700, fontFamily: 'Nunito, sans-serif', 
             textTransform: 'none', fontSize: '1rem',
