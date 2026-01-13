@@ -30,7 +30,7 @@ SET
         'displayName', 'Experia Admin',
         'phone', '+81-90-1234-5678'
     )
-WHERE id = 'SUP-543C66BA';
+WHERE application_id = 'SUP-543C66BA';
 
 -- Option 2: If using flat columns
 /*

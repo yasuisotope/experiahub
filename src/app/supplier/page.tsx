@@ -12,16 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import Image from 'next/image';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ApartmentIcon from '@mui/icons-material/Apartment';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import CollectionsIcon from '@mui/icons-material/Collections';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ShareIcon from '@mui/icons-material/Share';
+import { Add as AddIcon, Edit as EditIcon, DeleteOutline as DeleteOutlineIcon, Close as CloseIcon, CheckCircleOutline as CheckCircleOutlineIcon, Apartment as ApartmentIcon, PersonOutline as PersonOutlineIcon, Collections as CollectionsIcon, ContentCopy as ContentCopyIcon, Share as ShareIcon, Save as SaveIcon, PlayArrow as PlayArrowIcon, Check as CheckIcon, Sync as SyncIcon, Key as KeyIcon, VpnKey as VpnKeyIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useWordPressAuth } from '@/contexts/WordPressContext';
 import { AuthService } from '@/services/authService';
 import OnboardingForm from '@/components/supplier/OnboardingForm';
@@ -351,7 +342,7 @@ function ActivitiesSkeleton({ onToast }: { onToast: (m: string) => void }) {
     setLanguages(a.languages || '');
     setSchedulingMode(a.schedulingMode || '');
     setStartTimes(a.startTimes || '');
-    setCutoffHours(a.cutoffHours || '');
+    setCutoffHours(a.cutoffHours || (a.bookingLeadTime || ''));
     setPricingCategories(a.pricingCategories || '');
     setBaseRate(a.baseRate || '');
     setOpen(true);
@@ -829,6 +820,7 @@ const PRIMARY_BUTTON_SX = {
   boxShadow: '0 4px 12px rgba(1, 0, 87, 0.2)',
   transition: 'all 0.5s ease',
   width: 'fit-content',
+  alignSelf: 'flex-end',
   '&:hover': {
     bgcolor: '#ffbf00',
     boxShadow: '0 6px 16px rgba(255, 191, 0, 0.3)',
@@ -2036,6 +2028,7 @@ const PRIMARY_BUTTON_SX = {
                       size="small"
                       variant="contained"
                       sx={PRIMARY_BUTTON_SX}
+                      startIcon={<PlayArrowIcon />}
                       onClick={async ()=>{
                         try {
                           if (!appId) { setToast('Missing application ID'); return; }
@@ -2080,7 +2073,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Invoice email" value={companyBilling.invoiceEmail} onChange={(e)=>setCompanyBilling(s=>({ ...s, invoiceEmail: e.target.value }))} fullWidth />
                   <TextField label="Billing currency" value={companyBilling.currency} onChange={(e)=>setCompanyBilling(s=>({ ...s, currency: e.target.value }))} onBlur={(e)=>setCompanyBilling(s=>({ ...s, currency: String(e.target.value||'').toUpperCase() }))} fullWidth />
                 </Stack>
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/billing/save`, {
@@ -2116,7 +2109,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Privacy URL" value={companyLegal.privacyUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, privacyUrl: e.target.value }))} fullWidth />
                 </Stack>
                 <TextField label="Representative" value={companyLegal.representative} onChange={(e)=>setCompanyLegal(s=>({ ...s, representative: e.target.value }))} fullWidth />
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/legal/save`, {
@@ -2152,9 +2145,9 @@ const PRIMARY_BUTTON_SX = {
                     </Stack>
                   </Box>
                 ))}
-                <Stack direction="row" spacing={1}>
-                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const res = await fetch(`${N8N_BASE}/supplier/company/locations/save`, {
@@ -2180,7 +2173,7 @@ const PRIMARY_BUTTON_SX = {
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>User Profile</Typography>
                 <TextField label="Display name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
+                <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     if (!userDisplayName.trim()) { setToast('Please enter a display name'); return; }
@@ -2210,6 +2203,7 @@ const PRIMARY_BUTTON_SX = {
                   variant="contained"
                   size="small"
                   sx={PRIMARY_BUTTON_SX}
+                  startIcon={<VpnKeyIcon />}
                   disabled={securitySubmitting}
                   onClick={async ()=>{
                     try {
@@ -2245,12 +2239,12 @@ const PRIMARY_BUTTON_SX = {
                 <Stack direction="row" spacing={1}>
                   <TextField size="small" label="Login or Email" value={tokensUser} onChange={(e)=>setTokensUser(e.target.value)} fullWidth />
                   <TextField size="small" label="Current Password" type="password" value={tokensPassword} onChange={(e)=>setTokensPassword(e.target.value)} fullWidth />
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SyncIcon />} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
                 </Stack>
 
                 <Stack direction="row" spacing={1} alignItems="center">
                   <TextField size="small" label="Token Name" value={tokenName} onChange={(e)=>setTokenName(e.target.value)} />
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<AddIcon />} disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
                 </Stack>
 
                 {tokensLoading && (<Alert severity="info">Loading tokens…</Alert>)}
@@ -2318,11 +2312,11 @@ const PRIMARY_BUTTON_SX = {
             {pricingRows.length === 0 && (
               <Alert severity="info" sx={{ mb: 2 }}>Add at least one pricing row (category, amount, currency).</Alert>
             )}
-            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-              <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
+            <Stack direction="row" spacing={1} justifyContent="flex-end">
+              <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
             </Stack>
-            <Stack direction="row" spacing={1}>
-              <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
+            <Stack direction="row" spacing={1} justifyContent="flex-end">
+              <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                 const currencies = new Set(pricingRows.map(r=>r.currency).filter(Boolean));
                 if (currencies.size > 1) { setToast('Use a single currency across pricing rows'); return; }
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
@@ -2378,7 +2372,7 @@ const PRIMARY_BUTTON_SX = {
                     </Stack>
                   );
                 })()}
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={onSaveDetails}>Save Details</Button>
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Details</Button>
               </>
             )}
           </Stack>
@@ -2412,7 +2406,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={onSaveDetails}>Save Availability</Button>
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Availability</Button>
               </>
             )}
           </Stack>
@@ -2432,7 +2426,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={onSaveDetails}>Save Policies</Button>
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Policies</Button>
               </>
             )}
           </Stack>
@@ -2508,8 +2502,8 @@ const PRIMARY_BUTTON_SX = {
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={1} alignItems="center">
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} disabled={validating} onClick={runValidation}>{validating ? 'Validating…' : 'Run Validation'}</Button>
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} disabled={validating || experiences.length===0} onClick={async ()=>{
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<CheckIcon />} disabled={validating} onClick={runValidation}>{validating ? 'Validating…' : 'Run Validation'}</Button>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<CheckIcon />} disabled={validating || experiences.length===0} onClick={async ()=>{
                     const results: Record<string, number> = {} as any;
                     for (const e of experiences) {
                       const issues = await (async ()=>{
