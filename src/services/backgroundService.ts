@@ -12,12 +12,20 @@ export type PortalBackground = {
 const N8N_BASE = 'https://n8n.experiahub.com/webhook';
 
 export async function searchUnsplash(query: string, page = 1, perPage = 30): Promise<any[]> {
-  const qp = new URLSearchParams({ q: query || '', page: String(page), per_page: String(perPage) });
-  const res = await fetch(`${N8N_BASE}/media/unsplash/search?${qp.toString()}`, { cache: 'no-store' });
-  if (!res.ok) return [];
-  const data = await res.json().catch(() => ({}));
-  const list = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
-  return list;
+  try {
+    const qp = new URLSearchParams({ q: query || '', page: String(page), per_page: String(perPage) });
+    const res = await fetch(`${N8N_BASE}/media/unsplash/search?${qp.toString()}`, { cache: 'no-store' });
+    if (!res.ok) {
+        console.error('searchUnsplash failed:', res.status, res.statusText);
+        return [];
+    }
+    const data = await res.json().catch(() => ({}));
+    const list = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
+    return list;
+  } catch (e) {
+      console.error('searchUnsplash error:', e);
+      return [];
+  }
 }
 
 export async function getUserBackground(token: string | null): Promise<PortalBackground | null> {
@@ -47,7 +55,9 @@ export async function trackDownload(id: string): Promise<void> {
   try {
     if (!id) return;
     await fetch(`${N8N_BASE}/media/unsplash/track-download?id=${encodeURIComponent(id)}`, { method: 'POST' });
-  } catch {}
+  } catch (e) {
+    console.error('TrackDownload error:', e);
+  }
 }
 
 export function loadCachedBackground(userId?: string | null): PortalBackground | null {
@@ -55,7 +65,10 @@ export function loadCachedBackground(userId?: string | null): PortalBackground |
     const key = `portal_bg:${userId || 'anon'}`;
     const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as PortalBackground) : null;
-  } catch { return null; }
+  } catch (e) {
+    console.error('Error loading cached background:', e);
+    return null;
+  }
 }
 
 export function saveCachedBackground(bg: PortalBackground | null, userId?: string | null): void {

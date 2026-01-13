@@ -1,3 +1,4 @@
+/*
 UPDATE public.suppliers
 SET
     billing_data = jsonb_build_object(
@@ -31,9 +32,9 @@ SET
         'phone', '+81-90-1234-5678'
     )
 WHERE application_id = 'SUP-543C66BA';
+*/
 
 -- Option 2: If using flat columns
-/*
 UPDATE public.suppliers
 SET
     company_name = 'ExperiaHub Test Corp',
@@ -41,5 +42,4 @@ SET
     tax_id = 'JP-123456789',
     legal_name = 'ExperiaHub Legal Entity KK',
     representative_name = 'Yasu Saito'
-WHERE id = 'SUP-543C66BA';
-*/
+WHERE application_id = 'SUP-543C66BA';
