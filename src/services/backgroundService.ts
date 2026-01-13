@@ -22,7 +22,7 @@ export async function searchUnsplash(query: string, page = 1, perPage = 30): Pro
     const res = await fetch(`/api/unsplash?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`);
     if (!res.ok) throw new Error(`Unsplash proxy error: ${res.status}`);
     const json = await res.json();
-    return Array.isArray(json) ? json : [];
+    return Array.isArray(json?.results) ? json.results : (Array.isArray(json) ? json : []);
   } catch (err) {
     console.error('searchUnsplash error:', err);
     return [];
