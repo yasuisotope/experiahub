@@ -13,18 +13,14 @@ const N8N_BASE = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_
 
 export async function searchUnsplash(query: string, page = 1, perPage = 30): Promise<any[]> {
   try {
-    const qp = new URLSearchParams({ q: query || '', page: String(page), per_page: String(perPage) });
-    const res = await fetch(`${N8N_BASE}/media/unsplash/search?${qp.toString()}`, { cache: 'no-store' });
-    if (!res.ok) {
-        console.error('searchUnsplash failed:', res.status, res.statusText);
-        return [];
-    }
-    const data = await res.json().catch(() => ({}));
-    const list = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
-    return list;
-  } catch (e) {
-      console.error('searchUnsplash error:', e);
-      return [];
+    // Use local API proxy to avoid CORS issues
+    const res = await fetch(`/api/unsplash?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`);
+    if (!res.ok) throw new Error(`Unsplash proxy error: ${res.status}`);
+    const json = await res.json();
+    return Array.isArray(json) ? json : [];
+  } catch (err) {
+    console.error('searchUnsplash error:', err);
+    return [];
   }
 }
 
