@@ -250,8 +250,8 @@ export default function OnboardingForm({ applicationId, initialData }: { applica
             boxShadow: '0 4px 12px rgba(1, 0, 87, 0.2)',
             transition: 'all 0.5s ease',
             '&:hover': { 
-              bgcolor: '#C5A059', 
-              boxShadow: '0 6px 16px rgba(197, 160, 89, 0.3)',
+              bgcolor: '#ffbf00', 
+              boxShadow: '0 6px 16px rgba(255, 191, 0, 0.3)',
               transform: 'translateY(-1px)'
             } 
           }} 

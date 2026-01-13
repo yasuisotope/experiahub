@@ -1533,7 +1533,7 @@ export default function SupplierPortalPage() {
     return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
       <Stack spacing={2} alignItems="center">
-        <CircularProgress sx={{ color: '#C5A059' }} />
+        <CircularProgress sx={{ color: '#ffbf00' }} />
         <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
       </Stack>
     </Box>
@@ -1576,7 +1576,7 @@ export default function SupplierPortalPage() {
           <Box sx={{ mb: 3 }}>
             <img src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png" alt="ExperiaHub" style={{ height: '32px', width: 'auto' }} />
           </Box>
-          <Typography variant="overline" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 3, mb: 2, display: 'block' }}>
+          <Typography variant="overline" sx={{ color: '#ffbf00', fontWeight: 800, letterSpacing: 3, mb: 2, display: 'block' }}>
             {authTab === 'login' ? 'PARTNER PORTAL' : 'PARTNERSHIP APPROVED'}
           </Typography>
           
@@ -1606,8 +1606,8 @@ export default function SupplierPortalPage() {
                { step: '03', title: 'Portfolio Sync', desc: 'Connect inventory.' },
             ].map((item, i) => (
               <Grid item xs={12} sm={4} key={i} sx={{ display: 'flex' }}>
-                <Box sx={{ p: 1.5, borderLeft: '2px solid #C5A059', bgcolor: 'transparent', borderRadius: '0 4px 4px 0', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-                  <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
+                <Box sx={{ p: 1.5, borderLeft: '2px solid #ffbf00', bgcolor: 'transparent', borderRadius: '0 4px 4px 0', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                  <Typography variant="caption" sx={{ color: '#ffbf00', fontWeight: 800, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
                   <Typography variant="subtitle2" sx={{ color: '#010057', fontWeight: 700, lineHeight: 1.2 }}>{item.title}</Typography>
                   <Typography variant="caption" sx={{ color: '#64748B', lineHeight: 1.1 }}>{item.desc}</Typography>
                 </Box>
@@ -1667,7 +1667,7 @@ export default function SupplierPortalPage() {
                 boxShadow: '0 10px 25px rgba(1, 0, 87, 0.15)',
                 transition: 'all 0.3s ease',
                 '&:hover': { 
-                  bgcolor: '#C5A059', 
+                  bgcolor: '#ffbf00', 
                   transform: 'translateY(-1px)',
                   boxShadow: '0 15px 35px rgba(197, 160, 89, 0.25)' 
                 }
@@ -1700,7 +1700,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1245_FINAL_V2
+              Build: 2026.01.12.1315_FINAL_V3
             </Typography>
           </Box>
         </Paper>
@@ -1729,6 +1729,9 @@ export default function SupplierPortalPage() {
               style={{ height: 'auto', width: '100%', maxWidth: '200px' }}
             />
           </Box>
+          <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', textAlign: 'center', mb: 2, lineHeight: 1.1 }}>
+            Supplier Portal
+          </Typography>
 
           <Stack spacing={2} sx={{ mb: 2, px: 1 }}>
             {/* Identity Card */}
@@ -1811,7 +1814,7 @@ export default function SupplierPortalPage() {
                   label="Guest Session"
                   size="small"
                   onClick={() => setHasBegun(false)}
-                  sx={{ bgcolor: 'rgba(197, 160, 89, 0.1)', color: '#C5A059', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(197, 160, 89, 0.3)' }}
+                  sx={{ bgcolor: 'rgba(197, 160, 89, 0.1)', color: '#ffbf00', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(197, 160, 89, 0.3)' }}
                 />
               )}
               <Stack direction="row" spacing={0.5} alignItems="center" sx={{ p: 0.5, borderRadius: 1, border: '1px solid rgba(74,124,140,0.18)', bgcolor: 'rgba(74,124,140,0.04)' }}>
@@ -1986,7 +1989,7 @@ export default function SupplierPortalPage() {
 
         {section === 'company' && subsection.startsWith('payouts_') && (
           <Fade in timeout={250}>
-            <Box>
+            <Box sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>{subsectionLabel}</Typography>
               {subsection === 'payouts_overview' && (
                 <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, borderColor: 'rgba(0,0,0,0.08)' }}>
@@ -2019,7 +2022,7 @@ export default function SupplierPortalPage() {
                     </Typography>
                     <Button
                       variant="contained"
-                      sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }}
+                      sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }}
                       onClick={async ()=>{
                         try {
                           if (!appId) { setToast('Missing application ID'); return; }
@@ -2062,7 +2065,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Invoice email" value={companyBilling.invoiceEmail} onChange={(e)=>setCompanyBilling(s=>({ ...s, invoiceEmail: e.target.value }))} fullWidth />
                   <TextField label="Billing currency" value={companyBilling.currency} onChange={(e)=>setCompanyBilling(s=>({ ...s, currency: e.target.value }))} onBlur={(e)=>setCompanyBilling(s=>({ ...s, currency: String(e.target.value||'').toUpperCase() }))} fullWidth />
                 </Stack>
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/billing/save`, {
@@ -2096,7 +2099,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Privacy URL" value={companyLegal.privacyUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, privacyUrl: e.target.value }))} fullWidth />
                 </Stack>
                 <TextField label="Representative" value={companyLegal.representative} onChange={(e)=>setCompanyLegal(s=>({ ...s, representative: e.target.value }))} fullWidth />
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/legal/save`, {
@@ -2134,7 +2137,7 @@ export default function SupplierPortalPage() {
                 ))}
                 <Stack direction="row" spacing={1}>
                   <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
-                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
+                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const res = await fetch(`${N8N_BASE}/supplier/company/locations/save`, {
@@ -2160,7 +2163,7 @@ export default function SupplierPortalPage() {
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>User Profile</Typography>
                 <TextField label="Display name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <Button variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     if (!userDisplayName.trim()) { setToast('Please enter a display name'); return; }
@@ -2188,7 +2191,7 @@ export default function SupplierPortalPage() {
                 <TextField label="New password" type="password" value={passwordNew} onChange={(e)=>setPasswordNew(e.target.value)} fullWidth required error={passwordNew.length>0 && passwordNew.length<8} helperText={passwordNew.length>0 && passwordNew.length<8 ? 'Min 8 characters' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }}
+                  sx={{ bgcolor: '#010057', borderRadius: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }}
                   disabled={securitySubmitting}
                   onClick={async ()=>{
                     try {
@@ -2224,7 +2227,7 @@ export default function SupplierPortalPage() {
                 <Stack direction="row" spacing={1}>
                   <TextField size="small" label="Login or Email" value={tokensUser} onChange={(e)=>setTokensUser(e.target.value)} fullWidth />
                   <TextField size="small" label="Current Password" type="password" value={tokensPassword} onChange={(e)=>setTokensPassword(e.target.value)} fullWidth />
-                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
+                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
                 </Stack>
 
                 <Stack direction="row" spacing={1} alignItems="center">
@@ -2301,7 +2304,7 @@ export default function SupplierPortalPage() {
               <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 2, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
             </Stack>
             <Stack direction="row" spacing={1}>
-              <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={async ()=>{
+              <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
                 const currencies = new Set(pricingRows.map(r=>r.currency).filter(Boolean));
                 if (currencies.size > 1) { setToast('Use a single currency across pricing rows'); return; }
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
@@ -2357,7 +2360,7 @@ export default function SupplierPortalPage() {
                     </Stack>
                   );
                 })()}
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={onSaveDetails}>Save Details</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={onSaveDetails}>Save Details</Button>
               </>
             )}
           </Stack>
@@ -2391,7 +2394,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={onSaveDetails}>Save Availability</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={onSaveDetails}>Save Availability</Button>
               </>
             )}
           </Stack>
@@ -2411,7 +2414,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }} onClick={onSaveDetails}>Save Policies</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={onSaveDetails}>Save Policies</Button>
               </>
             )}
           </Stack>
@@ -2581,7 +2584,7 @@ export default function SupplierPortalPage() {
                 </Stack>
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#C5A059' } }}
+                  sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }}
                   onClick={syncSelected}
                   disabled={(validationMap[selectedExperienceId] ?? Infinity) !== 0}
                 >
