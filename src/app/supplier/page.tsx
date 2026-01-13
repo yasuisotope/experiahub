@@ -817,8 +817,24 @@ export default function SupplierPortalPage() {
   const [validating, setValidating] = React.useState(false);
   const [validationIssues, setValidationIssues] = React.useState<string[]>([]);
   const [validationMap, setValidationMap] = React.useState<Record<string, number>>({});
-  const [defaultCurrency, setDefaultCurrency] = React.useState<string>('');
-  const [defaultTimeZone, setDefaultTimeZone] = React.useState<string>('');
+  const defaultTimeZone = 'Asia/Tokyo';
+const defaultCurrency = 'USD';
+
+// Standardized button style matching OnboardingForm "Save Profile"
+const PRIMARY_BUTTON_SX = {
+  px: 3, py: 0.8, borderRadius: 1,
+  bgcolor: '#010057', color: '#fff',
+  fontWeight: 700, fontFamily: 'Nunito, sans-serif',
+  textTransform: 'none',
+  boxShadow: '0 4px 12px rgba(1, 0, 87, 0.2)',
+  transition: 'all 0.5s ease',
+  width: 'fit-content',
+  '&:hover': {
+    bgcolor: '#ffbf00',
+    boxShadow: '0 6px 16px rgba(255, 191, 0, 0.3)',
+    transform: 'translateY(-1px)'
+  }
+};
   const SUGGESTED_CATEGORIES = React.useMemo(() => ['Cultural','Food & Drink','Adventure','Nature','Sightseeing','Wellness','Nightlife','Workshops','Museums'], []);
   const TIME_ZONES = React.useMemo(() => ['UTC','Asia/Tokyo','America/Los_Angeles','Europe/London'], []);
   const [pricingRows, setPricingRows] = React.useState<{ category: string; amount: string; currency: string }[]>([]);
@@ -1191,8 +1207,8 @@ export default function SupplierPortalPage() {
     try {
       const c = localStorage.getItem('supplier_default_currency') || '';
       const tz = localStorage.getItem('supplier_default_timezone') || '';
-      setDefaultCurrency(c);
-      setDefaultTimeZone(tz);
+      // setDefaultCurrency(c); // Removed as defaultCurrency is now a constant
+      // setDefaultTimeZone(tz); // Removed as defaultTimeZone is now a constant
     } catch {}
   }, []);
 
@@ -2019,7 +2035,7 @@ export default function SupplierPortalPage() {
                     <Button
                       size="small"
                       variant="contained"
-                      sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, px: 3, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }}
+                      sx={PRIMARY_BUTTON_SX}
                       onClick={async ()=>{
                         try {
                           if (!appId) { setToast('Missing application ID'); return; }
@@ -2056,13 +2072,15 @@ export default function SupplierPortalPage() {
                 <TextField label="Billing address" value={companyBilling.address} onChange={(e)=>setCompanyBilling(s=>({ ...s, address: e.target.value }))} fullWidth />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Country" value={companyBilling.country} onChange={(e)=>setCompanyBilling(s=>({ ...s, country: e.target.value }))} fullWidth />
-                  <TextField label="Tax ID" value={companyBilling.taxId} onChange={(e)=>setCompanyBilling(s=>({ ...s, taxId: e.target.value }))} fullWidth />
+                  <Tooltip title="Enter your local Tax Identification Number" arrow placement="top">
+                    <TextField label="Tax ID" value={companyBilling.taxId} onChange={(e)=>setCompanyBilling(s=>({ ...s, taxId: e.target.value }))} fullWidth />
+                  </Tooltip>
                 </Stack>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Invoice email" value={companyBilling.invoiceEmail} onChange={(e)=>setCompanyBilling(s=>({ ...s, invoiceEmail: e.target.value }))} fullWidth />
                   <TextField label="Billing currency" value={companyBilling.currency} onChange={(e)=>setCompanyBilling(s=>({ ...s, currency: e.target.value }))} onBlur={(e)=>setCompanyBilling(s=>({ ...s, currency: String(e.target.value||'').toUpperCase() }))} fullWidth />
                 </Stack>
-                <Button size="small" variant="contained" sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/billing/save`, {
@@ -2089,14 +2107,16 @@ export default function SupplierPortalPage() {
                 <TextField label="Legal entity name" value={companyLegal.legalName} onChange={(e)=>setCompanyLegal(s=>({ ...s, legalName: e.target.value }))} fullWidth />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Registration number" value={companyLegal.regNumber} onChange={(e)=>setCompanyLegal(s=>({ ...s, regNumber: e.target.value }))} fullWidth />
-                  <TextField label="VAT number" value={companyLegal.vatNumber} onChange={(e)=>setCompanyLegal(s=>({ ...s, vatNumber: e.target.value }))} fullWidth />
+                  <Tooltip title="Enter your Value Added Tax registration number if applicable" arrow placement="top">
+                    <TextField label="VAT number" value={companyLegal.vatNumber} onChange={(e)=>setCompanyLegal(s=>({ ...s, vatNumber: e.target.value }))} fullWidth />
+                  </Tooltip>
                 </Stack>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Terms URL" value={companyLegal.termsUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, termsUrl: e.target.value }))} fullWidth />
                   <TextField label="Privacy URL" value={companyLegal.privacyUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, privacyUrl: e.target.value }))} fullWidth />
                 </Stack>
                 <TextField label="Representative" value={companyLegal.representative} onChange={(e)=>setCompanyLegal(s=>({ ...s, representative: e.target.value }))} fullWidth />
-                <Button size="small" variant="contained" sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/legal/save`, {
@@ -2134,7 +2154,7 @@ export default function SupplierPortalPage() {
                 ))}
                 <Stack direction="row" spacing={1}>
                   <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
-                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', borderRadius: 1, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const res = await fetch(`${N8N_BASE}/supplier/company/locations/save`, {
@@ -2160,7 +2180,7 @@ export default function SupplierPortalPage() {
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>User Profile</Typography>
                 <TextField label="Display name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <Button variant="contained" sx={{ bgcolor: '#010057', borderRadius: 1, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
+                <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     if (!userDisplayName.trim()) { setToast('Please enter a display name'); return; }
@@ -2188,7 +2208,8 @@ export default function SupplierPortalPage() {
                 <TextField label="New password" type="password" value={passwordNew} onChange={(e)=>setPasswordNew(e.target.value)} fullWidth required error={passwordNew.length>0 && passwordNew.length<8} helperText={passwordNew.length>0 && passwordNew.length<8 ? 'Min 8 characters' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#010057', borderRadius: 1, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }}
+                  size="small"
+                  sx={PRIMARY_BUTTON_SX}
                   disabled={securitySubmitting}
                   onClick={async ()=>{
                     try {
@@ -2224,12 +2245,12 @@ export default function SupplierPortalPage() {
                 <Stack direction="row" spacing={1}>
                   <TextField size="small" label="Login or Email" value={tokensUser} onChange={(e)=>setTokensUser(e.target.value)} fullWidth />
                   <TextField size="small" label="Current Password" type="password" value={tokensPassword} onChange={(e)=>setTokensPassword(e.target.value)} fullWidth />
-                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
                 </Stack>
 
                 <Stack direction="row" spacing={1} alignItems="center">
                   <TextField size="small" label="Token Name" value={tokenName} onChange={(e)=>setTokenName(e.target.value)} />
-                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
                 </Stack>
 
                 {tokensLoading && (<Alert severity="info">Loading tokens…</Alert>)}
@@ -2301,7 +2322,7 @@ export default function SupplierPortalPage() {
               <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
             </Stack>
             <Stack direction="row" spacing={1}>
-              <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={async ()=>{
+              <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} onClick={async ()=>{
                 const currencies = new Set(pricingRows.map(r=>r.currency).filter(Boolean));
                 if (currencies.size > 1) { setToast('Use a single currency across pricing rows'); return; }
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
@@ -2357,7 +2378,7 @@ export default function SupplierPortalPage() {
                     </Stack>
                   );
                 })()}
-                <Button size="small" variant="contained" sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={onSaveDetails}>Save Details</Button>
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={onSaveDetails}>Save Details</Button>
               </>
             )}
           </Stack>
@@ -2391,7 +2412,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button size="small" variant="contained" sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={onSaveDetails}>Save Availability</Button>
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={onSaveDetails}>Save Availability</Button>
               </>
             )}
           </Stack>
@@ -2411,7 +2432,7 @@ export default function SupplierPortalPage() {
                   <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }} onClick={onSaveDetails}>Save Policies</Button>
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} onClick={onSaveDetails}>Save Policies</Button>
               </>
             )}
           </Stack>
@@ -2487,8 +2508,8 @@ export default function SupplierPortalPage() {
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={1} alignItems="center">
-                  <Button variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} disabled={validating} onClick={runValidation}>{validating ? 'Validating…' : 'Run Validation'}</Button>
-                  <Button variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} disabled={validating || experiences.length===0} onClick={async ()=>{
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} disabled={validating} onClick={runValidation}>{validating ? 'Validating…' : 'Run Validation'}</Button>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} disabled={validating || experiences.length===0} onClick={async ()=>{
                     const results: Record<string, number> = {} as any;
                     for (const e of experiences) {
                       const issues = await (async ()=>{

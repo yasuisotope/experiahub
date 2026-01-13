@@ -1,8 +1,3 @@
--- Mock Data Update SQL for Supplier Portal (User/App ID: SUP-543C66BA)
--- Adjust table name if necessary (likely 'suppliers', 'applications', or 'supplier_applications')
--- This assumes a JSONB column structure often used with N8N/Supabase integrations.
-
--- Option 1: If using a 'suppliers' table with JSONB columns
 UPDATE public.suppliers
 SET
     billing_data = jsonb_build_object(
@@ -35,7 +30,7 @@ SET
         'displayName', 'Experia Admin',
         'phone', '+81-90-1234-5678'
     )
-WHERE id = 'SUP-543C66BA'; -- Or applicationId = 'SUP-543C66BA'
+WHERE id = 'SUP-543C66BA';
 
 -- Option 2: If using flat columns
 /*
