@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+// Unsplash API Credentials
+// Ideally these should be in environment variables, but hardcoding provided key for immediate fix.
+const UNSPLASH_ACCESS_KEY = 'DDzXTZVCKOwOwVxQniyA4vqCTtcEaqKRoN4I2WUTfH0'; 
+const UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q');
@@ -12,36 +17,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing query parameter "q"' }, { status: 400 });
   }
 
-  let n8nBase = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
-  
-  if (n8nBase.includes('n8n.experiahub.com')) {
-      n8nBase = 'https://n8n.isotope-blue.com/webhook';
-  }
-
-  // Ensure webhook suffix matches our expectation for Unsplash endpoint location
-  if (!n8nBase.endsWith('/webhook')) {
-      n8nBase += '/webhook';
-  }
-
-  const targetUrl = `${n8nBase}/media/unsplash/search?q=${encodeURIComponent(q)}&page=${page}&per_page=${per_page}`;
-
   try {
-    const res = await fetch(targetUrl);
+    const targetUrl = `${UNSPLASH_API_URL}?query=${encodeURIComponent(q)}&page=${page}&per_page=${per_page}`;
+    
+    const res = await fetch(targetUrl, {
+      headers: {
+        'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+        'Accept-Version': 'v1'
+      }
+    });
+
     if (!res.ok) {
-        // Return debug info
-        return NextResponse.json({ 
-            error: 'Unsplash Proxy Upstream Error', 
-            status: res.status, 
-            targetUrl // LEAK TARGET URL
-        }, { status: res.status });
+      const errorText = await res.text();
+      console.error(`[Unsplash Logic] Upstream Error ${res.status}:`, errorText);
+      return NextResponse.json({ 
+          error: 'Unsplash API Error', 
+          status: res.status, 
+          details: errorText 
+      }, { status: res.status });
     }
+
     const data = await res.json();
+    
+    // The frontend expects { results: [...] } or just [...]
+    // Unsplash API returns { total: ..., total_pages: ..., results: [...] }
+    // This matches the frontend expectation (data.results).
+    
     return NextResponse.json(data);
+
   } catch (error: any) {
-    console.error('[Unsplash Proxy] Error:', error);
-    return NextResponse.json({ 
-        error: error.message || 'Internal Server Error', 
-        targetUrl // LEAK TARGET URL
-    }, { status: 500 });
+    console.error('[Unsplash Logic] Internal Error:', error);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
