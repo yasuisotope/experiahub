@@ -197,12 +197,19 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     }
     
     if (Object.keys(updates).length > 0) {
-        const { error } = await supabase.from('suppliers').update(updates).eq('application_id', appId);
+        const { data, error } = await supabase.from('suppliers').update(updates).eq('application_id', appId).select();
+        
         if (error) {
             console.error('[N8N Proxy] Direct Save Error:', error);
             return { success: false, error: error.message };
         }
-        else console.log(`[N8N Proxy] Direct Save Success for ${type} (${appId})`);
+        
+        if (!data || data.length === 0) {
+             console.warn(`[N8N Proxy] Direct Save: No row found for appId ${appId}`);
+             return { success: false, error: `Supplier Record not found for ID: ${appId}` };
+        }
+
+        console.log(`[N8N Proxy] Direct Save Success for ${type} (${appId})`);
     }
     return { success: true };
   } catch (e: any) {
