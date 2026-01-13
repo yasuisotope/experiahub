@@ -9,7 +9,7 @@ export type PortalBackground = {
   linkHtml?: string; // unsplash photo url
 };
 
-const N8N_BASE = 'https://n8n.experiahub.com/webhook';
+const N8N_BASE = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.experiahub.com/webhook';
 
 export async function searchUnsplash(query: string, page = 1, perPage = 30): Promise<any[]> {
   try {

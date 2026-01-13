@@ -2239,28 +2239,32 @@ const PRIMARY_BUTTON_SX = {
         {section === 'user' && subsection === 'user_tokens' && (
           <Fade in timeout={250}>
             <Box sx={{ p: 4 }}>
-              <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 3 }}>API Tokens</Typography>
-              <Stack spacing={1.5}>
-                <Stack direction="row" spacing={1}>
-                  <TextField size="small" label="Login or Email" value={tokensUser} onChange={(e)=>setTokensUser(e.target.value)} fullWidth />
-                  <TextField size="small" label="Current Password" type="password" value={tokensPassword} onChange={(e)=>setTokensPassword(e.target.value)} fullWidth />
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SyncIcon />} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
-                </Stack>
-
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <TextField size="small" label="Token Name" value={tokenName} onChange={(e)=>setTokenName(e.target.value)} />
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<AddIcon />} disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
-                </Stack>
-
-                {tokensLoading && (<Alert severity="info">Loading tokens…</Alert>)}
-                {!tokensLoading && apiTokens.length === 0 && (<Alert severity="info">No API tokens yet.</Alert>)}
-
-                {apiTokens.map((t)=> (
-                  <Stack key={t.uuid} direction="row" spacing={1} alignItems="center">
-                    <TextField size="small" value={`${t.name} — ${t.uuid}`} fullWidth />
-                    <Button size="small" color="error" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} disabled={tokenMutating} onClick={()=>deleteToken(t.uuid)}>Remove</Button>
+              <Stack spacing={4}>
+                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>API Tokens</Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your API access tokens.</Typography>
+                
+                <Stack spacing={3}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField size="small" label="Login or Email" value={tokensUser} onChange={(e)=>setTokensUser(e.target.value)} fullWidth />
+                    <TextField size="small" label="Current Password" type="password" value={tokensPassword} onChange={(e)=>setTokensPassword(e.target.value)} fullWidth />
+                    <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SyncIcon />} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
                   </Stack>
-                ))}
+
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <TextField size="small" label="Token Name" value={tokenName} onChange={(e)=>setTokenName(e.target.value)} fullWidth />
+                    <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<AddIcon />} disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
+                  </Stack>
+
+                  {tokensLoading && (<Alert severity="info">Loading tokens…</Alert>)}
+                  {!tokensLoading && apiTokens.length === 0 && (<Alert severity="info">No API tokens yet.</Alert>)}
+
+                  {apiTokens.map((t)=> (
+                    <Stack key={t.uuid} direction="row" spacing={2} alignItems="center">
+                      <TextField size="small" value={`${t.name} — ${t.uuid}`} fullWidth />
+                      <Button size="small" color="error" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} disabled={tokenMutating} onClick={()=>deleteToken(t.uuid)}>Remove</Button>
+                    </Stack>
+                  ))}
+                </Stack>
               </Stack>
             </Box>
           </Fade>
