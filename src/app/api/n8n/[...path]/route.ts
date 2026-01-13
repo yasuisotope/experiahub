@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,20 +50,38 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
         
         // STUB LOGIC: Handle known missing workflows to prevent UI errors
         if (response.status === 404) {
-             if (targetUrl.includes('supplier/company/billing/save') || targetUrl.includes('supplier/company/legal/save') || targetUrl.includes('supplier/company/locations/save')) {
-                 return NextResponse.json({ success: true, stub: true });
+             if (targetUrl.includes('supplier/company/billing/save')) {
+                 await handleDirectSave('billing', body, targetUrl);
+                 return NextResponse.json({ success: true, stub: true, saved_direct: true });
              }
+             if (targetUrl.includes('supplier/company/legal/save')) {
+                 await handleDirectSave('legal', body, targetUrl);
+                 return NextResponse.json({ success: true, stub: true, saved_direct: true });
+             }
+             if (targetUrl.includes('supplier/company/locations/save')) {
+                 await handleDirectSave('locations', body, targetUrl);
+                 return NextResponse.json({ success: true, stub: true, saved_direct: true });
+             }
+             if (targetUrl.includes('supplier/user/profile/save')) {
+                 await handleDirectSave('user_profile', body, targetUrl);
+                 return NextResponse.json({ success: true, stub: true, saved_direct: true });
+             }
+
              if (targetUrl.includes('supplier/company/billing/get')) {
-                 return NextResponse.json({ success: true, billing: {}, stub: true });
+                 const billing = await handleDirectGet('billing', targetUrl);
+                 return NextResponse.json({ success: true, billing: billing || {}, stub: true, direct: true });
              }
              if (targetUrl.includes('supplier/company/legal/get')) {
-                 return NextResponse.json({ success: true, legal: {}, stub: true });
+                 const legal = await handleDirectGet('legal', targetUrl);
+                 return NextResponse.json({ success: true, legal: legal || {}, stub: true, direct: true });
              }
              if (targetUrl.includes('supplier/company/locations/get')) {
-                 return NextResponse.json({ success: true, locations: [], stub: true });
+                 const locations = await handleDirectGet('locations', targetUrl);
+                 return NextResponse.json({ success: true, locations: locations || [], stub: true, direct: true });
              }
              if (targetUrl.includes('supplier/user/profile/get')) {
-                 return NextResponse.json({ success: true, profile: {}, stub: true });
+                 const profile = await handleDirectGet('user_profile', targetUrl);
+                 return NextResponse.json({ success: true, profile: profile || {}, stub: true, direct: true });
              }
               if (targetUrl.includes('supplier/user/background/get') || targetUrl.includes('auth/user/background/get')) {
                  return NextResponse.json({ success: true, background: null, stub: true });
@@ -119,3 +138,104 @@ export async function POST(req: NextRequest, ctx: any) { return proxyRequest(req
 export async function PUT(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 export async function PATCH(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 export async function DELETE(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
+
+async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile', body: any, url: string) {
+  try {
+    if (!body || !(body instanceof Blob)) return;
+    const text = await body.text();
+    const payload = JSON.parse(text);
+    const appId = payload.applicationId;
+    if (!appId) return;
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+        console.warn('[N8N Proxy] Missing Supabase credentials for direct save');
+        return;
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let updates: any = {};
+    if (type === 'billing' && payload.billing) {
+        updates = {
+            billing_company_name: payload.billing.companyName,
+            billing_address: payload.billing.address,
+            billing_country: payload.billing.country,
+            billing_tax_id: payload.billing.taxId,
+            billing_invoice_email: payload.billing.invoiceEmail,
+            billing_currency: payload.billing.currency
+        };
+    } else if (type === 'legal' && payload.legal) {
+        updates = {
+            legal_name: payload.legal.legalName,
+            legal_reg_number: payload.legal.regNumber,
+            legal_vat_number: payload.legal.vatNumber,
+            legal_terms_url: payload.legal.termsUrl,
+            legal_privacy_url: payload.legal.privacyUrl,
+            legal_representative: payload.legal.representative
+        };
+    } else if (type === 'locations' && payload.locations) {
+        updates = { locations_json: payload.locations };
+    } else if (type === 'user_profile') {
+        updates = {
+            contact_name: payload.displayName,
+            contact_phone: payload.phone
+        };
+    }
+    
+    if (Object.keys(updates).length > 0) {
+        const { error } = await supabase.from('suppliers').update(updates).eq('application_id', appId);
+        if (error) console.error('[N8N Proxy] Direct Save Error:', error);
+        else console.log(`[N8N Proxy] Direct Save Success for ${type} (${appId})`);
+    }
+  } catch (e) {
+    console.error('[N8N Proxy] Direct Save Exception:', e);
+  }
+}
+
+async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile', url: string) {
+  try {
+    const u = new URL(url);
+    const appId = u.searchParams.get('applicationId');
+    if (!appId) return null;
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) return null;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data, error } = await supabase.from('suppliers').select('*').eq('application_id', appId).single();
+    if (error || !data) return null;
+
+    if (type === 'billing') {
+        return {
+            companyName: data.billing_company_name,
+            address: data.billing_address,
+            country: data.billing_country,
+            taxId: data.billing_tax_id,
+            invoiceEmail: data.billing_invoice_email,
+            currency: data.billing_currency
+        };
+    } else if (type === 'legal') {
+        return {
+            legalName: data.legal_name,
+            regNumber: data.legal_reg_number,
+            vatNumber: data.legal_vat_number,
+            termsUrl: data.legal_terms_url,
+            privacyUrl: data.legal_privacy_url,
+            representative: data.legal_representative
+        };
+    } else if (type === 'locations') {
+        return { locations: data.locations_json };
+    } else if (type === 'user_profile') {
+        return {
+             display_name: data.contact_name,
+             phone: data.contact_phone,
+             email: data.contact_email
+        };
+    }
+  } catch (e) {
+      console.error('[N8N Proxy] Direct Get Exception:', e);
+      return null;
+  }
+}
