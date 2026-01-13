@@ -9,11 +9,16 @@ export type PortalBackground = {
   linkHtml?: string; // unsplash photo url
 };
 
-const N8N_BASE = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
+// Use local proxy for all N8N calls
+const N8N_BASE = '/api/n8n';
 
 export async function searchUnsplash(query: string, page = 1, perPage = 30): Promise<any[]> {
   try {
-    // Use local API proxy to avoid CORS issues
+    // Access 'media' endpoint - check if our proxy handles non-webhook paths?
+    // The current proxy appends '/webhook'. Unsplash is at /media... NOT /webhook/media?
+    // Wait, previous logs showed: 'https://n8n.isotope-blue.com/media/unsplash/search'
+    // My proxy forces '/webhook' suffix. I need to ADJUST the proxy or use the Unsplash dedicated Route.
+    // I will keep the Unsplash dedicated route /api/unsplash for simplicity + correctness.
     const res = await fetch(`/api/unsplash?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`);
     if (!res.ok) throw new Error(`Unsplash proxy error: ${res.status}`);
     const json = await res.json();

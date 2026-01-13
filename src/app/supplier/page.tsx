@@ -25,9 +25,8 @@ import { getUserBackground, setUserBackground, searchUnsplash, trackDownload, lo
 import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
 
 const getBaseUrl = () => {
-  const envUrl = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
-  if (envUrl.includes('/webhook')) return envUrl;
-  return `${envUrl.replace(/\/$/, '')}/webhook`;
+  // Use local proxy to avoid CORS and Env issues
+  return '/api/n8n';
 };
 const N8N_BASE = getBaseUrl();
 // Removed exposed TOKENS_API_KEY. Now handled in /api/supplier/tokens
