@@ -13,17 +13,18 @@ export async function GET(request: Request) {
   }
 
   // Determine the N8N base URL from env vars or fallback
+  // Determine the N8N base URL from env vars or fallback
+  // Defaults to ending in /webhook
   let n8nBase = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
   
-  // Remove trailing slashes and '/webhook' suffix to get the root base
-  // e.g. https://n8n.isotope-blue.com/webhook -> https://n8n.isotope-blue.com
-  let baseUrl = n8nBase.replace(/\/$/, '');
-  if (baseUrl.endsWith('/webhook')) {
-    baseUrl = baseUrl.substring(0, baseUrl.length - '/webhook'.length);
+  // Normalize: Ensure it DOES end with /webhook (if that's where the endpoint lives)
+  // Previous logic STRIPPED it, which was wrong. The original code used `${N8N_BASE}/media/unsplash/search`
+  if (!n8nBase.endsWith('/webhook')) {
+      n8nBase += '/webhook';
   }
 
-  // Construct the target URL. Note: The path is /media/unsplash/search
-  const targetUrl = `${baseUrl}/media/unsplash/search?q=${encodeURIComponent(q)}&page=${page}&per_page=${per_page}`;
+  // Construct the target URL. 
+  const targetUrl = `${n8nBase}/media/unsplash/search?q=${encodeURIComponent(q)}&page=${page}&per_page=${per_page}`;
 
   try {
     const res = await fetch(targetUrl);
