@@ -893,7 +893,14 @@ const PRIMARY_BUTTON_SX = {
   const refreshPayoutStatus = React.useCallback(async () => {
     if (!appId) return;
     try {
-      const res = await fetch(`${N8N_BASE}/supplier/payouts/status?applicationId=${encodeURIComponent(appId)}`, { cache: 'no-store' });
+      const token = AuthService.getToken();
+      const headers: any = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      const res = await fetch(`${N8N_BASE}/supplier/payouts/status?applicationId=${encodeURIComponent(appId)}`, { 
+        cache: 'no-store',
+        headers 
+      });
       if (!res.ok) { setPayoutStatus('unknown'); setStripeAccountId(''); setStripeDashboardUrl(''); return; }
       const j = await res.json();
       const st = (j?.status || 'unknown').toLowerCase();
@@ -934,9 +941,13 @@ const PRIMARY_BUTTON_SX = {
     const t = setTimeout(async () => {
       try {
         setAutoSaving(true);
+        const token = AuthService.getToken();
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         await Promise.all([
-          fetch(`${N8N_BASE}/supplier/company/billing/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ applicationId: appId, billing: companyBilling }) }),
-          fetch(`${N8N_BASE}/supplier/company/legal/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ applicationId: appId, legal: companyLegal }) })
+          fetch(`${N8N_BASE}/supplier/company/billing/save`, { method: 'POST', headers, body: JSON.stringify({ applicationId: appId, billing: companyBilling }) }),
+          fetch(`${N8N_BASE}/supplier/company/legal/save`, { method: 'POST', headers, body: JSON.stringify({ applicationId: appId, legal: companyLegal }) })
         ]);
       } catch {}
       finally { setAutoSaving(false); }
@@ -1039,12 +1050,16 @@ const PRIMARY_BUTTON_SX = {
         return;
       }
 
+      const token = AuthService.getToken();
+      const headers: any = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       try {
         console.log(`[SupplierPortal] Initiating handshake for appId: ${appId} at ${N8N_BASE}`);
 
         // A. Fetch Onboarding Status (Primary Source for New Suppliers / Supabase)
         // Updated to v2 to bypass ghost workflows
-        const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status-v2?applicationId=${encodeURIComponent(appId)}`);
+        const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status-v2?applicationId=${encodeURIComponent(appId)}`, { headers });
         
         if (statusRes.ok) {
           const fetchedStatus = await parseJsonSafe(statusRes);
@@ -1090,7 +1105,7 @@ const PRIMARY_BUTTON_SX = {
         }
 
         // B. Fetch WP Profile (Verified Account Data - may overwrite with more 'official' info)
-        const profileRes = await fetch(`${N8N_BASE}/supplier/user/profile/get?applicationId=${encodeURIComponent(appId)}`);
+        const profileRes = await fetch(`${N8N_BASE}/supplier/user/profile/get?applicationId=${encodeURIComponent(appId)}`, { headers });
         if (profileRes.ok) {
           const profileJson = await parseJsonSafe(profileRes);
           if (profileJson) {
@@ -1110,9 +1125,9 @@ const PRIMARY_BUTTON_SX = {
         // C. Fetch specialized Company Data (Billing, Legal, Locations)
         // Only overwrite if these endpoints return actual data and we aren't already filled
         const [billRes, legRes, locRes] = await Promise.all([
-          fetch(`${N8N_BASE}/supplier/company/billing/get?applicationId=${encodeURIComponent(appId)}`),
-          fetch(`${N8N_BASE}/supplier/company/legal/get?applicationId=${encodeURIComponent(appId)}`),
-          fetch(`${N8N_BASE}/supplier/company/locations/get?applicationId=${encodeURIComponent(appId)}`)
+          fetch(`${N8N_BASE}/supplier/company/billing/get?applicationId=${encodeURIComponent(appId)}`, { headers }),
+          fetch(`${N8N_BASE}/supplier/company/legal/get?applicationId=${encodeURIComponent(appId)}`, { headers }),
+          fetch(`${N8N_BASE}/supplier/company/locations/get?applicationId=${encodeURIComponent(appId)}`, { headers })
         ]);
 
         if (billRes.ok) {
