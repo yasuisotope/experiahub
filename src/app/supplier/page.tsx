@@ -769,6 +769,11 @@ export default function SupplierPortalPage() {
   const [tab, setTab] = React.useState<number>(0);
   const [section, setSection] = React.useState<'welcome'|'company'|'user'|'experiences'|'information'>('company');
   const [toast, setToast] = React.useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = React.useState<{ section: string; timestamp: string } | null>(null);
+  const handleSaveSuccess = (sectionName: string) => {
+    setSaveSuccess({ section: sectionName, timestamp: new Date().toLocaleString() });
+    setToast(`${sectionName} saved`);
+  };
   const [subsection, setSubsection] = React.useState<'profile'|'billing'|'legal'|'locations'|'user_profile'|'user_security'|'user_tokens'|'overview'|'details'|'media'|'pricing'|'availability'|'policies'|'distribution'|'validation'|'sync'|'payouts_overview'|'payouts_connect'|'resources'|'reports'|'help'|'status'>('profile');
   const [activitiesSimple, setActivitiesSimple] = React.useState<{ id: string; title: string }[]>([]);
   const [selectedExperienceId, setSelectedExperienceId] = React.useState<string>('');
@@ -1297,7 +1302,7 @@ const PRIMARY_BUTTON_SX = {
       const next = experiences.map(e => e.id === selectedExperienceId ? { ...e, ...details } as Experience : e);
       setExperiences(next);
       await saveAllExperiences(next);
-      setToast('Experience saved');
+      handleSaveSuccess('Experience');
     } catch (e: any) { setToast(e?.message || 'Save failed'); }
   };
 
@@ -2060,6 +2065,7 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={4}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Billing</Typography>
+                {saveSuccess?.section === 'Billing' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your invoice details and tax information.</Typography>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Company name" value={companyBilling.companyName} onChange={(e)=>setCompanyBilling(s=>({ ...s, companyName: e.target.value }))} fullWidth />
@@ -2082,7 +2088,7 @@ const PRIMARY_BUTTON_SX = {
                     });
                     const json = await res.json();
                     if (!json?.success) throw new Error(json?.error || 'Save failed');
-                    setToast('Billing saved');
+                    handleSaveSuccess('Billing');
                   } catch (e: any) { setToast(e?.message || 'Save failed'); }
                 }}>Save Billing</Button>
               </Stack>
@@ -2097,6 +2103,7 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={4}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Legal Entity</Typography>
+                {saveSuccess?.section === 'Legal' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Update your legal entity registration and terms.</Typography>
                 <TextField label="Legal entity name" value={companyLegal.legalName} onChange={(e)=>setCompanyLegal(s=>({ ...s, legalName: e.target.value }))} fullWidth />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
@@ -2119,7 +2126,7 @@ const PRIMARY_BUTTON_SX = {
                     });
                     const json = await res.json();
                     if (!json?.success) throw new Error(json?.error || 'Save failed');
-                    setToast('Legal saved');
+                    handleSaveSuccess('Legal');
                   } catch (e: any) { setToast(e?.message || 'Save failed'); }
                 }}>Save Legal</Button>
               </Stack>
@@ -2133,6 +2140,7 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={4}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Locations</Typography>
+                {saveSuccess?.section === 'Locations' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your physical office locations.</Typography>
                 {companyLocations.map((loc, idx) => (
                   <Box key={idx} sx={{ p: 0, borderRadius: 0 }}>
@@ -2158,7 +2166,7 @@ const PRIMARY_BUTTON_SX = {
                       });
                       const json = await res.json();
                       if (!json?.success) throw new Error(json?.error || 'Save failed');
-                      setToast('Locations saved');
+                      handleSaveSuccess('Locations');
                     } catch (e: any) { setToast(e?.message || 'Save failed'); }
                   }}>Save Locations</Button>
                 </Stack>
@@ -2173,6 +2181,7 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
                 <Stack spacing={4}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Profile</Typography>
+                {saveSuccess?.section === 'Profile' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Update your personal contact information.</Typography>
                 <TextField label="Display Name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
@@ -2186,7 +2195,7 @@ const PRIMARY_BUTTON_SX = {
                     });
                     const json = await res.json();
                     if (!json?.success) throw new Error(json?.error || 'Save failed');
-                    setToast('Profile saved');
+                    handleSaveSuccess('Profile');
                   } catch (e: any) { setToast(e?.message || 'Save failed'); }
                 }}>Save Profile</Button>
               </Stack>
@@ -2343,6 +2352,7 @@ const PRIMARY_BUTTON_SX = {
           <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Product Details</Typography>
+            {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit details.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -2393,6 +2403,7 @@ const PRIMARY_BUTTON_SX = {
           <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Availability & Schedule</Typography>
+            {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit availability.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -2427,6 +2438,7 @@ const PRIMARY_BUTTON_SX = {
           <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Policies & Requirements</Typography>
+            {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit policies.</Alert>)}
             {selectedExperienceId && (
               <>
