@@ -243,10 +243,10 @@ export default function OnboardingForm({ applicationId, initialData }: { applica
           disabled={saving} 
           variant="contained"
           sx={{ 
-            px: 3, py: 0.8, borderRadius: 3, 
+            px: 3, py: 0.8, borderRadius: 1, 
             bgcolor: '#010057', color: '#fff', 
             fontWeight: 700, fontFamily: 'Nunito, sans-serif', 
-            textTransform: 'none', fontSize: '1rem',
+            textTransform: 'none',
             boxShadow: '0 4px 12px rgba(1, 0, 87, 0.2)',
             transition: 'all 0.5s ease',
             '&:hover': { 
@@ -256,6 +256,7 @@ export default function OnboardingForm({ applicationId, initialData }: { applica
             } 
           }} 
           startIcon={!saving ? <CheckCircleOutlineIcon /> : undefined}
+          size="small"
         >
           {saving ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Save Profile'}
         </Button>

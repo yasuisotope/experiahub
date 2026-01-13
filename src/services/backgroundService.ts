@@ -9,7 +9,7 @@ export type PortalBackground = {
   linkHtml?: string; // unsplash photo url
 };
 
-const N8N_BASE = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
+const N8N_BASE = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
 
 export async function searchUnsplash(query: string, page = 1, perPage = 30): Promise<any[]> {
   const qp = new URLSearchParams({ q: query || '', page: String(page), per_page: String(perPage) });
