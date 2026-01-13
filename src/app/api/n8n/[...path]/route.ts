@@ -51,36 +51,40 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
         // STUB LOGIC: Handle known missing workflows to prevent UI errors
         if (response.status === 404) {
              if (targetUrl.includes('supplier/company/billing/save')) {
-                 await handleDirectSave('billing', body, targetUrl);
+                 const res = await handleDirectSave('billing', body, targetUrl, authHeader);
+                 if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
                  return NextResponse.json({ success: true, stub: true, saved_direct: true });
              }
              if (targetUrl.includes('supplier/company/legal/save')) {
-                 await handleDirectSave('legal', body, targetUrl);
+                 const res = await handleDirectSave('legal', body, targetUrl, authHeader);
+                 if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
                  return NextResponse.json({ success: true, stub: true, saved_direct: true });
              }
              if (targetUrl.includes('supplier/company/locations/save')) {
-                 await handleDirectSave('locations', body, targetUrl);
+                 const res = await handleDirectSave('locations', body, targetUrl, authHeader);
+                 if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
                  return NextResponse.json({ success: true, stub: true, saved_direct: true });
              }
              if (targetUrl.includes('supplier/user/profile/save')) {
-                 await handleDirectSave('user_profile', body, targetUrl);
+                 const res = await handleDirectSave('user_profile', body, targetUrl, authHeader);
+                 if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
                  return NextResponse.json({ success: true, stub: true, saved_direct: true });
              }
 
              if (targetUrl.includes('supplier/company/billing/get')) {
-                 const billing = await handleDirectGet('billing', targetUrl);
+                 const billing = await handleDirectGet('billing', targetUrl, authHeader);
                  return NextResponse.json({ success: true, billing: billing || {}, stub: true, direct: true });
              }
              if (targetUrl.includes('supplier/company/legal/get')) {
-                 const legal = await handleDirectGet('legal', targetUrl);
+                 const legal = await handleDirectGet('legal', targetUrl, authHeader);
                  return NextResponse.json({ success: true, legal: legal || {}, stub: true, direct: true });
              }
              if (targetUrl.includes('supplier/company/locations/get')) {
-                 const locations = await handleDirectGet('locations', targetUrl);
+                 const locations = await handleDirectGet('locations', targetUrl, authHeader);
                  return NextResponse.json({ success: true, locations: locations || [], stub: true, direct: true });
              }
              if (targetUrl.includes('supplier/user/profile/get')) {
-                 const profile = await handleDirectGet('user_profile', targetUrl);
+                 const profile = await handleDirectGet('user_profile', targetUrl, authHeader);
                  return NextResponse.json({ success: true, profile: profile || {}, stub: true, direct: true });
              }
               if (targetUrl.includes('supplier/user/background/get') || targetUrl.includes('auth/user/background/get')) {
@@ -139,21 +143,30 @@ export async function PUT(req: NextRequest, ctx: any) { return proxyRequest(req,
 export async function PATCH(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 export async function DELETE(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 
-async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile', body: any, url: string) {
+async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
   try {
-    if (!body || !(body instanceof Blob)) return;
+    if (!body || !(body instanceof Blob)) return { success: false, error: 'Invalid Body' };
     const text = await body.text();
     const payload = JSON.parse(text);
     const appId = payload.applicationId;
-    if (!appId) return;
+    if (!appId) return { success: false, error: 'Missing applicationId' };
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
     if (!supabaseUrl || !supabaseKey) {
         console.warn('[N8N Proxy] Missing Supabase credentials for direct save');
-        return;
+        return { success: false, error: 'Configuration Error' };
     }
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Inject Auth Header if using Anon Key (RLS fix)
+    const options: any = {};
+    if (!isServiceKey && authHeader) {
+        options.global = { headers: { Authorization: authHeader } };
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey, options);
 
     let updates: any = {};
     if (type === 'billing' && payload.billing) {
@@ -185,24 +198,36 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     
     if (Object.keys(updates).length > 0) {
         const { error } = await supabase.from('suppliers').update(updates).eq('application_id', appId);
-        if (error) console.error('[N8N Proxy] Direct Save Error:', error);
+        if (error) {
+            console.error('[N8N Proxy] Direct Save Error:', error);
+            return { success: false, error: error.message };
+        }
         else console.log(`[N8N Proxy] Direct Save Success for ${type} (${appId})`);
     }
-  } catch (e) {
+    return { success: true };
+  } catch (e: any) {
     console.error('[N8N Proxy] Direct Save Exception:', e);
+    return { success: false, error: e.message };
   }
 }
 
-async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile', url: string) {
+async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile', url: string, authHeader: string | null) {
   try {
     const u = new URL(url);
     const appId = u.searchParams.get('applicationId');
     if (!appId) return null;
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) return null;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Inject Auth Header if using Anon Key (RLS fix)
+    const options: any = {};
+    if (!isServiceKey && authHeader) {
+        options.global = { headers: { Authorization: authHeader } };
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey, options);
 
     const { data, error } = await supabase.from('suppliers').select('*').eq('application_id', appId).single();
     if (error || !data) return null;
