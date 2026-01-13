@@ -6,9 +6,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { AuthService } from '@/services/authService';
 
 const getBaseUrl = () => {
-  const envUrl = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
-  if (envUrl.includes('/webhook')) return envUrl;
-  return `${envUrl.replace(/\/$/, '')}/webhook`;
+  return '/api/n8n';
 };
 const N8N_BASE = getBaseUrl();
 
