@@ -74,11 +74,11 @@ SET
 WHERE application_id = 'mock-app-id-001';
 */
 
+/*
 -- Option 2: If using flat columns
 UPDATE public.suppliers
 SET
     company_name = 'ExperiaHub Test Corp',
-    billing_address = '123 Innovation Drive',
     tax_id = 'JP-123456789',
     legal_name = 'ExperiaHub Legal Entity KK',
     representative_name = 'Yasu Saito'
