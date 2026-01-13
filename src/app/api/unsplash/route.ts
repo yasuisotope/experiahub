@@ -17,8 +17,12 @@ export async function GET(request: Request) {
   // Defaults to ending in /webhook
   let n8nBase = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
   
+  // Guard: If Env Var points to the broken 'experiahub.com' N8N, force the working one.
+  if (n8nBase.includes('n8n.experiahub.com')) {
+      n8nBase = 'https://n8n.isotope-blue.com/webhook';
+  }
+
   // Normalize: Ensure it DOES end with /webhook (if that's where the endpoint lives)
-  // Previous logic STRIPPED it, which was wrong. The original code used `${N8N_BASE}/media/unsplash/search`
   if (!n8nBase.endsWith('/webhook')) {
       n8nBase += '/webhook';
   }

@@ -12,14 +12,14 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
 
   // 3. Determine N8N Target Base URL
   // We want to target the /webhook endpoint base by default for these calls
-  // e.g. https://n8n.isotope-blue.com/webhook
-  const n8nEnv = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
+  let n8nEnv = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
+  
+  // Guard: If Env Var points to the broken 'experiahub.com' N8N, force the working one.
+  if (n8nEnv.includes('n8n.experiahub.com')) {
+      n8nEnv = 'https://n8n.isotope-blue.com/webhook';
+  }
   
   // Normalization: Ensure n8nEnv ends with /webhook if the proxy logic expects it.
-  // Looking at usage: ${N8N_BASE}/supplier/save.
-  // If we map /api/n8n/supplier/save -> https://n8n.isotope-blue.com/webhook/supplier/save
-  // Then defaults work.
-  
   let targetBase = n8nEnv.replace(/\/$/, '');
   if (!targetBase.endsWith('/webhook')) {
       targetBase += '/webhook';
