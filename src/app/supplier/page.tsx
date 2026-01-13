@@ -1745,7 +1745,7 @@ const PRIMARY_BUTTON_SX = {
             {/* Identity Card */}
             {/* Identity Card */}
             {/* Identity Card */}
-            <Box sx={{ mb: 3, py: 2, borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', textAlign: 'center', borderRadius: 3 }}>
+            <Box sx={{ mb: 3, py: 2, px: 1, border: '1px solid #E2E8F0', textAlign: 'center', borderRadius: 3, bgcolor: '#FFFFFF' }}>
               <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
                 {statusData?.businessName || 'ExperiaHub Partner'}
               </Typography>
