@@ -1700,7 +1700,7 @@ export default function SupplierPortalPage() {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1430_FINAL_V4
+              Build: 2026.01.12.1450_FINAL_V5
             </Typography>
           </Box>
         </Paper>
@@ -1960,9 +1960,9 @@ export default function SupplierPortalPage() {
                   </ListItemButton>
                 </List>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="center">
-                  <Button startIcon={<ApartmentIcon />} variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 3 }} onClick={() => { setSection('company'); setSubsection('profile'); }}>Start Company</Button>
-                  <Button startIcon={<PersonOutlineIcon />} variant="outlined" onClick={() => { setSection('user'); setSubsection('user_profile'); }}>Start User</Button>
-                  <Button startIcon={<CollectionsIcon />} variant="outlined" onClick={() => { setSection('experiences'); setSubsection('overview'); }}>Start Experiences</Button>
+                  <Button startIcon={<ApartmentIcon />} variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 3, fontWeight: 700 }} onClick={() => { setSection('company'); setSubsection('profile'); }}>Start Company</Button>
+                  <Button startIcon={<PersonOutlineIcon />} variant="outlined" sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 3, fontWeight: 700 }} onClick={() => { setSection('user'); setSubsection('user_profile'); }}>Start User</Button>
+                  <Button startIcon={<CollectionsIcon />} variant="outlined" sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 3, fontWeight: 700 }} onClick={() => { setSection('experiences'); setSubsection('overview'); }}>Start Experiences</Button>
                 </Stack>
               </Box>
             </Paper>
@@ -2010,7 +2010,7 @@ export default function SupplierPortalPage() {
               )}
 
               {subsection === 'payouts_connect' && (
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
                   <Stack spacing={2}>
                     <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Payouts & Onboarding</Typography>
                     <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>
