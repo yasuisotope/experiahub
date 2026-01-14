@@ -1217,14 +1217,14 @@ const PRIMARY_BUTTON_SX = {
         setMediaOk(!!ok);
       } catch { setMediaOk(false); }
     })();
+  }, [selectedExperienceId, experiences]);
+
   // Persist experiences to localStorage to prevent data loss on reload
   React.useEffect(() => {
     if (appId && experiences.length > 0) {
       try { localStorage.setItem(`supplier_experiences_${appId}`, JSON.stringify(experiences)); } catch {}
     }
   }, [experiences, appId]);
-
-  }, [selectedExperienceId, experiences]);
 
   const saveAllExperiences = async (nextExperiences: Experience[]) => {
     if (!appId) return;
