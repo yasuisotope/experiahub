@@ -9,16 +9,8 @@ export const revalidate = 0;
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, Stepper, Step, StepLabel } from '@mui/material';
-import ClearIcon from '@mui/icons-material/Clear';
-import Image from 'next/image';
-import { Add as AddIcon, Edit as EditIcon, DeleteOutline as DeleteOutlineIcon, Close as CloseIcon, CheckCircleOutline as CheckCircleOutlineIcon, Apartment as ApartmentIcon, PersonOutline as PersonOutlineIcon, Collections as CollectionsIcon, ContentCopy as ContentCopyIcon, Share as ShareIcon, Save as SaveIcon, PlayArrow as PlayArrowIcon, Check as CheckIcon, Sync as SyncIcon, Key as KeyIcon, VpnKey as VpnKeyIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { useWordPressAuth } from '@/contexts/WordPressContext';
-import { AuthService } from '@/services/authService';
-import OnboardingForm from '@/components/supplier/OnboardingForm';
-import SupportDialog from '@/components/support/SupportDialog';
-import { ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab } from '@mui/material';
-import BackgroundImage from '@/components/BackgroundImage';
+import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, Stepper, Step, StepLabel, ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab } from '@mui/material';
+// import BackgroundImage from '@/components/BackgroundImage';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
 import { getUserBackground, setUserBackground, searchUnsplash, trackDownload, loadCachedBackground, saveCachedBackground, getCuratedBackgrounds, prefetchBackgroundImage, type PortalBackground } from '@/services/backgroundService';
@@ -1882,15 +1874,17 @@ const PRIMARY_BUTTON_SX = {
   }
 
   // Logged-in view with left sidebar
+  // Logged-in view with left sidebar
   return (
-    <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
-    <Box sx={{
-      minHeight: '100vh',
-      py: 6,
-      px: 2,
-      bgcolor: 'rgba(255, 255, 255, 0.25)',
-      backgroundImage: 'radial-gradient(circle at 20% 10%, rgba(1, 0, 87, 0.05), transparent 45%), radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 40%)'
-    }}>
+    // <BackgroundImage ...> replaced with fragment or direct Box to fix build error
+    <>
+      <Box sx={{
+        minHeight: '100vh',
+        py: 6,
+        px: 2,
+        bgcolor: 'rgba(255, 255, 255, 0.25)',
+        backgroundImage: 'radial-gradient(circle at 20% 10%, rgba(1, 0, 87, 0.05), transparent 45%), radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 40%)'
+      }}>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '240px 1fr' }, gap: 3, maxWidth: 1280, mx: 'auto' }}>
         {/* Sidebar */}
         <Paper sx={{ p: 2, borderRadius: 1, height: 'fit-content', position: 'sticky', top: 24, width: { md: 230 }, transition: 'all .3s ease' }}>
@@ -2239,6 +2233,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Invoice email" value={companyBilling.invoiceEmail} onChange={(e)=>setCompanyBilling(s=>({ ...s, invoiceEmail: e.target.value }))} fullWidth />
                   <TextField label="Billing currency" value={companyBilling.currency} onChange={(e)=>setCompanyBilling(s=>({ ...s, currency: e.target.value }))} onBlur={(e)=>setCompanyBilling(s=>({ ...s, currency: String(e.target.value||'').toUpperCase() }))} fullWidth />
                 </Stack>
+                <Stack direction="row" justifyContent="flex-end">
                 <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
@@ -2251,6 +2246,7 @@ const PRIMARY_BUTTON_SX = {
                     handleSaveSuccess('Billing');
                   } catch (e: any) { setToast(e?.message || 'Save failed'); }
                 }}>Save Billing</Button>
+                </Stack>
               </Stack>
           </Box>
           </Fade>
@@ -2277,6 +2273,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Privacy URL" value={companyLegal.privacyUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, privacyUrl: e.target.value }))} fullWidth />
                 </Stack>
                 <TextField label="Representative" value={companyLegal.representative} onChange={(e)=>setCompanyLegal(s=>({ ...s, representative: e.target.value }))} fullWidth />
+                <Stack direction="row" justifyContent="flex-end">
                 <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
@@ -2289,6 +2286,7 @@ const PRIMARY_BUTTON_SX = {
                     handleSaveSuccess('Legal');
                   } catch (e: any) { setToast(e?.message || 'Save failed'); }
                 }}>Save Legal</Button>
+                </Stack>
               </Stack>
             </Box>
           </Fade>
@@ -2359,6 +2357,7 @@ const PRIMARY_BUTTON_SX = {
                     handleSaveSuccess('Profile');
                   } catch (e: any) { setToast(e?.message || 'Save failed'); }
                 }}>Save Profile</Button>
+                </Stack>
               </Stack>
             </Box>
           </Fade>
@@ -3060,8 +3059,8 @@ const PRIMARY_BUTTON_SX = {
         >
           <WallpaperIcon />
         </Fab>
-    </Box>
-    </BackgroundImage>
+     </Box>
+    </>
   );
 }
 
