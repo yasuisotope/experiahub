@@ -382,6 +382,23 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
     onToast('Deleted. Undo?');
   };
 
+  // Load/Save Drafts locally to prevent data loss
+  React.useEffect(() => {
+    if (!appId) return;
+    try {
+      const saved = localStorage.getItem(`supplier_activities_${appId}`);
+      if (saved) {
+        setRows(JSON.parse(saved));
+      }
+    } catch {}
+  }, [appId]);
+
+  React.useEffect(() => {
+    if (appId && rows.length > 0) {
+      localStorage.setItem(`supplier_activities_${appId}`, JSON.stringify(rows));
+    }
+  }, [rows, appId]);
+
   React.useEffect(() => {
     const load = async () => {
       if (!appId) return;
@@ -389,7 +406,7 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
         const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`);
         const json = await res.json();
         if (json?.success && Array.isArray(json.activities)) {
-          setRows(json.activities.map((a: any, i: number) => ({
+          const remoteRows = json.activities.map((a: any, i: number) => ({
             id: a.id || `row_${i}`,
             title: a.title || '',
             summary: a.summary || a.description || '',
@@ -409,8 +426,42 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
             cutoffHours: a.cutoffHours || (a.bookingLeadTime || ''),
             pricingCategories: a.pricingCategories || '',
             baseRate: a.baseRate || '',
-            bokunProductId: a.bokunProductId || ''
-          })));
+            bokunProductId: a.bokunProductId || '',
+            // Populate restored fields if available from API
+            authenticEchoes: a.authenticEchoes,
+            unforgettableFeeling: a.unforgettableFeeling,
+            magicMoment: a.magicMoment,
+            hiddenGem: a.hiddenGem,
+            communityConnection: a.communityConnection,
+            perfectMatch: a.perfectMatch,
+            threeWords: a.threeWords,
+            safetyMeasures: a.safetyMeasures,
+            requirements: a.requirements,
+            included: a.included,
+            notIncluded: a.notIncluded,
+            insurance: a.insurance
+          }));
+          
+          // Merge remote with local drafts (prefer local for things not yet synced, but remote for updates?)
+          // Actually, simply appending missing local drafts is safer to avoid deleting work.
+          setRows((prev) => {
+            const currentIds = new Set(prev.map(p => p.id));
+            const remoteMap = new Map(remoteRows.map((r:Activity) => [r.id, r]));
+            
+            // Start with remote rows as truth
+            const merged = [...remoteRows];
+            
+            // Add any local rows that don't exist in remote (Drafts)
+            prev.forEach(p => {
+               // If it's a temp ID (row_...) and not in remote, keep it
+               // Or if it's a real ID but not returned by API (maybe API is slow), keep it? 
+               // Let's assume real IDs come from API. Temp IDs are drafts.
+               if (!remoteMap.has(p.id)) {
+                 merged.push(p);
+               }
+            });
+            return merged as Activity[];
+          });
         }
       } catch {}
     };
