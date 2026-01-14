@@ -463,8 +463,10 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
       const res = await fetch(`${N8N_BASE}/supplier/activities/save`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || 'Save failed');
+      const json = await parseJsonSafe(res) || {};
+      if (res.ok && !json.success && !json.error) {
+         // tolerate empty success if HTTP 200
+      } else if (!json.success) throw new Error(json.error || 'Save failed');
       onToast('Activities saved');
     } catch (e: any) {
       onToast(e.message || 'Save failed');
@@ -576,7 +578,11 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
       const res = await fetch(`${N8N_BASE}/supplier/activities/sync`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
-      const json = await res.json();
+      const json = await parseJsonSafe(res);
+      if (!json) {
+        if (res.ok) { onToast('Published (No ID returned)'); return; }
+        throw new Error('Sync failed (Empty response)');
+      }
       if (!json?.success) throw new Error(json?.error || 'Sync failed');
       const bokunId = json.bokunProductId || '';
       setRows((rs) => rs.map((r) => r.id === a.id ? { ...r, bokunProductId: bokunId } : r));
@@ -595,13 +601,13 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
 
   return (
     <Box>
-      <Stepper activeStep={0} sx={{ mb: 4, bgcolor: 'transparent' }} alternativeLabel>
+      <Stepper activeStep={0} sx={{ mb: 5, mt: 1, bgcolor: 'transparent' }} alternativeLabel>
         <Step key="draft"><StepLabel icon="1">Draft Overview</StepLabel></Step>
         <Step key="details"><StepLabel icon="2">Add Details & Story</StepLabel></Step>
         <Step key="publish"><StepLabel icon="3">Publish to World</StepLabel></Step>
       </Stepper>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3, p: 2, bgcolor: '#f8f9fa', borderRadius: 2, alignItems: 'center' }}>
         <TextField size="small" label="Search" value={filterText} onChange={(e)=>setFilterText(e.target.value)} sx={{ maxWidth: 260 }} />
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel id="sort-by-label">Sort by</InputLabel>
@@ -1634,7 +1640,11 @@ const PRIMARY_BUTTON_SX = {
       const res = await fetch(`${N8N_BASE}/supplier/activities/sync`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
-      const json = await res.json();
+      const json = await parseJsonSafe(res);
+      if (!json) {
+         if (res.ok) { setToast('Synced (No content returned)'); return; }
+         throw new Error('Server returned empty response');
+      }
       if (!json?.success) throw new Error(json?.error || 'Sync failed');
       const bokunId = json.bokunProductId || '';
       const airtableId = json.airtableId || '';
@@ -2402,7 +2412,7 @@ const PRIMARY_BUTTON_SX = {
           <Fade in timeout={250}>
             <Box sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Experience Overview</Typography>
-              <Alert severity="info" sx={{ mb: 2 }}>Create draft experiences (title, city, duration). Saving will push to n8n later.</Alert>
+
             <ActivitiesSkeleton onToast={(m)=>setToast(m)} onEditDetails={(act: any) => {
                // Optimistically add to parent state so we can edit immediately without refresh
                const exists = experiences.find(e => e.id === act.id);
