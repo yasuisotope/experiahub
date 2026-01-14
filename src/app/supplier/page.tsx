@@ -2417,7 +2417,7 @@ const PRIMARY_BUTTON_SX = {
             <Box sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Experience Overview</Typography>
               <Alert severity="info" sx={{ mb: 2 }}>Create draft experiences (title, city, duration). Saving will push to n8n later.</Alert>
-            <ActivitiesSkeleton onToast={(m)=>setToast(m)} onEditDetails={(act) => {
+            <ActivitiesSkeleton onToast={(m)=>setToast(m)} onEditDetails={(act: any) => {
                // Optimistically add to parent state so we can edit immediately without refresh
                const exists = experiences.find(e => e.id === act.id);
                if (!exists) {
@@ -2431,7 +2431,7 @@ const PRIMARY_BUTTON_SX = {
                     // ... copy other fields if available in Activity
                  };
                  setExperiences(prev => [...prev, newExp]);
-                 setActivitiesSimple(prev => [...prev, { id: act.id, label: act.title }]);
+                 setActivitiesSimple(prev => [...prev, { id: act.id, title: act.title }]);
                }
                setSelectedExperienceId(act.id);
                setSubsection('details');
@@ -2511,7 +2511,7 @@ const PRIMARY_BUTTON_SX = {
                   const id = e.target.value as string;
                   setSelectedExperienceId(id);
                 }}>
-                  {activitiesSimple.map(a => (<MenuItem key={a.id} value={a.id}>{a.label}</MenuItem>))}
+                  {activitiesSimple.map(a => (<MenuItem key={a.id} value={a.id}>{a.title}</MenuItem>))}
                 </Select>
               </FormControl>
             </Stack>
