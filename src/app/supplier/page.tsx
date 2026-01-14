@@ -67,7 +67,7 @@ function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) =>
         const params = new URLSearchParams({ applicationId: appId });
         if (activityId) params.set('activityId', activityId);
         const res = await fetch(`${N8N_BASE}/supplier/media/get?${params.toString()}`, { signal: controller.signal });
-        const json = await res.json();
+        const json = await parseJsonSafe(res);
         if (json?.success) {
           setPhotos((json.photosDriveUrls || []).join(', '));
           setVideoDrive(json.videoDriveUrl || '');
@@ -90,7 +90,7 @@ function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) =>
       if (!appId) return;
       try {
         const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`);
-        const json = await res.json();
+        const json = await parseJsonSafe(res);
         if (json?.success && Array.isArray(json.activities)) {
           setActivities(json.activities.map((a: any, i: number) => ({ id: a.id || `row_${i}`, title: a.title || `Untitled ${i+1}` })));
         }
@@ -120,7 +120,8 @@ function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) =>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      const json = await res.json();
+      const json = await parseJsonSafe(res);
+      if (!json) { if (res.ok) return; throw new Error('Save failed'); }
       if (!json.success) throw new Error(json.error || 'Save failed');
       onToast('Media saved');
     } catch (e: any) {
@@ -145,7 +146,7 @@ function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) =>
         if (activityId.trim()) fd.append('activityId', activityId.trim());
         fd.append('file', f, f.name);
         const res = await fetch(`${N8N_BASE}/supplier/media/upload`, { method: 'POST', body: fd });
-        const json = await res.json();
+        const json = await parseJsonSafe(res);
         const url = json?.url || json?.driveUrl || '';
         setUploads(u => u.map(x => x.name === f.name ? { ...x, status: url ? 'ok' : 'error', url } : x));
         if (url) uploadedUrls.push(url);
@@ -391,7 +392,7 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
       if (!appId) return;
       try {
         const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`);
-        const json = await res.json();
+        const json = await parseJsonSafe(res);
         if (json?.success && Array.isArray(json.activities)) {
           const remoteRows = json.activities.map((a: any, i: number) => ({
             id: a.id || `row_${i}`,
@@ -508,7 +509,7 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
       const params = new URLSearchParams({ applicationId: appId });
       if (activityIdForCheck) params.set('activityId', activityIdForCheck);
       const res = await fetch(`${N8N_BASE}/supplier/media/get?${params.toString()}`);
-      const json = await res.json();
+      const json = await parseJsonSafe(res);
       const urls = json?.photosDriveUrls || [];
       return Array.isArray(urls) && urls.length > 0;
     } catch { return false; }
@@ -751,7 +752,7 @@ function PricingScheduleSkeleton({ onToast }: { onToast: (m: string) => void }) 
       if (!appId) return;
       try {
         const res = await fetch(`${N8N_BASE}/supplier/pricing/get?applicationId=${encodeURIComponent(appId)}`);
-        const json = await res.json();
+        const json = await parseJsonSafe(res);
         if (json?.success && json.notes) {
           setPricingNotes(json.notes.pricingNotes || '');
           setScheduleNotes(json.notes.scheduleNotes || '');
@@ -769,7 +770,8 @@ function PricingScheduleSkeleton({ onToast }: { onToast: (m: string) => void }) 
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicationId: appId, notes: { pricingNotes, scheduleNotes } })
       });
-      const json = await res.json();
+      const json = await parseJsonSafe(res);
+      if (!json) { if (res.ok) return; throw new Error('Save failed'); }
       if (!json.success) throw new Error(json.error || 'Save failed');
       onToast('Saved');
     } catch (e: any) { onToast(e.message || 'Save failed'); }
@@ -1288,7 +1290,7 @@ const PRIMARY_BUTTON_SX = {
       if (!appId) return;
       try {
         const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`);
-        const json = await res.json();
+        const json = await parseJsonSafe(res);
         if (json?.success && Array.isArray(json.activities)) {
           const mapped: Experience[] = json.activities.map((a: any, i: number) => ({
             id: a.id || `row_${i}`,
