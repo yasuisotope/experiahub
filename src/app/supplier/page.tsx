@@ -251,9 +251,7 @@ function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) =>
   );
 }
 
-const defaultTimeZone = 'Asia/Tokyo';
-
-function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) => void; onEditDetails?: (activity: Activity) => void }) {
+function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) => void; onEditDetails?: (activity: any) => void }) {
   type Activity = {
     id: string;
     title: string;
@@ -557,7 +555,6 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
           PRICING_CATEGORIES: a.pricingCategories,
           RATES: [{ name: 'Base', amount: a.baseRate || a.price, currency: a.currency }],
           AVAILABILITY_RULES: { schedulingMode: a.schedulingMode, startTimes: a.startTimes },
-          CUTOFF: a.cutoffHours || a.bookingLeadTime,
           CUTOFF: a.cutoffHours || a.bookingLeadTime,
           EXTERNAL_ID: a.id,
           // Marketing & Story (Restored Fields)
