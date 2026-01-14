@@ -602,33 +602,35 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
 
   return (
     <Box>
-      <Stepper activeStep={0} sx={{ mb: 5, mt: 1, bgcolor: 'transparent' }} alternativeLabel>
+      <Stepper activeStep={0} sx={{ mb: 8, mt: 4, bgcolor: 'transparent' }} alternativeLabel>
         <Step key="draft"><StepLabel icon="1">Draft Overview</StepLabel></Step>
         <Step key="details"><StepLabel icon="2">Add Details & Story</StepLabel></Step>
         <Step key="publish"><StepLabel icon="3">Publish to World</StepLabel></Step>
       </Stepper>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3, p: 2, bgcolor: '#f8f9fa', borderRadius: 2, alignItems: 'center' }}>
-        <TextField size="small" label="Search" value={filterText} onChange={(e)=>setFilterText(e.target.value)} sx={{ maxWidth: 260 }} />
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel id="sort-by-label">Sort by</InputLabel>
-          <Select labelId="sort-by-label" label="Sort by" value={sortKey} onChange={(e)=>setSortKey(e.target.value as any)}>
-            <MenuItem value="title">Title</MenuItem>
-            <MenuItem value="city">City</MenuItem>
-            <MenuItem value="durationMinutes">Duration</MenuItem>
-            <MenuItem value="price">Price</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel id="sort-dir-label">Order</InputLabel>
-          <Select labelId="sort-dir-label" label="Order" value={sortDir} onChange={(e)=>setSortDir(e.target.value as any)}>
-            <MenuItem value="asc">Ascending</MenuItem>
-            <MenuItem value="desc">Descending</MenuItem>
-          </Select>
-        </FormControl>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4, alignItems: 'center', justifyContent: 'space-between' }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <TextField size="small" label="Search" value={filterText} onChange={(e)=>setFilterText(e.target.value)} sx={{ maxWidth: 220, bgcolor: 'white' }} />
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="sort-by-label" sx={{ bgcolor: 'white', px: 0.5 }}>Sort by</InputLabel>
+            <Select labelId="sort-by-label" label="Sort by" value={sortKey} onChange={(e)=>setSortKey(e.target.value as any)} sx={{ bgcolor: 'white' }}>
+              <MenuItem value="title">Title</MenuItem>
+              <MenuItem value="city">City</MenuItem>
+              <MenuItem value="durationMinutes">Duration</MenuItem>
+              <MenuItem value="price">Price</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel id="sort-dir-label" sx={{ bgcolor: 'white', px: 0.5 }}>Order</InputLabel>
+            <Select labelId="sort-dir-label" label="Order" value={sortDir} onChange={(e)=>setSortDir(e.target.value as any)} sx={{ bgcolor: 'white' }}>
+              <MenuItem value="asc">Ascending</MenuItem>
+              <MenuItem value="desc">Descending</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
         <Stack direction="row" spacing={1}>
           <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}>Add</Button>
-          <Button variant="outlined" onClick={saveAll} disabled={saving} sx={{ borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>{saving ? 'Saving…' : 'Save drafts'}</Button>
+          <Button variant="outlined" onClick={saveAll} disabled={saving} sx={{ borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>{saving ? 'Saving…' : 'Save all'}</Button>
           {undo && (
             <Button size="small" onClick={() => { setRows((rs)=>[undo.row, ...rs]); setUndo(null); setTimeout(()=>onToast('Restored'), 0); }}>Undo</Button>
           )}
@@ -637,12 +639,14 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>Title</TableCell>
-            <TableCell>City</TableCell>
-            <TableCell>Duration (min)</TableCell>
-            <TableCell>Price</TableCell>
-            <TableCell>Bókun</TableCell>
-            <TableCell align="right">Actions</TableCell>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 'bold' }}>Title</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>City</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>Duration (min)</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>Price</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>Bókun</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+          </TableRow>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -1318,6 +1322,18 @@ const PRIMARY_BUTTON_SX = {
             bokunProductId: a.bokunProductId || ''
           }));
           setExperiences(mapped);
+          try {
+             // Merge with local storage if newer (or at least preserve drafts)
+             const localDetailed = JSON.parse(localStorage.getItem(`supplier_experiences_${appId}`) || '[]');
+             if (Array.isArray(localDetailed) && localDetailed.length > 0) {
+                const map = new Map(mapped.map(m=>[m.id, m]));
+                localDetailed.forEach(l => {
+                   if (!map.has(l.id)) map.set(l.id, l); // Add missing local
+                   // Ideally we would merge fields but let's prioritize API unless it's a temp ID
+                });
+                setExperiences(Array.from(map.values()));
+             }
+          } catch {}
           const simple = mapped.map(m => ({ id: m.id, title: m.title || '(Untitled)' }));
           setActivitiesSimple(simple);
           if (!selectedExperienceId && simple.length > 0) setSelectedExperienceId(simple[0].id);
@@ -1412,6 +1428,13 @@ const PRIMARY_BUTTON_SX = {
         setMediaOk(!!ok);
       } catch { setMediaOk(false); }
     })();
+  // Persist experiences to localStorage to prevent data loss on reload
+  React.useEffect(() => {
+    if (appId && experiences.length > 0) {
+      try { localStorage.setItem(`supplier_experiences_${appId}`, JSON.stringify(experiences)); } catch {}
+    }
+  }, [experiences, appId]);
+
   }, [selectedExperienceId, experiences]);
 
   const saveAllExperiences = async (nextExperiences: Experience[]) => {
@@ -2322,6 +2345,7 @@ const PRIMARY_BUTTON_SX = {
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Update your personal contact information.</Typography>
                 <TextField label="Display Name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                <Stack direction="row" justifyContent="flex-end">
                 <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
@@ -2606,9 +2630,9 @@ const PRIMARY_BUTTON_SX = {
                   </Grid>
                 </Grid>
 
-                <Box sx={{ mt: 3 }}>
+                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }}>
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Details</Button>
-                </Box>
+                </Stack>
               </>
             )}
           </Stack>
@@ -2664,7 +2688,9 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Policies</Button>
+                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Policies</Button>
+                </Stack>
               </>
             )}
           </Stack>
