@@ -585,29 +585,26 @@ function PricingScheduleSkeleton({ onToast }: { onToast: (m: string) => void }) 
   );
 }
 
-function useSupplierAppId(): string {
+// Hook moved to top level logic in component
+function useSupplierAppIdInternal() {
   const params = useSearchParams();
   const [appId, setAppId] = React.useState<string>('');
-
   React.useEffect(() => {
-    // Priority: URL > localStorage > (do NOT generate silently)
     const fromUrl = params?.get('appId') || params?.get('id') || '';
     const fromStorage = typeof window !== 'undefined' ? (localStorage.getItem('supplier_application_id') || '') : '';
     const ensure = fromUrl || fromStorage;
     if (ensure) {
       setAppId(ensure);
       try { localStorage.setItem('supplier_application_id', ensure); } catch {}
-    } else {
-      setAppId('');
     }
   }, [params]);
-
   return appId;
 }
+// function useSupplierAppId() removed as it was buggy. Logic is now inside component.
 
 export default function SupplierPortalPage() {
   const { isLoggedIn, isLoading, logout, login } = useWordPressAuth() as any;
-  const appId = useSupplierAppId();
+  const appId = useSupplierAppIdInternal();
   const [bg, setBg] = React.useState<PortalBackground | null>(null);
   const [bgAnchorEl, setBgAnchorEl] = React.useState<HTMLElement | null>(null);
   const [bgSearch, setBgSearch] = React.useState<string>('');
