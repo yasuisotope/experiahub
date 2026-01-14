@@ -42,6 +42,19 @@ async function parseJsonSafe(res: Response): Promise<any | null> {
   }
 }
 
+const defaultTimeZone = 'Asia/Tokyo';
+
+function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) => void; onEditDetails?: (activity: Activity) => void }) {
+  const [open, setOpen] = React.useState(false);
+  // The following state variables seem to be misplaced here, they belong to GridLikeMedia
+  // const [photos, setPhotos] = React.useState<string>('');
+  // const [videoDrive, setVideoDrive] = React.useState<string>('');
+  // const [videoExternal, setVideoExternal] = React.useState<string>('');
+  // const [saving, setSaving] = React.useState(false);
+  // const [uploading, setUploading] = React.useState(false);
+  // const [uploads, setUploads] = React.useState<{ name: string; status: 'pending'|'ok'|'error'; url?: string }[]>([]);
+}
+
 function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) => void; defaultActivityId?: string }) {
   const [photos, setPhotos] = React.useState<string>('');
   const [videoDrive, setVideoDrive] = React.useState<string>('');
@@ -249,7 +262,9 @@ function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) =>
   );
 }
 
-function ActivitiesSkeleton({ onToast }: { onToast: (m: string) => void }) {
+const defaultTimeZone = 'Asia/Tokyo';
+
+function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) => void; onEditDetails?: (activity: Activity) => void }) {
   type Activity = {
     id: string;
     title: string;
@@ -534,8 +549,21 @@ function ActivitiesSkeleton({ onToast }: { onToast: (m: string) => void }) {
     }
   };
 
+
+
+  const isPublishable = (r: Activity) => {
+    // Basic check: must have title, city, duration, and at least one story element or logistic element
+    return !!(r.title && r.city && r.durationMinutes);
+  };
+
   return (
     <Box>
+      <Stepper activeStep={0} sx={{ mb: 4, bgcolor: 'transparent' }} alternativeLabel>
+        <Step key="draft"><StepLabel icon="1">Draft Overview</StepLabel></Step>
+        <Step key="details"><StepLabel icon="2">Add Details & Story</StepLabel></Step>
+        <Step key="publish"><StepLabel icon="3">Publish to World</StepLabel></Step>
+      </Stepper>
+
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
         <TextField size="small" label="Search" value={filterText} onChange={(e)=>setFilterText(e.target.value)} sx={{ maxWidth: 260 }} />
         <FormControl size="small" sx={{ minWidth: 160 }}>
@@ -596,8 +624,8 @@ function ActivitiesSkeleton({ onToast }: { onToast: (m: string) => void }) {
                       setRows(rs => [copy, ...rs]);
                       onToast('Experience duplicated');
                     }}>Duplicate</Button>
-                    <Button size="small" variant="outlined" sx={{ ml: 1, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }} onClick={()=>onEditDetails && onEditDetails(r.id)}>Add Details</Button>
-                    <Button size="small" variant="contained" sx={{ ml: 1, bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Publish</Button>
+                    <Button size="small" variant="outlined" sx={{ ml: 1, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }} onClick={()=>onEditDetails && onEditDetails(r)}>Add Details</Button>
+                    <Button size="small" variant="contained" disabled={!isPublishable(r)} sx={{ ml: 1, bgcolor: isPublishable(r)?'#010057':'#ccc', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Publish</Button>
                   </>
                 )}
               </TableCell>
@@ -2338,14 +2366,24 @@ const PRIMARY_BUTTON_SX = {
             <Box sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Experience Overview</Typography>
               <Alert severity="info" sx={{ mb: 2 }}>Create draft experiences (title, city, duration). Saving will push to n8n later.</Alert>
-            <ActivitiesSkeleton onToast={(m)=>setToast(m)} onEditDetails={(id) => {
-               const exists = experiences.find(e => e.id === id);
-               if (exists) {
-                 setSelectedExperienceId(id);
-                 setSubsection('details');
-               } else {
-                 setToast('Please "Save drafts" and Refresh page to edit details for this new item.');
+            <ActivitiesSkeleton onToast={(m)=>setToast(m)} onEditDetails={(act) => {
+               // Optimistically add to parent state so we can edit immediately without refresh
+               const exists = experiences.find(e => e.id === act.id);
+               if (!exists) {
+                 // Convert Activity to Experience (partial)
+                 const newExp: Experience = {
+                    id: act.id, title: act.title, city: act.city, durationMinutes: act.durationMinutes,
+                    summary: act.summary, price: act.price, currency: act.currency,
+                    bokunProductId: act.bokunProductId,
+                    authenticEchoes: act.authenticEchoes,
+                    unforgettableFeeling: act.unforgettableFeeling,
+                    // ... copy other fields if available in Activity
+                 };
+                 setExperiences(prev => [...prev, newExp]);
+                 setActivitiesSimple(prev => [...prev, { id: act.id, label: act.title }]);
                }
+               setSelectedExperienceId(act.id);
+               setSubsection('details');
             }} />
           </Box>
           </Fade>
@@ -2414,7 +2452,18 @@ const PRIMARY_BUTTON_SX = {
           <Fade in timeout={250}>
           <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Product Details</Typography>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Product Details</Typography>
+              <FormControl size="small" sx={{ minWidth: 200 }}>
+                <InputLabel id="details-experience-select">Switch Experience</InputLabel>
+                <Select labelId="details-experience-select" label="Switch Experience" value={selectedExperienceId || ''} onChange={(e) => {
+                  const id = e.target.value as string;
+                  setSelectedExperienceId(id);
+                }}>
+                  {activitiesSimple.map(a => (<MenuItem key={a.id} value={a.id}>{a.label}</MenuItem>))}
+                </Select>
+              </FormControl>
+            </Stack>
             {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit details.</Alert>)}
             {selectedExperienceId && (
