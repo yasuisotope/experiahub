@@ -1,16 +1,14 @@
 'use client';
 
-// Build Trace: 2026.01.12.1245_LAYOUT_CONSOLIDATION - Removing right rail, adding tabs
-export const buildId = "2026.01.12.1245_LAYOUT_CONSOLIDATION";
+// Route segment config removed as this is a Client Component
+// useSearchParams usage automatically opts into dynamic rendering where needed
 
-// Disable static prerendering — this page depends on search params/localStorage.
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, Stepper, Step, StepLabel, ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab } from '@mui/material';
-// import BackgroundImage from '@/components/BackgroundImage';
+// BackgroundImage removed
+
 import ClearIcon from '@mui/icons-material/Clear';
 import Image from 'next/image';
 import { Add as AddIcon, Edit as EditIcon, DeleteOutline as DeleteOutlineIcon, Close as CloseIcon, CheckCircleOutline as CheckCircleOutlineIcon, Apartment as ApartmentIcon, PersonOutline as PersonOutlineIcon, Collections as CollectionsIcon, ContentCopy as ContentCopyIcon, Share as ShareIcon, Save as SaveIcon, PlayArrow as PlayArrowIcon, Check as CheckIcon, Sync as SyncIcon, Key as KeyIcon, VpnKey as VpnKeyIcon, Delete as DeleteIcon } from '@mui/icons-material';
