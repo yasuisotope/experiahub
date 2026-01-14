@@ -271,6 +271,18 @@ function ActivitiesSkeleton({ onToast }: { onToast: (m: string) => void }) {
     pricingCategories?: string;
     baseRate?: string;
     bokunProductId?: string;
+    authenticEchoes?: string;
+    unforgettableFeeling?: string;
+    magicMoment?: string;
+    hiddenGem?: string;
+    communityConnection?: string;
+    perfectMatch?: string;
+    threeWords?: string;
+    safetyMeasures?: string;
+    requirements?: string;
+    included?: string;
+    notIncluded?: string;
+    insurance?: string;
   };
   const [rows, setRows] = React.useState<Activity[]>([]);
   const [open, setOpen] = React.useState(false);
@@ -491,7 +503,22 @@ function ActivitiesSkeleton({ onToast }: { onToast: (m: string) => void }) {
           RATES: [{ name: 'Base', amount: a.baseRate || a.price, currency: a.currency }],
           AVAILABILITY_RULES: { schedulingMode: a.schedulingMode, startTimes: a.startTimes },
           CUTOFF: a.cutoffHours || a.bookingLeadTime,
-          EXTERNAL_ID: a.id
+          CUTOFF: a.cutoffHours || a.bookingLeadTime,
+          EXTERNAL_ID: a.id,
+          // Marketing & Story (Restored Fields)
+          AUTHENTIC_ECHOES: a.authenticEchoes,
+          UNFORGETTABLE_FEELING: a.unforgettableFeeling,
+          MAGIC_MOMENT: a.magicMoment,
+          HIDDEN_GEM: a.hiddenGem,
+          COMMUNITY_CONNECTION: a.communityConnection,
+          PERFECT_MATCH: a.perfectMatch,
+          THREE_WORDS: a.threeWords,
+          // Logistics & Safety
+          SAFETY_MEASURES: a.safetyMeasures,
+          REQUIREMENTS: a.requirements,
+          INCLUDED: a.included,
+          NOT_INCLUDED: a.notIncluded,
+          INSURANCE: a.insurance
         }
       };
       const res = await fetch(`${N8N_BASE}/supplier/activities/sync`, {
@@ -501,9 +528,9 @@ function ActivitiesSkeleton({ onToast }: { onToast: (m: string) => void }) {
       if (!json?.success) throw new Error(json?.error || 'Sync failed');
       const bokunId = json.bokunProductId || '';
       setRows((rs) => rs.map((r) => r.id === a.id ? { ...r, bokunProductId: bokunId } : r));
-      onToast(`Synced to Bókun${bokunId ? ` (${bokunId})` : ''}`);
+      onToast(`Published! ID: ${bokunId || 'Pending'}`);
     } catch (e: any) {
-      onToast(e?.message || 'Sync failed');
+      onToast(e?.message || 'Publish failed');
     }
   };
 
@@ -569,7 +596,8 @@ function ActivitiesSkeleton({ onToast }: { onToast: (m: string) => void }) {
                       setRows(rs => [copy, ...rs]);
                       onToast('Experience duplicated');
                     }}>Duplicate</Button>
-                    <Button size="small" variant="contained" sx={{ ml: 1, bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Sync to Bókun</Button>
+                    <Button size="small" variant="outlined" sx={{ ml: 1, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }} onClick={()=>onEditDetails && onEditDetails(r.id)}>Add Details</Button>
+                    <Button size="small" variant="contained" sx={{ ml: 1, bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Publish</Button>
                   </>
                 )}
               </TableCell>
@@ -806,6 +834,18 @@ export default function SupplierPortalPage() {
     bokunProductId?: string;
     airtableId?: string;
     lastSyncedAt?: string;
+    authenticEchoes?: string;
+    unforgettableFeeling?: string;
+    magicMoment?: string;
+    hiddenGem?: string;
+    communityConnection?: string;
+    perfectMatch?: string;
+    threeWords?: string;
+    safetyMeasures?: string;
+    requirements?: string;
+    included?: string;
+    notIncluded?: string;
+    insurance?: string;
   };
   const [experiences, setExperiences] = React.useState<Experience[]>([]);
   const [details, setDetails] = React.useState<Partial<Experience>>({});
@@ -2298,7 +2338,15 @@ const PRIMARY_BUTTON_SX = {
             <Box sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Experience Overview</Typography>
               <Alert severity="info" sx={{ mb: 2 }}>Create draft experiences (title, city, duration). Saving will push to n8n later.</Alert>
-            <ActivitiesSkeleton onToast={(m)=>setToast(m)} />
+            <ActivitiesSkeleton onToast={(m)=>setToast(m)} onEditDetails={(id) => {
+               const exists = experiences.find(e => e.id === id);
+               if (exists) {
+                 setSelectedExperienceId(id);
+                 setSubsection('details');
+               } else {
+                 setToast('Please "Save drafts" and Refresh page to edit details for this new item.');
+               }
+            }} />
           </Box>
           </Fade>
         )}
@@ -2405,7 +2453,61 @@ const PRIMARY_BUTTON_SX = {
                     </Stack>
                   );
                 })()}
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Details</Button>
+                
+                {/* Story & Vibe Section */}
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mt: 3, mb: 1 }}>The Story & Vibe</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Unforgettable Feeling" value={details.unforgettableFeeling || ''} onChange={(e)=>setDetails(d=>({ ...d, unforgettableFeeling: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Authentic Echoes" value={details.authenticEchoes || ''} onChange={(e)=>setDetails(d=>({ ...d, authenticEchoes: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="A Moment of Magic" value={details.magicMoment || ''} onChange={(e)=>setDetails(d=>({ ...d, magicMoment: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Hidden Gem" value={details.hiddenGem || ''} onChange={(e)=>setDetails(d=>({ ...d, hiddenGem: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Community Connection" value={details.communityConnection || ''} onChange={(e)=>setDetails(d=>({ ...d, communityConnection: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Perfect Match" value={details.perfectMatch || ''} onChange={(e)=>setDetails(d=>({ ...d, perfectMatch: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField label="Three Words" placeholder="e.g. Serene, Historical, Tasty" value={details.threeWords || ''} onChange={(e)=>setDetails(d=>({ ...d, threeWords: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                </Grid>
+
+                {/* Inclusions & Logistics */}
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mt: 3, mb: 1 }}>Inclusions & Requirements</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Included in Price" value={details.included || ''} onChange={(e)=>setDetails(d=>({ ...d, included: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="NOT Included" value={details.notIncluded || ''} onChange={(e)=>setDetails(d=>({ ...d, notIncluded: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField label="Participant Requirements" value={details.requirements || ''} onChange={(e)=>setDetails(d=>({ ...d, requirements: e.target.value }))} fullWidth multiline minRows={2} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                </Grid>
+
+                {/* Safety */}
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mt: 3, mb: 1 }}>Safety & Insurance</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label="Safety Measures" value={details.safetyMeasures || ''} onChange={(e)=>setDetails(d=>({ ...d, safetyMeasures: e.target.value }))} fullWidth multiline minRows={2} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                  <TextField label="Insurance Information" value={details.insurance || ''} onChange={(e)=>setDetails(d=>({ ...d, insurance: e.target.value }))} fullWidth multiline minRows={2} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ mt: 3 }}>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Details</Button>
+                </Box>
               </>
             )}
           </Stack>
