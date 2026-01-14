@@ -9,7 +9,7 @@ export const revalidate = 0;
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, Stepper, Step, StepLabel } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import Image from 'next/image';
 import { Add as AddIcon, Edit as EditIcon, DeleteOutline as DeleteOutlineIcon, Close as CloseIcon, CheckCircleOutline as CheckCircleOutlineIcon, Apartment as ApartmentIcon, PersonOutline as PersonOutlineIcon, Collections as CollectionsIcon, ContentCopy as ContentCopyIcon, Share as ShareIcon, Save as SaveIcon, PlayArrow as PlayArrowIcon, Check as CheckIcon, Sync as SyncIcon, Key as KeyIcon, VpnKey as VpnKeyIcon, Delete as DeleteIcon } from '@mui/icons-material';
@@ -43,17 +43,6 @@ async function parseJsonSafe(res: Response): Promise<any | null> {
 }
 
 const defaultTimeZone = 'Asia/Tokyo';
-
-function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) => void; onEditDetails?: (activity: Activity) => void }) {
-  const [open, setOpen] = React.useState(false);
-  // The following state variables seem to be misplaced here, they belong to GridLikeMedia
-  // const [photos, setPhotos] = React.useState<string>('');
-  // const [videoDrive, setVideoDrive] = React.useState<string>('');
-  // const [videoExternal, setVideoExternal] = React.useState<string>('');
-  // const [saving, setSaving] = React.useState(false);
-  // const [uploading, setUploading] = React.useState(false);
-  // const [uploads, setUploads] = React.useState<{ name: string; status: 'pending'|'ok'|'error'; url?: string }[]>([]);
-}
 
 function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) => void; defaultActivityId?: string }) {
   const [photos, setPhotos] = React.useState<string>('');
