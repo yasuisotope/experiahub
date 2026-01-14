@@ -2049,7 +2049,7 @@ const PRIMARY_BUTTON_SX = {
                     <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Pricing {c.pricing.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="pricing" />
                     <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Availability {c.availability.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="availability" />
                     <Tab label="Policies" value="policies" />
-                    <Tab label="Distribution" value="distribution" />
+                    {/* <Tab label="Distribution" value="distribution" /> */}
                     <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Validate {c.validation.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : (c.validation.count ? <Typography variant="caption" sx={{color:'warning.main', fontWeight:800}}>{c.validation.count}</Typography> : null)}</Box>} value="validation" />
                     <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Sync {c.sync.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="sync" />
                   </Tabs>
@@ -2486,8 +2486,6 @@ const PRIMARY_BUTTON_SX = {
             )}
             <Stack direction="row" spacing={1} justifyContent="flex-end">
               <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
-            </Stack>
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
               <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                 const currencies = new Set(pricingRows.map(r=>r.currency).filter(Boolean));
                 if (currencies.size > 1) { setToast('Use a single currency across pricing rows'); return; }
