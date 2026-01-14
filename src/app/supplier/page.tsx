@@ -2737,7 +2737,7 @@ const PRIMARY_BUTTON_SX = {
                   onClick={syncSelected}
                   disabled={(validationMap[selectedExperienceId] ?? Infinity) !== 0}
                 >
-                  Sync to Bókun
+                  Publish Experience
                 </Button>
                 {(validationMap[selectedExperienceId] ?? Infinity) !== 0 && (
                   <Typography variant="caption" sx={{ color: '#a15b00' }}>
