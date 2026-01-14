@@ -1418,7 +1418,12 @@ const PRIMARY_BUTTON_SX = {
     const res = await fetch(`${N8N_BASE}/supplier/activities/save`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
-    const json = await res.json();
+    const json = await parseJsonSafe(res);
+    if (!json) {
+       // Tolerate empty body if status is 200
+       if (res.ok) return; 
+       throw new Error('Save failed (Empty response)');
+    }
     if (!json?.success) throw new Error(json?.error || 'Save failed');
   };
 
@@ -1475,7 +1480,7 @@ const PRIMARY_BUTTON_SX = {
       const params = new URLSearchParams({ applicationId: appId });
       if (id) params.set('activityId', id);
       const res = await fetch(`${N8N_BASE}/supplier/media/get?${params.toString()}`);
-      const json = await res.json();
+      const json = await parseJsonSafe(res);
       const urls = json?.photosDriveUrls || [];
       const ok = Array.isArray(urls) && urls.length > 0;
       if (id) {
