@@ -3,7 +3,7 @@
 import React from 'react';
 import { Box, Typography, Paper, Stack, IconButton, Menu, MenuItem, Drawer, TextField, InputAdornment, Select, FormControl, InputLabel, Button, ToggleButton, ToggleButtonGroup, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert, Tooltip, Fab, Popover, Skeleton } from '@mui/material';
 import { CalendarMonth, AccessTime, LocationOn, Groups, FlightTakeoff, Hotel, Restaurant, MoreVert, Search as SearchIcon, ChevronLeft, ChevronRight, Share as ShareIcon } from '@mui/icons-material';
-import MainLayout from '@/components/layout/MainLayout';
+
 import BackgroundImage from '@/components/BackgroundImage';
 import { getUserBackground, loadCachedBackground, saveCachedBackground, type PortalBackground } from '@/services/backgroundService';
 import Link from 'next/link';
@@ -494,7 +494,7 @@ export default function SchedulePage() {
   };
 
   return (
-    <MainLayout>
+    <>
               <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
       <Box
         sx={{
@@ -974,6 +974,6 @@ export default function SchedulePage() {
       <Fab color="default" aria-label="Background" onClick={(e)=>setBgAnchorEl(e.currentTarget)} sx={{ position: 'fixed', right: 20, bottom: 92, zIndex: 2000, bgcolor: 'rgba(255,255,255,0.9)', color: '#4a7c8c' }}>
         <WallpaperIcon />
       </Fab>
-    </MainLayout>
+    </>
   );
 }

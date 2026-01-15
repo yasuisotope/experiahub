@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import MainLayout from '@/components/layout/MainLayout';
+
 import { Box, Typography, Stack, Paper, Button, Divider, CircularProgress, Alert } from '@mui/material';
 
 type BookingDetails = {
@@ -65,7 +65,7 @@ export default function BookingDetailsPage() {
   }, [bookingId]);
 
   return (
-    <MainLayout>
+    <>
       <Box
         sx={{
           height: 'calc(100vh - 32px)',
@@ -234,7 +234,7 @@ export default function BookingDetailsPage() {
           </Paper>
         )}
       </Box>
-    </MainLayout>
+    </>
   );
 }
 

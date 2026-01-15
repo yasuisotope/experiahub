@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import MainLayout from '@/components/layout/MainLayout';
+
 
 export const metadata: Metadata = {
   title: 'Chat - ExperiaHub',
@@ -7,5 +7,6 @@ export const metadata: Metadata = {
 };
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
-  return <MainLayout>{children}</MainLayout>;
+  // Layout is handled by (user)/layout.tsx
+  return <>{children}</>;
 }

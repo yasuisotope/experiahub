@@ -42,35 +42,70 @@ export class AuthService {
 
   static async login(username: string, password: string, persist: boolean = true): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.AUTH_BASE_URL}`, {
+      console.log('Attempting Direct WP Login...');
+      // 1. Get Token
+      const tokenResponse = await fetch('https://experiahub.com/wp-json/jwt-auth/v1/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'login',
-          username, 
-          password 
-        })
+        body: JSON.stringify({ username, password })
       });
 
-      const data = await response.json();
+      const text = await tokenResponse.text();
+      let tokenData;
+      try {
+        tokenData = JSON.parse(text);
+      } catch (e) {
+        console.error('Login response parsing failed. Body:', text.substring(0, 200));
+        return {
+          success: false,
+          error: 'Server returned invalid response. Please try again or contact support.',
+          status: tokenResponse.status
+        };
+      }
 
-      if (data.success && persist) {
-        // Store authentication data
-        localStorage.setItem(this.TOKEN_KEY, data.token);
+      if (!tokenResponse.ok || !tokenData.token) {
+        return {
+          success: false,
+          error: tokenData.message ? tokenData.message.replace(/<[^>]*>?/gm, '') : 'Invalid credentials',
+          status: tokenResponse.status
+        };
+      }
+
+      // 2. Get User Details
+      const userResponse = await fetch('https://experiahub.com/wp-json/wp/v2/users/me?context=edit', {
+        headers: { 
+          'Authorization': `Bearer ${tokenData.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const userData = await userResponse.json();
+
+      if (persist) {
+        localStorage.setItem(this.TOKEN_KEY, tokenData.token);
         localStorage.setItem(this.USER_KEY, JSON.stringify({
-          id: data.user_id,
-          email: data.user_email,
-          nicename: data.user_nicename,
-          display_name: data.user_display_name
+          id: userData.id,
+          email: tokenData.user_email || userData.email,
+          nicename: tokenData.user_nicename || userData.slug,
+          display_name: tokenData.user_display_name || userData.name
         }));
       }
 
-      return data;
+      return {
+        success: true,
+        token: tokenData.token,
+        user_email: tokenData.user_email,
+        user_nicename: tokenData.user_nicename,
+        user_display_name: tokenData.user_display_name,
+        status: 200
+      };
+
     } catch (error) {
       console.error('Login error:', error);
+      // Fallback to N8N if direct fails (optional, but let's stick to direct for now)
       return {
         success: false,
-        error: 'Failed to connect to authentication service',
+        error: 'Connection to server failed',
         status: 500
       };
     }

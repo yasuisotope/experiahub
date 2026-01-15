@@ -2,13 +2,13 @@
 
 import { Box, Typography, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import MainLayout from '@/components/layout/MainLayout';
+import UserLayout from '@/components/layout/UserLayout';
 
 export default function NotFound() {
   const router = useRouter();
 
   return (
-    <MainLayout>
+    <UserLayout>
       <Box
         sx={{
           display: 'flex',
@@ -63,6 +63,6 @@ export default function NotFound() {
           Return Home
         </Button>
       </Box>
-    </MainLayout>
+    </UserLayout>
   );
 }

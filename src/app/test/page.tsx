@@ -1,11 +1,11 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-import MainLayout from '@/components/layout/MainLayout';
+import UserLayout from '@/components/layout/UserLayout';
 
 export default function TestPage() {
   return (
-    <MainLayout>
+    <UserLayout>
       <Box
         sx={{
           display: 'flex',
@@ -20,6 +20,6 @@ export default function TestPage() {
           Test Page Works!
         </Typography>
       </Box>
-    </MainLayout>
+    </UserLayout>
   );
 }

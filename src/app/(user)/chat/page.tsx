@@ -122,7 +122,13 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const { sendMessage, loading, currentChat, selectedExperience, setSelectedExperience } = useChatContext();
   const { isLoggedIn, login, isLoading: authLoading } = useWordPressAuth();
-  const [bg, setBg] = useState<PortalBackground | null>(null);
+  const [bg, setBg] = useState<PortalBackground | null>({
+    url: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80",
+    lqip: '',
+    authorName: 'Unsplash',
+    authorUrl: 'https://unsplash.com',
+    source: 'default'
+  });
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');

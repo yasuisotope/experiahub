@@ -1,30 +1,39 @@
 'use client';
 
-// Route segment config removed as this is a Client Component
-// useSearchParams usage automatically opts into dynamic rendering where needed
+// Build Trace: 2026.01.12.0815 - Ensuring reactive patterns are live
+export const buildId = "2026.01.12.0815";
 
+// Disable static prerendering — this page depends on search params/localStorage.
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, Stepper, Step, StepLabel, ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab } from '@mui/material';
-// BackgroundImage removed
-
+import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import Image from 'next/image';
-import { Add as AddIcon, Edit as EditIcon, DeleteOutline as DeleteOutlineIcon, Close as CloseIcon, CheckCircleOutline as CheckCircleOutlineIcon, Apartment as ApartmentIcon, PersonOutline as PersonOutlineIcon, Collections as CollectionsIcon, ContentCopy as ContentCopyIcon, Share as ShareIcon, Save as SaveIcon, PlayArrow as PlayArrowIcon, Check as CheckIcon, Sync as SyncIcon, Key as KeyIcon, VpnKey as VpnKeyIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { useSupplierAuth } from '@/contexts/SupplierAuthContext';
-import { AuthService } from '@/services/authService';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import CloseIcon from '@mui/icons-material/Close';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ApartmentIcon from '@mui/icons-material/Apartment';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import CollectionsIcon from '@mui/icons-material/Collections';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ShareIcon from '@mui/icons-material/Share';
+import { useWordPressAuth } from '@/contexts/WordPressContext';
 import OnboardingForm from '@/components/supplier/OnboardingForm';
 import SupportDialog from '@/components/support/SupportDialog';
-import GridLikeMedia from '@/components/supplier/GridLikeMedia';
-import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import WallpaperIcon from '@mui/icons-material/Wallpaper';
+import { ToggleButtonGroup, ToggleButton } from '@mui/material';
+import BackgroundImage from '@/components/BackgroundImage';
 import { getUserBackground, setUserBackground, searchUnsplash, trackDownload, loadCachedBackground, saveCachedBackground, getCuratedBackgrounds, prefetchBackgroundImage, type PortalBackground } from '@/services/backgroundService';
 import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
 
 const getBaseUrl = () => {
-  // Use local proxy to avoid CORS and Env issues
-  return '/api/n8n';
+  const envUrl = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
+  if (envUrl.includes('/webhook')) return envUrl;
+  return `${envUrl.replace(/\/$/, '')}/webhook`;
 };
 const N8N_BASE = getBaseUrl();
 // Removed exposed TOKENS_API_KEY. Now handled in /api/supplier/tokens
@@ -40,11 +49,214 @@ async function parseJsonSafe(res: Response): Promise<any | null> {
   }
 }
 
-const defaultTimeZone = 'Asia/Tokyo';
+function GridLikeMedia({ onToast, defaultActivityId }: { onToast: (m: string) => void; defaultActivityId?: string }) {
+  const [photos, setPhotos] = React.useState<string>('');
+  const [videoDrive, setVideoDrive] = React.useState<string>('');
+  const [videoExternal, setVideoExternal] = React.useState<string>('');
+  const [saving, setSaving] = React.useState(false);
+  const [uploading, setUploading] = React.useState(false);
+  const [uploads, setUploads] = React.useState<{ name: string; status: 'pending'|'ok'|'error'; url?: string }[]>([]);
+  const [activityId, setActivityId] = React.useState<string>('');
+  const [activities, setActivities] = React.useState<{ id: string; title: string }[]>([]);
+  const [coverUrl, setCoverUrl] = React.useState<string>('');
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const appId = React.useMemo(() => {
+    try { return localStorage.getItem('supplier_application_id') || ''; } catch { return ''; }
+  }, []);
 
-// GridLikeMedia definition moved to @/components/supplier/GridLikeMedia.tsx
+  React.useEffect(() => {
+    const controller = new AbortController();
+    const load = async () => {
+      if (!appId) return;
+      try {
+        const params = new URLSearchParams({ applicationId: appId });
+        if (activityId) params.set('activityId', activityId);
+        const res = await fetch(`${N8N_BASE}/supplier/media/get?${params.toString()}`, { signal: controller.signal });
+        const json = await res.json();
+        if (json?.success) {
+          setPhotos((json.photosDriveUrls || []).join(', '));
+          setVideoDrive(json.videoDriveUrl || '');
+          setVideoExternal(json.videoUrl || '');
+        }
+      } catch {}
+    };
+    load();
+    return () => controller.abort();
+  }, [appId, activityId]);
 
-function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) => void; onEditDetails?: (activity: any) => void }) {
+  React.useEffect(() => {
+    if (defaultActivityId && defaultActivityId !== activityId) {
+      setActivityId(defaultActivityId);
+    }
+  }, [defaultActivityId]);
+
+  React.useEffect(() => {
+    const loadActivities = async () => {
+      if (!appId) return;
+      try {
+        const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`);
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.activities)) {
+          setActivities(json.activities.map((a: any, i: number) => ({ id: a.id || `row_${i}`, title: a.title || `Untitled ${i+1}` })));
+        }
+      } catch {}
+    };
+    loadActivities();
+  }, [appId]);
+
+  React.useEffect(() => {
+    if (!activityId && activities.length === 1) {
+      setActivityId(activities[0].id);
+    }
+  }, [activities, activityId]);
+
+  const onSave = async () => {
+    if (!appId) { onToast('Missing application ID'); return; }
+    setSaving(true);
+    try {
+      const payload = {
+        applicationId: appId,
+        photosDriveUrls: photos.split(',').map((s) => s.trim()).filter(Boolean),
+        videoDriveUrl: videoDrive.trim(),
+        videoUrl: videoExternal.trim()
+      };
+      const res = await fetch(`${N8N_BASE}/supplier/media/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Save failed');
+      onToast('Media saved');
+    } catch (e: any) {
+      onToast(e.message || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onFilesSelected = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    if (!appId) { onToast('Missing application ID'); return; }
+    if (!activityId.trim()) { onToast('Select an Activity to attach uploads'); return; }
+    const list = Array.from(files);
+    setUploads(list.map(f => ({ name: f.name, status: 'pending' })));
+    setUploading(true);
+    try {
+      const uploadedUrls: string[] = [];
+      for (const f of list) {
+        const fd = new FormData();
+        fd.append('applicationId', appId);
+        if (activityId.trim()) fd.append('activityId', activityId.trim());
+        fd.append('file', f, f.name);
+        const res = await fetch(`${N8N_BASE}/supplier/media/upload`, { method: 'POST', body: fd });
+        const json = await res.json();
+        const url = json?.url || json?.driveUrl || '';
+        setUploads(u => u.map(x => x.name === f.name ? { ...x, status: url ? 'ok' : 'error', url } : x));
+        if (url) uploadedUrls.push(url);
+      }
+      if (uploadedUrls.length) {
+        setPhotos(curr => {
+          const existing = curr.split(',').map(s => s.trim()).filter(Boolean);
+          return [...existing, ...uploadedUrls].join(', ');
+        });
+        onToast('Upload complete');
+        // Auto-save and reset media UI to prevent repeated saves
+        try { await onSave(); } catch {}
+        setUploads([]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        setActivityId('');
+      }
+    } catch (e: any) {
+      onToast(e.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Stack spacing={2}>
+      <TextField label="Photo URLs (Drive, comma-separated)" value={photos} onChange={(e) => setPhotos(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
+      <TextField label="Video URL (Drive)" value={videoDrive} onChange={(e) => setVideoDrive(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
+      <TextField label="Video URL (External)" value={videoExternal} onChange={(e) => setVideoExternal(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
+      <TextField select label="Attach to Activity" value={activityId} onChange={(e)=>setActivityId(e.target.value)} size="small" helperText="Required for uploads">
+        {activities.map((a) => (
+          <MenuItem key={a.id} value={a.id}>{a.title}</MenuItem>
+        ))}
+      </TextField>
+      {(() => {
+        const list = photos.split(',').map(s => s.trim()).filter(Boolean);
+        return (
+          <FormControl size="small" fullWidth>
+            <InputLabel id="cover-photo-label">Cover photo (first in list)</InputLabel>
+            <Select labelId="cover-photo-label" label="Cover photo (first in list)" value={coverUrl} onChange={(e)=>{
+              const val = String(e.target.value);
+              setCoverUrl(val);
+              if (val) {
+                const filtered = list.filter(u => u !== val);
+                const reordered = [val, ...filtered];
+                setPhotos(reordered.join(', '));
+              }
+            }}>
+              {list.map((u) => (<MenuItem key={u} value={u}>{u}</MenuItem>))}
+            </Select>
+          </FormControl>
+        );
+      })()}
+      {photos.trim().length === 0 && uploads.length === 0 && (
+        <Alert severity="info">No photos yet. Upload images or paste Drive URLs to get started.</Alert>
+      )}
+      <Box onDragOver={(e)=>{ e.preventDefault(); }} onDrop={(e)=>{ e.preventDefault(); onFilesSelected(e.dataTransfer.files); }} sx={{
+        p: 2,
+        border: '1px dashed #BFC7CD',
+        borderRadius: 2,
+        bgcolor: '#fafafa',
+        color: '#6b7780'
+      }}>
+        <Stack spacing={1}>
+          <Typography variant="caption">Drag & drop images/videos here or select files</Typography>
+          <Button component="label" variant="outlined" size="small">
+            Choose Files
+            <input ref={fileInputRef} hidden type="file" accept="image/*,video/*" multiple onChange={(e)=>onFilesSelected(e.target.files)} />
+          </Button>
+          {uploads.length > 0 && (
+            <Stack spacing={0.5}>
+              {uploads.map(u => (
+                <Typography key={u.name} variant="caption" sx={{ color: u.status==='error'?'#c62828': (u.status==='ok'?'#2e7d32':'#6b7780') }}>
+                  {u.name} — {u.status}{u.url?`: ${u.url}`:''}
+                </Typography>
+              ))}
+            </Stack>
+          )}
+        </Stack>
+      </Box>
+      {(() => {
+        const list = photos.split(',').map(s => s.trim()).filter(Boolean);
+        if (!list.length) return null;
+        return (
+          <Stack spacing={0.5}>
+            {list.map((u, idx) => (
+              <Stack key={u+idx} direction="row" spacing={1} alignItems="center">
+                <Typography variant="caption" sx={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u}</Typography>
+                <Button size="small" variant="outlined" onClick={() => {
+                  const filtered = list.filter(x => x !== u);
+                  setPhotos([u, ...filtered].join(', '));
+                  setCoverUrl(u);
+                }}>Set as cover</Button>
+              </Stack>
+            ))}
+          </Stack>
+        );
+      })()}
+      <Stack direction="row" spacing={1}>
+        <Button onClick={onSave} disabled={saving} variant="contained" sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' }, fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}>{saving ? 'Saving…' : 'Save Media'}</Button>
+        <Button variant="outlined" disabled={uploading}>{uploading ? 'Uploading…' : 'Preview'}</Button>
+      </Stack>
+    </Stack>
+  );
+}
+
+function ActivitiesSkeleton({ onToast }: { onToast: (m: string) => void }) {
   type Activity = {
     id: string;
     title: string;
@@ -66,18 +278,6 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
     pricingCategories?: string;
     baseRate?: string;
     bokunProductId?: string;
-    authenticEchoes?: string;
-    unforgettableFeeling?: string;
-    magicMoment?: string;
-    hiddenGem?: string;
-    communityConnection?: string;
-    perfectMatch?: string;
-    threeWords?: string;
-    safetyMeasures?: string;
-    requirements?: string;
-    included?: string;
-    notIncluded?: string;
-    insurance?: string;
   };
   const [rows, setRows] = React.useState<Activity[]>([]);
   const [open, setOpen] = React.useState(false);
@@ -148,7 +348,7 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
     setLanguages(a.languages || '');
     setSchedulingMode(a.schedulingMode || '');
     setStartTimes(a.startTimes || '');
-    setCutoffHours(a.cutoffHours || (a.bookingLeadTime || ''));
+    setCutoffHours(a.cutoffHours || '');
     setPricingCategories(a.pricingCategories || '');
     setBaseRate(a.baseRate || '');
     setOpen(true);
@@ -162,31 +362,14 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
     onToast('Deleted. Undo?');
   };
 
-  // Load/Save Drafts locally to prevent data loss
-  React.useEffect(() => {
-    if (!appId) return;
-    try {
-      const saved = localStorage.getItem(`supplier_activities_${appId}`);
-      if (saved) {
-        setRows(JSON.parse(saved));
-      }
-    } catch {}
-  }, [appId]);
-
-  React.useEffect(() => {
-    if (appId && rows.length > 0) {
-      localStorage.setItem(`supplier_activities_${appId}`, JSON.stringify(rows));
-    }
-  }, [rows, appId]);
-
   React.useEffect(() => {
     const load = async () => {
       if (!appId) return;
       try {
         const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`);
-        const json = await parseJsonSafe(res);
+        const json = await res.json();
         if (json?.success && Array.isArray(json.activities)) {
-          const remoteRows = json.activities.map((a: any, i: number) => ({
+          setRows(json.activities.map((a: any, i: number) => ({
             id: a.id || `row_${i}`,
             title: a.title || '',
             summary: a.summary || a.description || '',
@@ -206,42 +389,8 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
             cutoffHours: a.cutoffHours || (a.bookingLeadTime || ''),
             pricingCategories: a.pricingCategories || '',
             baseRate: a.baseRate || '',
-            bokunProductId: a.bokunProductId || '',
-            // Populate restored fields if available from API
-            authenticEchoes: a.authenticEchoes,
-            unforgettableFeeling: a.unforgettableFeeling,
-            magicMoment: a.magicMoment,
-            hiddenGem: a.hiddenGem,
-            communityConnection: a.communityConnection,
-            perfectMatch: a.perfectMatch,
-            threeWords: a.threeWords,
-            safetyMeasures: a.safetyMeasures,
-            requirements: a.requirements,
-            included: a.included,
-            notIncluded: a.notIncluded,
-            insurance: a.insurance
-          }));
-          
-          // Merge remote with local drafts (prefer local for things not yet synced, but remote for updates?)
-          // Actually, simply appending missing local drafts is safer to avoid deleting work.
-          setRows((prev) => {
-            const currentIds = new Set(prev.map(p => p.id));
-            const remoteMap = new Map(remoteRows.map((r:Activity) => [r.id, r]));
-            
-            // Start with remote rows as truth
-            const merged = [...remoteRows];
-            
-            // Add any local rows that don't exist in remote (Drafts)
-            prev.forEach(p => {
-               // If it's a temp ID (row_...) and not in remote, keep it
-               // Or if it's a real ID but not returned by API (maybe API is slow), keep it? 
-               // Let's assume real IDs come from API. Temp IDs are drafts.
-               if (!remoteMap.has(p.id)) {
-                 merged.push(p);
-               }
-            });
-            return merged as Activity[];
-          });
+            bokunProductId: a.bokunProductId || ''
+          })));
         }
       } catch {}
     };
@@ -256,10 +405,8 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
       const res = await fetch(`${N8N_BASE}/supplier/activities/save`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
-      const json = await parseJsonSafe(res) || {};
-      if (res.ok && !json.success && !json.error) {
-         // tolerate empty success if HTTP 200
-      } else if (!json.success) throw new Error(json.error || 'Save failed');
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Save failed');
       onToast('Activities saved');
     } catch (e: any) {
       onToast(e.message || 'Save failed');
@@ -301,7 +448,7 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
       const params = new URLSearchParams({ applicationId: appId });
       if (activityIdForCheck) params.set('activityId', activityIdForCheck);
       const res = await fetch(`${N8N_BASE}/supplier/media/get?${params.toString()}`);
-      const json = await parseJsonSafe(res);
+      const json = await res.json();
       const urls = json?.photosDriveUrls || [];
       return Array.isArray(urls) && urls.length > 0;
     } catch { return false; }
@@ -351,78 +498,45 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
           RATES: [{ name: 'Base', amount: a.baseRate || a.price, currency: a.currency }],
           AVAILABILITY_RULES: { schedulingMode: a.schedulingMode, startTimes: a.startTimes },
           CUTOFF: a.cutoffHours || a.bookingLeadTime,
-          EXTERNAL_ID: a.id,
-          // Marketing & Story (Restored Fields)
-          AUTHENTIC_ECHOES: a.authenticEchoes,
-          UNFORGETTABLE_FEELING: a.unforgettableFeeling,
-          MAGIC_MOMENT: a.magicMoment,
-          HIDDEN_GEM: a.hiddenGem,
-          COMMUNITY_CONNECTION: a.communityConnection,
-          PERFECT_MATCH: a.perfectMatch,
-          THREE_WORDS: a.threeWords,
-          // Logistics & Safety
-          SAFETY_MEASURES: a.safetyMeasures,
-          REQUIREMENTS: a.requirements,
-          INCLUDED: a.included,
-          NOT_INCLUDED: a.notIncluded,
-          INSURANCE: a.insurance
+          EXTERNAL_ID: a.id
         }
       };
       const res = await fetch(`${N8N_BASE}/supplier/activities/sync`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
-      const json = await parseJsonSafe(res);
-      if (!json) {
-        if (res.ok) { onToast('Published (No ID returned)'); return; }
-        throw new Error('Sync failed (Empty response)');
-      }
+      const json = await res.json();
       if (!json?.success) throw new Error(json?.error || 'Sync failed');
       const bokunId = json.bokunProductId || '';
       setRows((rs) => rs.map((r) => r.id === a.id ? { ...r, bokunProductId: bokunId } : r));
-      onToast(`Published! ID: ${bokunId || 'Pending'}`);
+      onToast(`Synced to Bókun${bokunId ? ` (${bokunId})` : ''}`);
     } catch (e: any) {
-      onToast(e?.message || 'Publish failed');
+      onToast(e?.message || 'Sync failed');
     }
-  };
-
-
-
-  const isPublishable = (r: Activity) => {
-    // Basic check: must have title, city, duration, and at least one story element or logistic element
-    return !!(r.title && r.city && r.durationMinutes);
   };
 
   return (
     <Box>
-      <Stepper activeStep={0} sx={{ mb: 8, mt: 4, bgcolor: 'transparent' }} alternativeLabel>
-        <Step key="draft"><StepLabel icon="1">Draft Overview</StepLabel></Step>
-        <Step key="details"><StepLabel icon="2">Add Details & Story</StepLabel></Step>
-        <Step key="publish"><StepLabel icon="3">Publish to World</StepLabel></Step>
-      </Stepper>
-
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4, alignItems: 'center', justifyContent: 'space-between' }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField size="small" label="Search" value={filterText} onChange={(e)=>setFilterText(e.target.value)} sx={{ maxWidth: 220, bgcolor: 'white' }} />
-          <FormControl size="small" sx={{ minWidth: 140 }}>
-            <InputLabel id="sort-by-label" sx={{ bgcolor: 'white', px: 0.5 }}>Sort by</InputLabel>
-            <Select labelId="sort-by-label" label="Sort by" value={sortKey} onChange={(e)=>setSortKey(e.target.value as any)} sx={{ bgcolor: 'white' }}>
-              <MenuItem value="title">Title</MenuItem>
-              <MenuItem value="city">City</MenuItem>
-              <MenuItem value="durationMinutes">Duration</MenuItem>
-              <MenuItem value="price">Price</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel id="sort-dir-label" sx={{ bgcolor: 'white', px: 0.5 }}>Order</InputLabel>
-            <Select labelId="sort-dir-label" label="Order" value={sortDir} onChange={(e)=>setSortDir(e.target.value as any)} sx={{ bgcolor: 'white' }}>
-              <MenuItem value="asc">Ascending</MenuItem>
-              <MenuItem value="desc">Descending</MenuItem>
-            </Select>
-          </FormControl>
-        </Stack>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
+        <TextField size="small" label="Search" value={filterText} onChange={(e)=>setFilterText(e.target.value)} sx={{ maxWidth: 260 }} />
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel id="sort-by-label">Sort by</InputLabel>
+          <Select labelId="sort-by-label" label="Sort by" value={sortKey} onChange={(e)=>setSortKey(e.target.value as any)}>
+            <MenuItem value="title">Title</MenuItem>
+            <MenuItem value="city">City</MenuItem>
+            <MenuItem value="durationMinutes">Duration</MenuItem>
+            <MenuItem value="price">Price</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel id="sort-dir-label">Order</InputLabel>
+          <Select labelId="sort-dir-label" label="Order" value={sortDir} onChange={(e)=>setSortDir(e.target.value as any)}>
+            <MenuItem value="asc">Ascending</MenuItem>
+            <MenuItem value="desc">Descending</MenuItem>
+          </Select>
+        </FormControl>
         <Stack direction="row" spacing={1}>
           <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}>Add</Button>
-          <Button variant="outlined" onClick={saveAll} disabled={saving} sx={{ borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>{saving ? 'Saving…' : 'Save all'}</Button>
+          <Button variant="outlined" onClick={saveAll} disabled={saving} sx={{ borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>{saving ? 'Saving…' : 'Save drafts'}</Button>
           {undo && (
             <Button size="small" onClick={() => { setRows((rs)=>[undo.row, ...rs]); setUndo(null); setTimeout(()=>onToast('Restored'), 0); }}>Undo</Button>
           )}
@@ -431,14 +545,12 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
       <Table size="small">
         <TableHead>
           <TableRow>
-          <TableRow>
-            <TableCell sx={{ fontWeight: 'bold' }}>Title</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>City</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Duration (min)</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Price</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Bókun</TableCell>
-            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
-          </TableRow>
+            <TableCell>Title</TableCell>
+            <TableCell>City</TableCell>
+            <TableCell>Duration (min)</TableCell>
+            <TableCell>Price</TableCell>
+            <TableCell>Bókun</TableCell>
+            <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -464,8 +576,7 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
                       setRows(rs => [copy, ...rs]);
                       onToast('Experience duplicated');
                     }}>Duplicate</Button>
-                    <Button size="small" variant="outlined" sx={{ ml: 1, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }} onClick={()=>onEditDetails && onEditDetails(r)}>Add Details</Button>
-                    <Button size="small" variant="contained" disabled={!isPublishable(r)} sx={{ ml: 1, bgcolor: isPublishable(r)?'#010057':'#ccc', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Publish</Button>
+                    <Button size="small" variant="contained" sx={{ ml: 1, bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Sync to Bókun</Button>
                   </>
                 )}
               </TableCell>
@@ -548,7 +659,7 @@ function PricingScheduleSkeleton({ onToast }: { onToast: (m: string) => void }) 
       if (!appId) return;
       try {
         const res = await fetch(`${N8N_BASE}/supplier/pricing/get?applicationId=${encodeURIComponent(appId)}`);
-        const json = await parseJsonSafe(res);
+        const json = await res.json();
         if (json?.success && json.notes) {
           setPricingNotes(json.notes.pricingNotes || '');
           setScheduleNotes(json.notes.scheduleNotes || '');
@@ -566,8 +677,7 @@ function PricingScheduleSkeleton({ onToast }: { onToast: (m: string) => void }) 
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicationId: appId, notes: { pricingNotes, scheduleNotes } })
       });
-      const json = await parseJsonSafe(res);
-      if (!json) { if (res.ok) return; throw new Error('Save failed'); }
+      const json = await res.json();
       if (!json.success) throw new Error(json.error || 'Save failed');
       onToast('Saved');
     } catch (e: any) { onToast(e.message || 'Save failed'); }
@@ -585,52 +695,36 @@ function PricingScheduleSkeleton({ onToast }: { onToast: (m: string) => void }) 
   );
 }
 
-// Hook moved to top level logic in component
-function useSupplierAppIdInternal() {
+function useSupplierAppId(): string {
   const params = useSearchParams();
   const [appId, setAppId] = React.useState<string>('');
+
   React.useEffect(() => {
+    // Priority: URL > localStorage > (do NOT generate silently)
     const fromUrl = params?.get('appId') || params?.get('id') || '';
     const fromStorage = typeof window !== 'undefined' ? (localStorage.getItem('supplier_application_id') || '') : '';
     const ensure = fromUrl || fromStorage;
     if (ensure) {
       setAppId(ensure);
       try { localStorage.setItem('supplier_application_id', ensure); } catch {}
+    } else {
+      setAppId('');
     }
   }, [params]);
+
   return appId;
 }
-// function useSupplierAppId() removed as it was buggy. Logic is now inside component.
 
 export default function SupplierPortalPage() {
-  const { isLoggedIn, isLoading, logout, login } = useSupplierAuth() as any;
-  const appId = useSupplierAppIdInternal();
+  const { isLoggedIn, isLoading, logout, login } = useWordPressAuth() as any;
+  const appId = useSupplierAppId();
   const [bg, setBg] = React.useState<PortalBackground | null>(null);
-  const [bgAnchorEl, setBgAnchorEl] = React.useState<HTMLElement | null>(null);
   const [bgSearch, setBgSearch] = React.useState<string>('');
   const [bgResults, setBgResults] = React.useState<any[]>([]);
   const [bgLoading, setBgLoading] = React.useState<boolean>(false);
   const [bgPage, setBgPage] = React.useState<number>(1);
   const [bgLoadingMore, setBgLoadingMore] = React.useState<boolean>(false);
   const [bgSeed, setBgSeed] = React.useState<number>(0);
-  const [statusData, setStatusData] = React.useState<any>(null);
-  // Stable curated list to prevent re-render flicker
-  const [curatedBgs] = React.useState<PortalBackground[]>(() => getCuratedBackgrounds());
-
-  // Load saved background on mount
-  React.useEffect(() => {
-    const loadBg = async () => {
-      try {
-        const token = AuthService.getToken();
-        const cached = loadCachedBackground('supplier'); 
-        if (cached) setBg(cached);
-        const server = await getUserBackground(token);
-        if (server) { setBg(server); saveCachedBackground(server, 'supplier'); }
-      } catch {}
-    };
-    loadBg();
-  }, []);
-
   const loadRandomBg = React.useCallback(async () => {
     try {
       setBgLoading(true);
@@ -642,32 +736,16 @@ export default function SupplierPortalPage() {
     } finally { setBgLoading(false); }
   }, [setBgLoading, setBgResults, setBgPage]);
   // Load fresh random images when opening the Background picker with no query
-  // Load fresh random images when opening the Background picker with no query
-  // Load fresh random images when opening the Background picker with no query
   React.useEffect(() => {
-    (async () => {
-      if (!bgAnchorEl) return;
-      if (bgSearch.trim()) return;
-      try {
-        setBgLoading(true);
-        const topics = ['nature','city','ocean','mountains','forest','sky','beach','night','sunset','architecture'];
-        const q = topics[Math.floor(Math.random() * topics.length)];
-        const results = await searchUnsplash(q, 1, 30);
-        setBgResults(Array.isArray(results) ? results : []);
-        setBgPage(1);
-      } finally {
-        setBgLoading(false);
-      }
-    })();
-  }, [bgAnchorEl, bgSeed, bgSearch]);
+    // Triggered by changing seed before opening the popover
+    if (!bgSearch.trim() && bgSeed) {
+      loadRandomBg();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bgSeed]);
   const [tab, setTab] = React.useState<number>(0);
   const [section, setSection] = React.useState<'welcome'|'company'|'user'|'experiences'|'information'>('company');
   const [toast, setToast] = React.useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = React.useState<{ section: string; timestamp: string } | null>(null);
-  const handleSaveSuccess = (sectionName: string) => {
-    setSaveSuccess({ section: sectionName, timestamp: new Date().toLocaleString() });
-    setToast(`${sectionName} saved`);
-  };
   const [subsection, setSubsection] = React.useState<'profile'|'billing'|'legal'|'locations'|'user_profile'|'user_security'|'user_tokens'|'overview'|'details'|'media'|'pricing'|'availability'|'policies'|'distribution'|'validation'|'sync'|'payouts_overview'|'payouts_connect'|'resources'|'reports'|'help'|'status'>('profile');
   const [activitiesSimple, setActivitiesSimple] = React.useState<{ id: string; title: string }[]>([]);
   const [selectedExperienceId, setSelectedExperienceId] = React.useState<string>('');
@@ -700,43 +778,14 @@ export default function SupplierPortalPage() {
     bokunProductId?: string;
     airtableId?: string;
     lastSyncedAt?: string;
-    authenticEchoes?: string;
-    unforgettableFeeling?: string;
-    magicMoment?: string;
-    hiddenGem?: string;
-    communityConnection?: string;
-    perfectMatch?: string;
-    threeWords?: string;
-    safetyMeasures?: string;
-    requirements?: string;
-    included?: string;
-    notIncluded?: string;
-    insurance?: string;
   };
   const [experiences, setExperiences] = React.useState<Experience[]>([]);
   const [details, setDetails] = React.useState<Partial<Experience>>({});
   const [validating, setValidating] = React.useState(false);
   const [validationIssues, setValidationIssues] = React.useState<string[]>([]);
   const [validationMap, setValidationMap] = React.useState<Record<string, number>>({});
-  const defaultTimeZone = 'Asia/Tokyo';
-const defaultCurrency = 'USD';
-
-// Standardized button style matching OnboardingForm "Save Profile"
-const PRIMARY_BUTTON_SX = {
-  px: 3, py: 0.8, borderRadius: 1,
-  bgcolor: '#010057', color: '#fff',
-  fontWeight: 700, fontFamily: 'Nunito, sans-serif',
-  textTransform: 'none',
-  boxShadow: '0 4px 12px rgba(1, 0, 87, 0.2)',
-  transition: 'all 0.5s ease',
-  width: 'fit-content',
-  alignSelf: 'flex-end',
-  '&:hover': {
-    bgcolor: '#ffbf00',
-    boxShadow: '0 6px 16px rgba(255, 191, 0, 0.3)',
-    transform: 'translateY(-1px)'
-  }
-};
+  const [defaultCurrency, setDefaultCurrency] = React.useState<string>('');
+  const [defaultTimeZone, setDefaultTimeZone] = React.useState<string>('');
   const SUGGESTED_CATEGORIES = React.useMemo(() => ['Cultural','Food & Drink','Adventure','Nature','Sightseeing','Wellness','Nightlife','Workshops','Museums'], []);
   const TIME_ZONES = React.useMemo(() => ['UTC','Asia/Tokyo','America/Los_Angeles','Europe/London'], []);
   const [pricingRows, setPricingRows] = React.useState<{ category: string; amount: string; currency: string }[]>([]);
@@ -749,13 +798,6 @@ const PRIMARY_BUTTON_SX = {
   const [showAuth, setShowAuth] = React.useState(false);
   const [authTab, setAuthTab] = React.useState<'login' | 'signup'>('login');
   const [username, setUsername] = React.useState('');
-  
-  // Force 'signup' tab if we have an appId (Onboarding Flow)
-  React.useEffect(() => {
-    if (appId && !isLoggedIn) {
-      setAuthTab('signup');
-    }
-  }, [appId, isLoggedIn]);
   const [password, setPassword] = React.useState('');
   const [suUsername, setSuUsername] = React.useState('');
   const [suEmail, setSuEmail] = React.useState('');
@@ -799,14 +841,7 @@ const PRIMARY_BUTTON_SX = {
   const refreshPayoutStatus = React.useCallback(async () => {
     if (!appId) return;
     try {
-      const token = AuthService.getToken();
-      const headers: any = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      
-      const res = await fetch(`${N8N_BASE}/supplier/payouts/status?applicationId=${encodeURIComponent(appId)}`, { 
-        cache: 'no-store',
-        headers 
-      });
+      const res = await fetch(`${N8N_BASE}/supplier/payouts/status?applicationId=${encodeURIComponent(appId)}`, { cache: 'no-store' });
       if (!res.ok) { setPayoutStatus('unknown'); setStripeAccountId(''); setStripeDashboardUrl(''); return; }
       const j = await res.json();
       const st = (j?.status || 'unknown').toLowerCase();
@@ -847,13 +882,9 @@ const PRIMARY_BUTTON_SX = {
     const t = setTimeout(async () => {
       try {
         setAutoSaving(true);
-        const token = AuthService.getToken();
-        const headers: any = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-
         await Promise.all([
-          fetch(`${N8N_BASE}/supplier/company/billing/save`, { method: 'POST', headers, body: JSON.stringify({ applicationId: appId, billing: companyBilling }) }),
-          fetch(`${N8N_BASE}/supplier/company/legal/save`, { method: 'POST', headers, body: JSON.stringify({ applicationId: appId, legal: companyLegal }) })
+          fetch(`${N8N_BASE}/supplier/company/billing/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ applicationId: appId, billing: companyBilling }) }),
+          fetch(`${N8N_BASE}/supplier/company/legal/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ applicationId: appId, legal: companyLegal }) })
         ]);
       } catch {}
       finally { setAutoSaving(false); }
@@ -886,7 +917,6 @@ const PRIMARY_BUTTON_SX = {
   const [autoSaving, setAutoSaving] = React.useState<boolean>(false);
   const autoSaveTimerRef = React.useRef<any>(null);
   const [mediaOk, setMediaOk] = React.useState<boolean>(false);
-  const [showForm, setShowForm] = React.useState<boolean>(false);
   
   // User forms placeholders
   const [userDisplayName, setUserDisplayName] = React.useState<string>('');
@@ -956,23 +986,16 @@ const PRIMARY_BUTTON_SX = {
         return;
       }
 
-      const token = AuthService.getToken();
-      const headers: any = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
       try {
         console.log(`[SupplierPortal] Initiating handshake for appId: ${appId} at ${N8N_BASE}`);
 
         // A. Fetch Onboarding Status (Primary Source for New Suppliers / Supabase)
-        // Updated to v2 to bypass ghost workflows
-        const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status-v2?applicationId=${encodeURIComponent(appId)}`, { headers });
+        const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status?applicationId=${encodeURIComponent(appId)}`);
         
         if (statusRes.ok) {
-          const fetchedStatus = await parseJsonSafe(statusRes);
-          setStatusData(fetchedStatus);
-          console.log(`[SupplierPortal] Handshake - Mapping Data:`, fetchedStatus);
-          if (fetchedStatus && fetchedStatus.exists) {
-            const statusData = fetchedStatus; // Local ref for logic below
+          const statusData = await parseJsonSafe(statusRes);
+          console.log(`[SupplierPortal] Handshake - Mapping Data:`, statusData);
+          if (statusData && statusData.exists) {
             // Field mapping MUST match n8n version 3 output
             const primaryEmail = statusData.email || statusData.contactEmail || statusData.supplierEmail || '';
             const primaryName = statusData.fullName || statusData.businessName || '';
@@ -998,20 +1021,15 @@ const PRIMARY_BUTTON_SX = {
                 ? [{ ...prev[0], city: statusData.city, country: statusData.country || prev[0].country }]
                 : prev);
             }
-            if (statusData.businessName) {
-              const safeUser = statusData.businessName.replace(/[^a-zA-Z0-9]/g, '');
-              setSuUsername(safeUser);
-            }
           } else {
             console.warn(`[SupplierPortal] No Supabase record found for ID: ${appId}`);
-            setSuEmail("ID Not Found"); // Visual feedback
           }
         } else {
           console.error(`[SupplierPortal] Status fetch failed: ${statusRes.status}`);
         }
 
         // B. Fetch WP Profile (Verified Account Data - may overwrite with more 'official' info)
-        const profileRes = await fetch(`${N8N_BASE}/supplier/user/profile/get?applicationId=${encodeURIComponent(appId)}`, { headers });
+        const profileRes = await fetch(`${N8N_BASE}/supplier/user/profile/get?applicationId=${encodeURIComponent(appId)}`);
         if (profileRes.ok) {
           const profileJson = await parseJsonSafe(profileRes);
           if (profileJson) {
@@ -1031,9 +1049,9 @@ const PRIMARY_BUTTON_SX = {
         // C. Fetch specialized Company Data (Billing, Legal, Locations)
         // Only overwrite if these endpoints return actual data and we aren't already filled
         const [billRes, legRes, locRes] = await Promise.all([
-          fetch(`${N8N_BASE}/supplier/company/billing/get?applicationId=${encodeURIComponent(appId)}`, { headers }),
-          fetch(`${N8N_BASE}/supplier/company/legal/get?applicationId=${encodeURIComponent(appId)}`, { headers }),
-          fetch(`${N8N_BASE}/supplier/company/locations/get?applicationId=${encodeURIComponent(appId)}`, { headers })
+          fetch(`${N8N_BASE}/supplier/company/billing/get?applicationId=${encodeURIComponent(appId)}`),
+          fetch(`${N8N_BASE}/supplier/company/legal/get?applicationId=${encodeURIComponent(appId)}`),
+          fetch(`${N8N_BASE}/supplier/company/locations/get?applicationId=${encodeURIComponent(appId)}`)
         ]);
 
         if (billRes.ok) {
@@ -1074,16 +1092,297 @@ const PRIMARY_BUTTON_SX = {
     return `https://app.experiahub.com/login?next=${enc}`;
   }, [appId]);
 
-  const heroImage = 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&q=80';
+  const heroImage = '/images/supplier-hero.png';
 
-  // View definitions moved inline to main render
+  const loadingView = (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
+      <Stack spacing={2} alignItems="center">
+        <CircularProgress sx={{ color: '#C5A059' }} />
+        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
+      </Stack>
+    </Box>
+  );
+
+  const LoggedOutView = () => (
+    <Box sx={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      overflow: 'hidden',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: `url(${heroImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        filter: 'brightness(0.75) saturate(1.1)',
+        zIndex: -1
+      }
+    }}>
+      <Container maxWidth="md">
+        <Paper elevation={0} sx={{
+          p: { xs: 4, md: 6 },
+          borderRadius: 4,
+          bgcolor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          textAlign: 'center',
+          transition: 'all 0.4s ease-in-out',
+          minHeight: showAuth ? '550px' : 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center'
+        }}>
+          {!showAuth ? (
+            <Fade in={!showAuth}>
+              <Box>
+                <Typography variant="overline" sx={{ color: '#4A7C8C', fontWeight: 700, letterSpacing: 3, mb: 1, display: 'block' }}>
+                  PARTNERSHIP APPROVED
+                </Typography>
+                <Typography variant="h2" sx={{ 
+                  color: '#010057', 
+                  fontFamily: 'Agrandir, serif', 
+                  fontWeight: 800, 
+                  mb: 2,
+                  fontSize: { xs: '2.5rem', md: '3.8rem' },
+                  letterSpacing: '-0.02em'
+                }}>
+                  {companyBilling.companyName ? `Welcome, ${companyBilling.companyName}` : 'Welcome to the Portfolio'}
+                </Typography>
+                <Typography variant="h6" sx={{ 
+                  color: '#475569', 
+                  fontFamily: 'Nunito, sans-serif', 
+                  fontWeight: 400, 
+                  maxWidth: '600px', 
+                  mx: 'auto', 
+                  mb: 6,
+                  lineHeight: 1.6
+                }}>
+                  Your application to join ExperiaHub's exclusive supplier network has been approved. 
+                  Finalize your access to showcase your signature experiences to our global audience.
+                </Typography>
+
+                <Grid container spacing={4} sx={{ mb: 6, textAlign: 'left' }}>
+                  {[
+                    { step: '01', title: 'Secure Access', desc: 'Create your partner login credentials.' },
+                    { step: '02', title: 'Direct Profile', desc: 'Verify business details and compliance.' },
+                    { step: '03', title: 'Portfolio Sync', desc: 'Connect your inventory or upload experiences.' },
+                  ].map((item, i) => (
+                    <Grid item xs={12} md={4} key={i}>
+                      <Box sx={{ p: 2, borderLeft: '2px solid #C5A059' }}>
+                        <Typography variant="caption" sx={{ color: '#C5A059', fontWeight: 800, letterSpacing: 1 }}>STEP {item.step}</Typography>
+                        <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 0.5 }}>{item.title}</Typography>
+                        <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>{item.desc}</Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <Stack direction="column" spacing={3} justifyContent="center" alignItems="center">
+                  <Button 
+                    onClick={() => { setAuthTab('signup'); setShowAuth(true); }}
+                    variant="contained" 
+                    size="large"
+                    sx={{ 
+                      bgcolor: '#010057', 
+                      color: '#fff', 
+                      px: 8, 
+                      py: 2.2, 
+                      borderRadius: '4px',
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      fontFamily: 'Agrandir, serif',
+                      textTransform: 'none',
+                      boxShadow: '0 10px 30px rgba(1, 0, 87, 0.2)',
+                      transition: 'all 0.4s ease',
+                      width: { xs: '100%', sm: 'auto' },
+                      '&:hover': { 
+                        bgcolor: '#C5A059', // GOLD on hover
+                        transform: 'translateY(-2px)', 
+                        boxShadow: '0 15px 35px rgba(197, 160, 89, 0.3)' 
+                      },
+                    }}
+                  >
+                    Begin Onboarding
+                  </Button>
+                  
+                  <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>
+                    Already set up your password? <Button 
+                      onClick={() => { setAuthTab('login'); setShowAuth(true); }}
+                      variant="text" 
+                      size="small" 
+                      sx={{ 
+                        color: '#010057', 
+                        textTransform: 'none', 
+                        fontWeight: 700,
+                        p: 0,
+                        minWidth: 'auto',
+                        verticalAlign: 'baseline',
+                        fontFamily: 'Nunito, sans-serif',
+                        '&:hover': { background: 'none', textDecoration: 'underline' }
+                      }}
+                    >Sign In</Button>
+                  </Typography>
+
+                  <Button 
+                    variant="text" 
+                    size="small"
+                    onClick={() => { setHasBegun(true); setSection('welcome'); }}
+                    sx={{ color: '#94A3B8', textTransform: 'none', fontWeight: 400, opacity: 0.7, '&:hover': { opacity: 1, background: 'none' } }}
+                  >
+                    Continue as Guest (No login)
+                  </Button>
+                </Stack>
+              </Box>
+            </Fade>
+          ) : (
+            <Fade in={showAuth}>
+              <Box sx={{ maxWidth: 400, mx: 'auto', width: '100%' }}>
+                <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 700, mb: 1 }}>
+                  {authTab === 'login' ? 'Partner Login' : 'Finalize Your Access'}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontFamily: 'Nunito, sans-serif' }}>
+                  {authTab === 'login' 
+                    ? 'Enter your credentials to access your dashboard.' 
+                    : 'Set up your secure portal credentials to complete approval.'}
+                </Typography>
+                {appId && (
+                  <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2, fontStyle: 'italic' }}>
+                    Portal ID: {appId}
+                  </Typography>
+                )}
+
+                {authError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{authError}</Alert>}
+
+                <Box component="form" onSubmit={authTab === 'login' ? handleLoginSubmit : handleSignupSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  {authTab === 'signup' && (
+                    <TextField 
+                      fullWidth label="Choose Username" variant="outlined" 
+                      value={suUsername} onChange={(e) => setSuUsername(e.target.value)}
+                      required disabled={authLoading}
+                    />
+                  )}
+                  <TextField 
+                    fullWidth label={authTab === 'login' ? "Username or Email" : "Email Address"} 
+                    variant="outlined" 
+                    value={authTab === 'login' ? username : suEmail}
+                    onChange={(e) => authTab === 'login' ? setUsername(e.target.value) : setSuEmail(e.target.value)}
+                    required disabled={authLoading}
+                  />
+                  <TextField 
+                    fullWidth label="Pick a Password" type="password" variant="outlined" 
+                    value={authTab === 'login' ? password : suPassword}
+                    onChange={(e) => authTab === 'login' ? setPassword(e.target.value) : setSuPassword(e.target.value)}
+                    required disabled={authLoading}
+                  />
+                  
+                  <Button 
+                    type="submit" 
+                    variant="contained" 
+                    size="large"
+                    disabled={authLoading}
+                    sx={{ 
+                      bgcolor: '#010057', // DARK BLUE
+                      color: '#fff',
+                      py: 2, 
+                      borderRadius: '4px',
+                      fontWeight: 700,
+                      fontSize: '1.1rem',
+                      mt: 1,
+                      fontFamily: 'Agrandir, serif',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                      '&:hover': { 
+                        bgcolor: '#C5A059', // GOLD
+                        boxShadow: '0 10px 30px rgba(197, 160, 89, 0.3)',
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
+                  >
+                    {authLoading ? <CircularProgress size={26} color="inherit" /> : (authTab === 'login' ? 'Enter Portal' : 'Finalize Approval')}
+                  </Button>
+
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Button 
+                      variant="text" 
+                      onClick={() => setShowAuth(false)}
+                      sx={{ color: '#64748B', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      variant="text" 
+                      onClick={() => setAuthTab(authTab === 'login' ? 'signup' : 'login')}
+                      sx={{ color: '#010057', fontWeight: 700, textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
+                    >
+                      {authTab === 'login' ? 'Setup New Access' : 'Sign In'}
+                    </Button>
+                  </Stack>
+                </Box>
+              </Box>
+            </Fade>
+          )}
+
+          <Box sx={{ mt: 10, pt: 4, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="center" spacing={4} sx={{ mb: 3 }}>
+              <Typography variant="caption" sx={{ color: '#94A3B8', fontFamily: 'Nunito, sans-serif', letterSpacing: 1 }}>
+                PORTAL ID: <Typography component="span" variant="caption" sx={{ color: '#64748B', fontWeight: 700 }}>{appId || 'NEW_APPLICATION'}</Typography>
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#94A3B8', fontFamily: 'Nunito, sans-serif', letterSpacing: 1 }}>
+                STATUS: <Typography component="span" variant="caption" sx={{ color: companyBilling.companyName ? '#4CAF50' : '#010057', fontWeight: 800 }}>
+                  {companyBilling.companyName ? 'CONNECTED' : (appId ? 'READY TO START' : 'WAITING')}
+                </Typography>
+              </Typography>
+            </Stack>
+            
+            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 1, opacity: 0.5 }}>
+              Build: 2026.01.12.0900 | Portal ID: {appId || 'NONE'}
+            </Typography>
+            
+            <Typography variant="caption" sx={{ display: 'block', color: '#B0BEC5', mt: 2 }}>
+              Need help? Contact <a href="mailto:support@experiahub.com" style={{ color: 'inherit', fontWeight: 600 }}>Partner Relations</a>
+            </Typography>
+            
+            {!appId && (
+              <Box sx={{ mt: 2, maxWidth: 300, mx: 'auto' }}>
+                <TextField 
+                  fullWidth
+                  size="small" 
+                  placeholder="Enter Portal ID manually" 
+                  value={tempAppId} 
+                  onChange={(e)=>setTempAppId(e.target.value)}
+                  InputProps={{
+                    sx: { fontFamily: 'Nunito, sans-serif', fontSize: '0.875rem' },
+                    endAdornment: (
+                      <Button size="small" sx={{ ml: 1, color: '#4A7C8C', fontWeight: 700 }} onClick={()=>{
+                        const id = (tempAppId||'').trim();
+                        if (!id) return;
+                        try { localStorage.setItem('supplier_application_id', id); } catch {}
+                        window.location.href = `/supplier?appId=${encodeURIComponent(id)}`;
+                      }}>Set</Button>
+                    )
+                  }}
+                />
+              </Box>
+            )}
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
+  );
 
   React.useEffect(() => {
     const load = async () => {
       if (!appId) return;
       try {
         const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`);
-        const json = await parseJsonSafe(res);
+        const json = await res.json();
         if (json?.success && Array.isArray(json.activities)) {
           const mapped: Experience[] = json.activities.map((a: any, i: number) => ({
             id: a.id || `row_${i}`,
@@ -1111,18 +1410,6 @@ const PRIMARY_BUTTON_SX = {
             bokunProductId: a.bokunProductId || ''
           }));
           setExperiences(mapped);
-          try {
-             // Merge with local storage if newer (or at least preserve drafts)
-             const localDetailed = JSON.parse(localStorage.getItem(`supplier_experiences_${appId}`) || '[]');
-             if (Array.isArray(localDetailed) && localDetailed.length > 0) {
-                const map = new Map(mapped.map(m=>[m.id, m]));
-                localDetailed.forEach(l => {
-                   if (!map.has(l.id)) map.set(l.id, l); // Add missing local
-                   // Ideally we would merge fields but let's prioritize API unless it's a temp ID
-                });
-                setExperiences(Array.from(map.values()));
-             }
-          } catch {}
           const simple = mapped.map(m => ({ id: m.id, title: m.title || '(Untitled)' }));
           setActivitiesSimple(simple);
           if (!selectedExperienceId && simple.length > 0) setSelectedExperienceId(simple[0].id);
@@ -1136,8 +1423,8 @@ const PRIMARY_BUTTON_SX = {
     try {
       const c = localStorage.getItem('supplier_default_currency') || '';
       const tz = localStorage.getItem('supplier_default_timezone') || '';
-      // setDefaultCurrency(c); // Removed as defaultCurrency is now a constant
-      // setDefaultTimeZone(tz); // Removed as defaultTimeZone is now a constant
+      setDefaultCurrency(c);
+      setDefaultTimeZone(tz);
     } catch {}
   }, []);
 
@@ -1219,25 +1506,13 @@ const PRIMARY_BUTTON_SX = {
     })();
   }, [selectedExperienceId, experiences]);
 
-  // Persist experiences to localStorage to prevent data loss on reload
-  React.useEffect(() => {
-    if (appId && experiences.length > 0) {
-      try { localStorage.setItem(`supplier_experiences_${appId}`, JSON.stringify(experiences)); } catch {}
-    }
-  }, [experiences, appId]);
-
   const saveAllExperiences = async (nextExperiences: Experience[]) => {
     if (!appId) return;
     const payload = { applicationId: appId, activities: nextExperiences.map(({ id, ...rest }) => rest) };
     const res = await fetch(`${N8N_BASE}/supplier/activities/save`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
-    const json = await parseJsonSafe(res);
-    if (!json) {
-       // Tolerate empty body if status is 200
-       if (res.ok) return; 
-       throw new Error('Save failed (Empty response)');
-    }
+    const json = await res.json();
     if (!json?.success) throw new Error(json?.error || 'Save failed');
   };
 
@@ -1247,7 +1522,7 @@ const PRIMARY_BUTTON_SX = {
       const next = experiences.map(e => e.id === selectedExperienceId ? { ...e, ...details } as Experience : e);
       setExperiences(next);
       await saveAllExperiences(next);
-      handleSaveSuccess('Experience');
+      setToast('Experience saved');
     } catch (e: any) { setToast(e?.message || 'Save failed'); }
   };
 
@@ -1294,7 +1569,7 @@ const PRIMARY_BUTTON_SX = {
       const params = new URLSearchParams({ applicationId: appId });
       if (id) params.set('activityId', id);
       const res = await fetch(`${N8N_BASE}/supplier/media/get?${params.toString()}`);
-      const json = await parseJsonSafe(res);
+      const json = await res.json();
       const urls = json?.photosDriveUrls || [];
       const ok = Array.isArray(urls) && urls.length > 0;
       if (id) {
@@ -1459,11 +1734,7 @@ const PRIMARY_BUTTON_SX = {
       const res = await fetch(`${N8N_BASE}/supplier/activities/sync`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
-      const json = await parseJsonSafe(res);
-      if (!json) {
-         if (res.ok) { setToast('Synced (No content returned)'); return; }
-         throw new Error('Server returned empty response');
-      }
+      const json = await res.json();
       if (!json?.success) throw new Error(json?.error || 'Sync failed');
       const bokunId = json.bokunProductId || '';
       const airtableId = json.airtableId || '';
@@ -1490,199 +1761,20 @@ const PRIMARY_BUTTON_SX = {
   };
 
   // Decide top-level view without affecting hooks order
-  if (isLoading) {
-    return (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: '#010057' }}>
-      <Stack spacing={2} alignItems="center">
-        <CircularProgress sx={{ color: '#ffbf00' }} />
-        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#fff' }}>Entering Portal...</Typography>
-      </Stack>
-    </Box>
-    );
-  }
+  if (isLoading) return loadingView;
+  if (!isLoggedIn && !hasBegun) return <LoggedOutView />;
 
-  if (!isLoggedIn) {
-
-     return (
-      <Box sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundImage: `url('${heroImage}')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          filter: 'brightness(0.6) saturate(1.2)',
-          zIndex: -1
-        }
-      }}>
-      <Container maxWidth="sm">
-        <Paper elevation={0} sx={{
-          p: { xs: 4, md: 6 },
-          borderRadius: 4,
-          bgcolor: 'rgba(255, 255, 255, 0.96)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.5)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          textAlign: 'center',
-          transition: 'all 0.4s ease-in-out',
-        }}>
-          <Box sx={{ mb: 3 }}>
-            <img src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png" alt="ExperiaHub" style={{ height: '32px', width: 'auto' }} />
-          </Box>
-          <Typography variant="overline" sx={{ color: '#ffbf00', fontWeight: 800, letterSpacing: 3, mb: 2, display: 'block' }}>
-            {authTab === 'login' ? 'PARTNER PORTAL' : 'PARTNERSHIP APPROVED'}
-          </Typography>
-          
-          <Typography variant="h3" sx={{ 
-            color: '#010057', 
-            fontFamily: 'Agrandir, serif', 
-            fontWeight: 800, 
-            mb: 2,
-            fontSize: { xs: '2rem', md: '2.5rem' },
-            letterSpacing: '-0.02em',
-            lineHeight: 1.1
-          }}>
-            {authTab === 'login' ? 'Welcome Back' : (companyBilling.companyName || 'Welcome to the Portfolio')}
-          </Typography>
-
-          <Typography variant="body1" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif', mb: 4, maxWidth: '90%', mx: 'auto' }}>
-            {authTab === 'login' 
-              ? 'Access your dashboard to manage experiences.' 
-              : 'Finalize your credentials to activate your supplier access.'}
-          </Typography>
-
-          {/* Steps Grid - Equal Height */}
-          <Grid container spacing={2} sx={{ mb: 4, textAlign: 'left', px: 2, alignItems: 'stretch' }}>
-            {[
-               { step: '01', title: 'Secure Access', desc: 'Create partner login.' },
-               { step: '02', title: 'Direct Profile', desc: 'Verify business details.' },
-               { step: '03', title: 'Portfolio Sync', desc: 'Connect inventory.' },
-            ].map((item, i) => (
-              <Grid item xs={12} sm={4} key={i} sx={{ display: 'flex' }}>
-                <Box sx={{ p: 1.5, borderLeft: '2px solid #ffbf00', bgcolor: 'transparent', borderRadius: '0 4px 4px 0', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-                  <Typography variant="caption" sx={{ color: '#ffbf00', fontWeight: 800, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
-                  <Typography variant="subtitle2" sx={{ color: '#010057', fontWeight: 700, lineHeight: 1.2 }}>{item.title}</Typography>
-                  <Typography variant="caption" sx={{ color: '#64748B', lineHeight: 1.1 }}>{item.desc}</Typography>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-
-          <Box component="form" onSubmit={authTab === 'login' ? handleLoginSubmit : handleSignupSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            {authTab === 'signup' && (
-              <TextField 
-                fullWidth 
-                label="Choose Username" 
-                variant="outlined" 
-                value={suUsername} 
-                onChange={(e) => setSuUsername(e.target.value)}
-                required disabled={authLoading}
-                InputLabelProps={{ shrink: true }}
-                placeholder="e.g. KyotoTours"
-              />
-            )}
-            <TextField 
-              fullWidth 
-              label={authTab === 'login' ? "Username or Email" : "Confirmed Email"} 
-              variant="outlined" 
-              value={authTab === 'login' ? username : suEmail}
-              onChange={(e) => authTab === 'login' ? setUsername(e.target.value) : setSuEmail(e.target.value)}
-              required disabled={authLoading}
-              InputLabelProps={{ shrink: true }}
-              placeholder={authTab === 'signup' ? "checking..." : ""}
-            />
-            <TextField 
-              fullWidth 
-              label={authTab === 'login' ? "Password" : "Create Password"} 
-              type="password" 
-              variant="outlined" 
-              value={authTab === 'login' ? password : suPassword}
-              onChange={(e) => authTab === 'login' ? setPassword(e.target.value) : setSuPassword(e.target.value)}
-              required disabled={authLoading}
-            />
-            
-            <Button 
-              type="submit" 
-              variant="contained" 
-              size="large"
-              disabled={authLoading}
-              sx={{ 
-                bgcolor: '#010057', 
-                color: '#fff',
-                py: 2, 
-                borderRadius: '4px',
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                mt: 1,
-                fontFamily: 'Agrandir, serif',
-                textTransform: 'none',
-                letterSpacing: '0.5px',
-                boxShadow: '0 10px 25px rgba(1, 0, 87, 0.15)',
-                transition: 'all 0.3s ease',
-                '&:hover': { 
-                  bgcolor: '#ffbf00', 
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 15px 35px rgba(197, 160, 89, 0.25)' 
-                }
-              }}
-            >
-              {authLoading ? <CircularProgress size={24} color="inherit" /> : (authTab === 'login' ? 'Enter Portal' : 'Activate Access')}
-            </Button>
-
-            <Box sx={{ mt: 2 }}>
-              <Button 
-                variant="text" 
-                onClick={() => setAuthTab(authTab === 'login' ? 'signup' : 'login')}
-                sx={{ 
-                  color: '#475569', 
-                  fontWeight: 600, 
-                  textTransform: 'none', 
-                  fontFamily: 'Nunito, sans-serif',
-                  '&:hover': { color: '#010057', bgcolor: 'transparent', textDecoration: 'underline' }
-                }}
-              >
-                {authTab === 'login' ? "Don't have an account? Set up access" : "Already have an account? Sign In"}
-              </Button>
-            </Box>
-          </Box>
-
-          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-            <Stack direction="row" justifyContent="center" spacing={3} sx={{ mb: 1 }}>
-              <Typography variant="caption" sx={{ color: '#94A3B8', letterSpacing: 1 }}>
-                ID: {appId || 'NONE'}
-              </Typography>
-            </Stack>
-            <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.12.1650_FINAL_V9
-            </Typography>
-          </Box>
-        </Paper>
-      </Container>
-      </Box>
-    );
-  }
-
-  // Logged-in view with left sidebar
   // Logged-in view with left sidebar
   return (
-    // <BackgroundImage ...> replaced with fragment or direct Box to fix build error
-    <>
-      <Box sx={{
-        minHeight: '100vh',
-        py: 6,
-        px: 2,
-        bgcolor: 'rgba(255, 255, 255, 0.25)',
-        backgroundImage: 'radial-gradient(circle at 20% 10%, rgba(1, 0, 87, 0.05), transparent 45%), radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 40%)'
-      }}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '240px 1fr' }, gap: 3, maxWidth: 1280, mx: 'auto' }}>
+    <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
+    <Box sx={{
+      minHeight: '100vh',
+      py: 6,
+      px: 2,
+      bgcolor: 'rgba(255, 255, 255, 0.25)',
+      backgroundImage: 'radial-gradient(circle at 20% 10%, rgba(1, 0, 87, 0.05), transparent 45%), radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 40%)'
+    }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: section !== 'welcome' ? '240px 1fr 220px' : '240px 1fr' }, gap: 2, maxWidth: 1280, mx: 'auto' }}>
         {/* Sidebar */}
         <Paper sx={{ p: 2, borderRadius: 1, height: 'fit-content', position: 'sticky', top: 24, width: { md: 230 }, transition: 'all .3s ease' }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
@@ -1692,60 +1784,40 @@ const PRIMARY_BUTTON_SX = {
               style={{ height: 'auto', width: '100%', maxWidth: '200px' }}
             />
           </Box>
-          <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', textAlign: 'center', mb: 2, lineHeight: 1.1 }}>
-            Supplier Portal
-          </Typography>
-
-          <Stack spacing={2} sx={{ mb: 2, px: 1 }}>
-            {/* Identity Card */}
-            {/* Identity Card */}
-            {/* Identity Card */}
-            <Box sx={{ mb: 3, py: 2, px: 1, border: '1px solid #E2E8F0', textAlign: 'center', borderRadius: 3, bgcolor: '#FFFFFF' }}>
-              <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
-                {statusData?.businessName || 'ExperiaHub Partner'}
-              </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', fontWeight: 600 }}>
-                {statusData?.fullName || statusData?.email || 'Guest User'}
-              </Typography>
-              <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#94A3B8', display: 'block', mt: 0.5 }}>
-                ID: {appId || '—'}
-              </Typography>
-            </Box>
-          </Stack>
-          
+          <Typography variant="subtitle2" sx={{ mb: 1, letterSpacing: '.3px', color: '#777', textAlign: 'left' }}>Navigation</Typography>
           <List>
-            <ListItemButton selected={section==='welcome'} onClick={() => { setSection('welcome'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='welcome'?{ bgcolor:'#F0F4F6' }:{}) }}>
-              <ListItemText primary="Welcome" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='welcome'?700:500 }} />
+            <ListItemButton selected={section==='welcome'} onClick={() => { setSection('welcome'); setTab(0); setSubsection('resources'); }} sx={{ ...(section==='welcome'?{ bgcolor:'#F0F4F6' }:{} ) }}>
+              <ListItemText primary="Welcome" />
             </ListItemButton>
-            <ListItemButton selected={section==='company'} onClick={() => { setSection('company'); setTab(0); setSubsection('profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='company'?{ bgcolor:'#F0F4F6' }:{}) }}>
-              <ListItemText primary="Company" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='company'?700:500 }} />
+            <ListItemButton selected={section==='company'} onClick={() => { setSection('company'); setTab(0); setSubsection('profile'); }} sx={{ ...(section==='company'?{ bgcolor:'#F0F4F6' }:{} ) }}>
+              <ListItemText primary="Company" />
             </ListItemButton>
-            <ListItemButton selected={section==='user'} onClick={() => { setSection('user'); setTab(0); setSubsection('user_profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='user'?{ bgcolor:'#F0F4F6' }:{}) }}>
-              <ListItemText primary="User" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='user'?700:500 }} />
+            <ListItemButton selected={section==='user'} onClick={() => { setSection('user'); setTab(0); setSubsection('user_profile'); }} sx={{ ...(section==='user'?{ bgcolor:'#F0F4F6' }:{} ) }}>
+              <ListItemText primary="User" />
             </ListItemButton>
-            <ListItemButton selected={section==='experiences'} onClick={() => { setSection('experiences'); setTab(0); setSubsection('overview'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='experiences'?{ bgcolor:'#F0F4F6' }:{}) }}>
-              <ListItemText primary="Experiences" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='experiences'?700:500 }} />
+            <ListItemButton selected={section==='experiences'} onClick={() => { setSection('experiences'); setTab(0); setSubsection('overview'); }} sx={{ ...(section==='experiences'?{ bgcolor:'#F0F4F6' }:{} ) }}>
+              <ListItemText primary="Experiences" />
             </ListItemButton>
-            <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='information'?{ bgcolor:'#F0F4F6' }:{}) }}>
-              <ListItemText primary="Information" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='information'?700:500 }} />
+            <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('resources'); }} sx={{ ...(section==='information'?{ bgcolor:'#F0F4F6' }:{} ) }}>
+              <ListItemText primary="Information" />
             </ListItemButton>
           </List>
-
-
-          
-
-
-          <Box sx={{ mt: 'auto', pt: 2 }}>
-            <Divider sx={{ mb: 2 }} />
-            <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 700 }}>Refresh</Button>
-              {isLoggedIn ? (
-                <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 700 }}>Log out</Button>
-              ) : (
-                <Button variant="contained" size="small" fullWidth sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 700 }} onClick={() => { setHasBegun(false); }}>Sign in</Button>
-              )}
-            </Stack>
-          </Box>
+          <Divider sx={{ my: 2 }} />
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()}>Refresh</Button>
+            {isLoggedIn ? (
+              <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }}>Log out</Button>
+            ) : (
+              <Button variant="contained" size="small" fullWidth sx={{ bgcolor: '#010057' }} onClick={() => { setHasBegun(false); }}>Sign in</Button>
+            )}
+          </Stack>
+          <Divider sx={{ my: 1.5 }} />
+          <Typography variant="caption" sx={{ color: '#888', mb: 0.5, pl: 1 }}>Resources</Typography>
+          <List>
+            <ListItemButton dense component="a" href="https://experiahub.com/supplier-agreement/" target="_blank"><ListItemText primary="Supplier Agreement" /></ListItemButton>
+            <ListItemButton dense component="a" href="https://experiahub.com/suppliers/" target="_blank"><ListItemText primary="Supplier Signup Info" /></ListItemButton>
+            <ListItemButton dense onClick={()=>setSupportOpen(true)}><ListItemText primary="Contact Support" /></ListItemButton>
+          </List>
         </Paper>
 
         {/* Main content */}
@@ -1761,19 +1833,23 @@ const PRIMARY_BUTTON_SX = {
         }}>
         {/* Header block: Row 1 title, Row 2 meta */}
         <Box sx={{ mb: 2 }}>
-
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 600, letterSpacing: '.2px' }}>
+              Supplier Portal
+            </Typography>
+          </Box>
           <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="subtitle2" sx={{ color: '#4A7C8C', fontFamily: 'Nunito, sans-serif' }}>
               {sectionLabel}{subsectionLabel ? ` · ${subsectionLabel}` : ''}
             </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
-
+              <Typography variant="body2" sx={{ color: '#666' }}>App ID: <strong>{appId || '—'}</strong></Typography>
               {!isLoggedIn && (
                 <Chip
                   label="Guest Session"
                   size="small"
                   onClick={() => setHasBegun(false)}
-                  sx={{ bgcolor: 'rgba(197, 160, 89, 0.1)', color: '#ffbf00', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(197, 160, 89, 0.3)' }}
+                  sx={{ bgcolor: 'rgba(197, 160, 89, 0.1)', color: '#C5A059', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(197, 160, 89, 0.3)' }}
                 />
               )}
               <Stack direction="row" spacing={0.5} alignItems="center" sx={{ p: 0.5, borderRadius: 1, border: '1px solid rgba(74,124,140,0.18)', bgcolor: 'rgba(74,124,140,0.04)' }}>
@@ -1790,102 +1866,7 @@ const PRIMARY_BUTTON_SX = {
           </Box>
           <Divider sx={{ mt: 1.5, mb: 1.5 }} />
         </Box>
-
-        
-        {/* Navigation Tabs */}
-        {section === 'company' && (
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs 
-              value={subsection.startsWith('payouts_') ? 'payouts' : subsection} 
-              onChange={(_, v) => setSubsection(v === 'payouts' ? 'payouts_overview' : v)}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
-            >
-              <Tab label="Profile" value="profile" />
-              <Tab label="Billing" value="billing" />
-              <Tab label="Legal" value="legal" />
-              <Tab label="Locations" value="locations" />
-              <Tab label="Payouts" value="payouts" />
-            </Tabs>
-          </Box>
-        )}
-
-        {section === 'user' && (
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs 
-              value={subsection} 
-              onChange={(_, v) => setSubsection(v)}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
-            >
-              <Tab label="Profile" value="user_profile" />
-              <Tab label="Security" value="user_security" />
-              <Tab label="API Tokens" value="user_tokens" />
-            </Tabs>
-          </Box>
-        )}
-
-        {section === 'experiences' && (
-          <Box sx={{ mb: 3 }}>
-            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                 <FormControl size="small" sx={{ minWidth: 240 }}>
-                   <InputLabel id="exp-sel-label" sx={{ fontFamily: 'Nunito, sans-serif' }}>Select Experience</InputLabel>
-                   <Select 
-                    labelId="exp-sel-label" 
-                    label="Select Experience" 
-                    value={selectedExperienceId} 
-                    onChange={(e)=>setSelectedExperienceId(String(e.target.value))} 
-                    sx={{ fontFamily: 'Nunito, sans-serif' }}
-                   >
-                     {activitiesSimple.map((a)=> (
-                        <MenuItem key={a.id} value={a.id} sx={{ fontFamily: 'Nunito, sans-serif' }}>{a.title}</MenuItem>
-                     ))}
-                   </Select>
-                 </FormControl>
-                 {!selectedExperienceId && <Typography variant="caption" color="error">Select an experience to edit.</Typography>}
-            </Stack>
-            {selectedExperienceId && (() => {
-               const c = getSectionChecks();
-               return (
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                  <Tabs 
-                    value={subsection} 
-                    onChange={(_, v) => setSubsection(v)}
-                    variant="scrollable"
-                    scrollButtons="auto"
-                    sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
-                  >
-                    <Tab label="Overview" value="overview" />
-                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Details {c.details.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="details" />
-                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Media {mediaOk ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="media" />
-                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Pricing {c.pricing.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="pricing" />
-                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Availability {c.availability.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="availability" />
-                    <Tab label="Policies" value="policies" />
-                    {/* <Tab label="Distribution" value="distribution" /> */}
-                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Validate {c.validation.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : (c.validation.count ? <Typography variant="caption" sx={{color:'warning.main', fontWeight:800}}>{c.validation.count}</Typography> : null)}</Box>} value="validation" />
-                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Sync {c.sync.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="sync" />
-                  </Tabs>
-                </Box>
-               );
-            })()}
-          </Box>
-        )}
-
-        {section === 'information' && (
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs 
-              value={subsection} 
-              onChange={(_, v) => setSubsection(v)}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
-            >
-              <Tab label="Resources" value="resources" />
-            </Tabs>
-          </Box>
-        )}
+        {/* Contextual sub-navigation moved to right rail (center segmented removed) */}
 
         {section === 'welcome' && (
           <Fade in timeout={250}>
@@ -1898,7 +1879,7 @@ const PRIMARY_BUTTON_SX = {
                 {welcomeImgOk ? (
                   <Image src="/images/supplier-welcome-1120.webp" alt="Welcome to ExperiaHub" width={1120} height={700} sizes="(max-width: 768px) 100vw, 560px" style={{ width: '100%', height: 'auto', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }} priority onError={()=>setWelcomeImgOk(false)} />
                 ) : (
-                  <Box sx={{ width: '100%', height: 0, pb: '62.5%', borderRadius: 1, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', background: 'radial-gradient(120% 120% at 0% 0%, rgba(74,124,140,0.2), transparent), radial-gradient(120% 120% at 100% 0%, rgba(255,183,107,0.2), transparent), #f7f9fb', position: 'relative' }}>
+                  <Box sx={{ width: '100%', height: 0, pb: '62.5%', borderRadius: 2, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', background: 'radial-gradient(120% 120% at 0% 0%, rgba(74,124,140,0.2), transparent), radial-gradient(120% 120% at 100% 0%, rgba(255,183,107,0.2), transparent), #f7f9fb', position: 'relative' }}>
                     <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a7c8c' }}>
                       <CollectionsIcon sx={{ fontSize: 72, opacity: 0.5 }} />
                     </Box>
@@ -1923,9 +1904,9 @@ const PRIMARY_BUTTON_SX = {
                   </ListItemButton>
                 </List>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="center">
-                  <Button size="small" startIcon={<ApartmentIcon />} variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700 }} onClick={() => { setSection('company'); setSubsection('profile'); }}>Start Company</Button>
-                  <Button size="small" startIcon={<PersonOutlineIcon />} variant="outlined" sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700 }} onClick={() => { setSection('user'); setSubsection('user_profile'); }}>Start User</Button>
-                  <Button size="small" startIcon={<CollectionsIcon />} variant="outlined" sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700 }} onClick={() => { setSection('experiences'); setSubsection('overview'); }}>Start Experiences</Button>
+                  <Button startIcon={<ApartmentIcon />} variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={() => { setSection('company'); setSubsection('profile'); }}>Start Company</Button>
+                  <Button startIcon={<PersonOutlineIcon />} variant="outlined" onClick={() => { setSection('user'); setSubsection('user_profile'); }}>Start User</Button>
+                  <Button startIcon={<CollectionsIcon />} variant="outlined" onClick={() => { setSection('experiences'); setSubsection('overview'); }}>Start Experiences</Button>
                 </Stack>
               </Box>
             </Paper>
@@ -1936,11 +1917,11 @@ const PRIMARY_BUTTON_SX = {
         {section === 'company' && subsection === 'profile' && (
           <Fade in timeout={250}>
           <Box>
-
+            <Alert severity="info" sx={{ mb: 2 }}>Portal ID: <strong>{appId || '—'}</strong></Alert>
             {!appId ? (
               <Alert severity="warning">Missing application ID. Please open the signup email link or add <code>?appId=... </code> to the URL.</Alert>
             ) : (
-              <OnboardingForm applicationId={appId} initialData={statusData} />
+              <OnboardingForm applicationId={appId} />
             )}
           </Box>
           </Fade>
@@ -1948,24 +1929,24 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'company' && subsection.startsWith('payouts_') && (
           <Fade in timeout={250}>
-            <Box sx={{ p: 4 }}>
-              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>{subsectionLabel}</Typography>
+            <Box>
+              <Typography variant="h6" sx={{ mb: 1, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>{subsectionLabel}</Typography>
               {subsection === 'payouts_overview' && (
-                <Paper variant="outlined" sx={{ p: 3, borderRadius: 1, borderColor: 'rgba(0,0,0,0.08)' }}>
-                  <Stack spacing={2}>
-                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666', fontSize: '1rem' }}>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Stack spacing={1.25}>
+                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>
                       Connect your payout account to receive earnings. We use Stripe Connect for secure onboarding and payouts.
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <Chip size="small" label={`Status: ${payoutStatus || 'Unknown'}`} color={payoutStatus==='verified'?'success':(payoutStatus==='pending'?'warning':'default')} sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1 }} />
-                      {stripeAccountId && (<Chip size="small" label={`Acct: ${stripeAccountId}`} variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif' }} />)}
+                      <Chip size="small" label={`Status: ${payoutStatus || 'Unknown'}`} color={payoutStatus==='verified'?'success':(payoutStatus==='pending'?'warning':'default')} variant="outlined" />
+                      {stripeAccountId && (<Chip size="small" label={`Acct: ${stripeAccountId}`} variant="outlined" />)}
                     </Stack>
                     <Stack direction="row" spacing={1}>
-                      <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} onClick={()=>setSubsection('payouts_connect')}>
+                      <Button size="small" variant="outlined" onClick={()=>setSubsection('payouts_connect')}>
                         {payoutStatus==='pending' ? 'Resume onboarding' : 'Start onboarding'}
                       </Button>
                       {stripeDashboardUrl && (
-                        <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} component="a" href={stripeDashboardUrl} target="_blank" rel="noreferrer">Open Stripe Dashboard</Button>
+                        <Button size="small" variant="outlined" component="a" href={stripeDashboardUrl} target="_blank" rel="noreferrer">Open Stripe Dashboard</Button>
                       )}
                     </Stack>
                   </Stack>
@@ -1973,17 +1954,14 @@ const PRIMARY_BUTTON_SX = {
               )}
 
               {subsection === 'payouts_connect' && (
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
-                  <Stack spacing={2}>
-                    <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Payouts & Onboarding</Typography>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Stack spacing={1}>
                     <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>
                       Begin Stripe onboarding to add your bank details and business information.
                     </Typography>
                     <Button
-                      size="small"
                       variant="contained"
-                      sx={PRIMARY_BUTTON_SX}
-                      startIcon={<PlayArrowIcon />}
+                      sx={{ width: 'fit-content', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}
                       onClick={async ()=>{
                         try {
                           if (!appId) { setToast('Missing application ID'); return; }
@@ -2011,27 +1989,20 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'company' && subsection === 'billing' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
+          <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
-              {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
-              <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Billing</Typography>
-                {saveSuccess?.section === 'Billing' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your invoice details and tax information.</Typography>
-                <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="Company name" value={companyBilling.companyName} onChange={(e)=>setCompanyBilling(s=>({ ...s, companyName: e.target.value }))} fullWidth />
-                  <Tooltip title="Enter your local Tax Identification Number" arrow placement="top">
-                    <TextField label="Tax ID" value={companyBilling.taxId} onChange={(e)=>setCompanyBilling(s=>({ ...s, taxId: e.target.value }))} fullWidth />
-                  </Tooltip>
-                </Stack>
+              <Stack spacing={2}>
+                <TextField label="Company name" value={companyBilling.companyName} onChange={(e)=>setCompanyBilling(s=>({ ...s, companyName: e.target.value }))} fullWidth />
                 <TextField label="Billing address" value={companyBilling.address} onChange={(e)=>setCompanyBilling(s=>({ ...s, address: e.target.value }))} fullWidth />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Country" value={companyBilling.country} onChange={(e)=>setCompanyBilling(s=>({ ...s, country: e.target.value }))} fullWidth />
+                  <TextField label="Tax ID" value={companyBilling.taxId} onChange={(e)=>setCompanyBilling(s=>({ ...s, taxId: e.target.value }))} fullWidth />
+                </Stack>
+                <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Invoice email" value={companyBilling.invoiceEmail} onChange={(e)=>setCompanyBilling(s=>({ ...s, invoiceEmail: e.target.value }))} fullWidth />
                   <TextField label="Billing currency" value={companyBilling.currency} onChange={(e)=>setCompanyBilling(s=>({ ...s, currency: e.target.value }))} onBlur={(e)=>setCompanyBilling(s=>({ ...s, currency: String(e.target.value||'').toUpperCase() }))} fullWidth />
                 </Stack>
-                <Stack direction="row" justifyContent="flex-end">
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/billing/save`, {
@@ -2040,10 +2011,9 @@ const PRIMARY_BUTTON_SX = {
                     });
                     const json = await res.json();
                     if (!json?.success) throw new Error(json?.error || 'Save failed');
-                    handleSaveSuccess('Billing');
+                    setToast('Billing saved');
                   } catch (e: any) { setToast(e?.message || 'Save failed'); }
                 }}>Save Billing</Button>
-                </Stack>
               </Stack>
           </Box>
           </Fade>
@@ -2051,27 +2021,20 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'company' && subsection === 'legal' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
+          <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
-              {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
-              <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Legal Entity</Typography>
-                {saveSuccess?.section === 'Legal' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Update your legal entity registration and terms.</Typography>
+              <Stack spacing={2}>
                 <TextField label="Legal entity name" value={companyLegal.legalName} onChange={(e)=>setCompanyLegal(s=>({ ...s, legalName: e.target.value }))} fullWidth />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Registration number" value={companyLegal.regNumber} onChange={(e)=>setCompanyLegal(s=>({ ...s, regNumber: e.target.value }))} fullWidth />
-                  <Tooltip title="Enter your Value Added Tax registration number if applicable" arrow placement="top">
-                    <TextField label="VAT number" value={companyLegal.vatNumber} onChange={(e)=>setCompanyLegal(s=>({ ...s, vatNumber: e.target.value }))} fullWidth />
-                  </Tooltip>
+                  <TextField label="VAT number" value={companyLegal.vatNumber} onChange={(e)=>setCompanyLegal(s=>({ ...s, vatNumber: e.target.value }))} fullWidth />
                 </Stack>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Terms URL" value={companyLegal.termsUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, termsUrl: e.target.value }))} fullWidth />
                   <TextField label="Privacy URL" value={companyLegal.privacyUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, privacyUrl: e.target.value }))} fullWidth />
                 </Stack>
                 <TextField label="Representative" value={companyLegal.representative} onChange={(e)=>setCompanyLegal(s=>({ ...s, representative: e.target.value }))} fullWidth />
-                <Stack direction="row" justifyContent="flex-end">
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/legal/save`, {
@@ -2080,10 +2043,9 @@ const PRIMARY_BUTTON_SX = {
                     });
                     const json = await res.json();
                     if (!json?.success) throw new Error(json?.error || 'Save failed');
-                    handleSaveSuccess('Legal');
+                    setToast('Legal saved');
                   } catch (e: any) { setToast(e?.message || 'Save failed'); }
                 }}>Save Legal</Button>
-                </Stack>
               </Stack>
             </Box>
           </Fade>
@@ -2091,14 +2053,11 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'company' && subsection === 'locations' && (
           <Fade in timeout={250}>
-            <Box sx={{ p: 4 }}>
+            <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
-              <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Locations</Typography>
-                {saveSuccess?.section === 'Locations' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your physical office locations.</Typography>
+              <Stack spacing={2}>
                 {companyLocations.map((loc, idx) => (
-                  <Box key={idx} sx={{ p: 0, borderRadius: 0 }}>
+                  <Paper key={idx} sx={{ p: 2, borderRadius: 2 }}>
                     <Stack spacing={1.5}>
                       <TextField label="Location name" value={loc.name} onChange={(e)=>setCompanyLocations(arr=>arr.map((x,i)=>i===idx?{ ...x, name: e.target.value }:x))} fullWidth />
                       <TextField label="Address" value={loc.address} onChange={(e)=>setCompanyLocations(arr=>arr.map((x,i)=>i===idx?{ ...x, address: e.target.value }:x))} fullWidth />
@@ -2108,11 +2067,11 @@ const PRIMARY_BUTTON_SX = {
                         <TextField label="Time zone" value={loc.timeZone} onChange={(e)=>setCompanyLocations(arr=>arr.map((x,i)=>i===idx?{ ...x, timeZone: e.target.value }:x))} fullWidth />
                       </Stack>
                     </Stack>
-                  </Box>
+                  </Paper>
                 ))}
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
+                <Stack direction="row" spacing={1}>
+                  <Button size="small" variant="outlined" onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
+                  <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const res = await fetch(`${N8N_BASE}/supplier/company/locations/save`, {
@@ -2121,7 +2080,7 @@ const PRIMARY_BUTTON_SX = {
                       });
                       const json = await res.json();
                       if (!json?.success) throw new Error(json?.error || 'Save failed');
-                      handleSaveSuccess('Locations');
+                      setToast('Locations saved');
                     } catch (e: any) { setToast(e?.message || 'Save failed'); }
                   }}>Save Locations</Button>
                 </Stack>
@@ -2132,16 +2091,12 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'user' && subsection === 'user_profile' && (
           <Fade in timeout={250}>
-            <Box sx={{ p: 4 }}>
+            <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
-                <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Profile</Typography>
-                {saveSuccess?.section === 'Profile' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Update your personal contact information.</Typography>
-                <TextField label="Display Name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <Stack direction="row" justifyContent="flex-end">
-                <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
+              <Stack spacing={2}>
+                <TextField label="Display name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} />
+                <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth />
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     if (!userDisplayName.trim()) { setToast('Please enter a display name'); return; }
@@ -2151,10 +2106,9 @@ const PRIMARY_BUTTON_SX = {
                     });
                     const json = await res.json();
                     if (!json?.success) throw new Error(json?.error || 'Save failed');
-                    handleSaveSuccess('Profile');
+                    setToast('Profile saved');
                   } catch (e: any) { setToast(e?.message || 'Save failed'); }
                 }}>Save Profile</Button>
-                </Stack>
               </Stack>
             </Box>
           </Fade>
@@ -2162,18 +2116,14 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'user' && subsection === 'user_security' && (
           <Fade in timeout={250}>
-            <Box sx={{ p: 4 }}>
+            <Box>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
-                <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Security</Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your password and security settings.</Typography>
-                <TextField type="password" label="Current Password" value={passwordCurrent} onChange={(e)=>setPasswordCurrent(e.target.value)} fullWidth required error={!passwordCurrent.trim()} helperText={!passwordCurrent.trim()?'Required':''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <TextField label="New password" type="password" value={passwordNew} onChange={(e)=>setPasswordNew(e.target.value)} fullWidth required error={passwordNew.length>0 && passwordNew.length<8} helperText={passwordNew.length>0 && passwordNew.length<8 ? 'Min 8 characters' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+              <Stack spacing={2}>
+                <TextField label="Current password" type="password" value={passwordCurrent} onChange={(e)=>setPasswordCurrent(e.target.value)} fullWidth required error={!passwordCurrent.trim()} helperText={!passwordCurrent.trim()?'Required':''} />
+                <TextField label="New password" type="password" value={passwordNew} onChange={(e)=>setPasswordNew(e.target.value)} fullWidth required error={passwordNew.length>0 && passwordNew.length<8} helperText={passwordNew.length>0 && passwordNew.length<8 ? 'Min 8 characters' : ''} />
                 <Button
                   variant="contained"
-                  size="small"
-                  sx={PRIMARY_BUTTON_SX}
-                  startIcon={<VpnKeyIcon />}
+                  sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}
                   disabled={securitySubmitting}
                   onClick={async ()=>{
                     try {
@@ -2203,33 +2153,29 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'user' && subsection === 'user_tokens' && (
           <Fade in timeout={250}>
-            <Box sx={{ p: 4 }}>
-              <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>API Tokens</Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your API access tokens.</Typography>
-                
-                <Stack spacing={3}>
-                  <Stack direction="row" spacing={2}>
-                    <TextField size="small" label="Login or Email" value={tokensUser} onChange={(e)=>setTokensUser(e.target.value)} fullWidth />
-                    <TextField size="small" label="Current Password" type="password" value={tokensPassword} onChange={(e)=>setTokensPassword(e.target.value)} fullWidth />
-                    <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SyncIcon />} disabled={tokensLoading} onClick={loadTokens}>Load</Button>
-                  </Stack>
-
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <TextField size="small" label="Token Name" value={tokenName} onChange={(e)=>setTokenName(e.target.value)} fullWidth />
-                    <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<AddIcon />} disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
-                  </Stack>
-
-                  {tokensLoading && (<Alert severity="info">Loading tokens…</Alert>)}
-                  {!tokensLoading && apiTokens.length === 0 && (<Alert severity="info">No API tokens yet.</Alert>)}
-
-                  {apiTokens.map((t)=> (
-                    <Stack key={t.uuid} direction="row" spacing={2} alignItems="center">
-                      <TextField size="small" value={`${t.name} — ${t.uuid}`} fullWidth />
-                      <Button size="small" color="error" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} disabled={tokenMutating} onClick={()=>deleteToken(t.uuid)}>Remove</Button>
-                    </Stack>
-                  ))}
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>API Tokens</Typography>
+              <Stack spacing={1.5}>
+                <Stack direction="row" spacing={1}>
+                  <TextField size="small" label="Login or Email" value={tokensUser} onChange={(e)=>setTokensUser(e.target.value)} fullWidth />
+                  <TextField size="small" label="Current Password" type="password" value={tokensPassword} onChange={(e)=>setTokensPassword(e.target.value)} fullWidth />
+                  <Button size="small" variant="contained" disabled={tokensLoading} onClick={loadTokens}>Load</Button>
                 </Stack>
+
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <TextField size="small" label="Token Name" value={tokenName} onChange={(e)=>setTokenName(e.target.value)} />
+                  <Button size="small" variant="outlined" disabled={tokenMutating || tokensLoading} onClick={createToken}>Create Token</Button>
+                </Stack>
+
+                {tokensLoading && (<Alert severity="info">Loading tokens…</Alert>)}
+                {!tokensLoading && apiTokens.length === 0 && (<Alert severity="info">No API tokens yet.</Alert>)}
+
+                {apiTokens.map((t)=> (
+                  <Stack key={t.uuid} direction="row" spacing={1} alignItems="center">
+                    <TextField size="small" value={`${t.name} — ${t.uuid}`} fullWidth />
+                    <Button size="small" disabled={tokenMutating} onClick={()=>deleteToken(t.uuid)}>Remove</Button>
+                  </Stack>
+                ))}
               </Stack>
             </Box>
           </Fade>
@@ -2237,36 +2183,16 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'overview' && (
           <Fade in timeout={250}>
-            <Box sx={{ p: 4 }}>
-              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Experience Overview</Typography>
-
-            <ActivitiesSkeleton onToast={(m)=>setToast(m)} onEditDetails={(act: any) => {
-               // Optimistically add to parent state so we can edit immediately without refresh
-               const exists = experiences.find(e => e.id === act.id);
-               if (!exists) {
-                 // Convert Activity to Experience (partial)
-                 const newExp: Experience = {
-                    id: act.id, title: act.title, city: act.city, durationMinutes: act.durationMinutes,
-                    summary: act.summary, price: act.price, currency: act.currency,
-                    bokunProductId: act.bokunProductId,
-                    authenticEchoes: act.authenticEchoes,
-                    unforgettableFeeling: act.unforgettableFeeling,
-                    // ... copy other fields if available in Activity
-                 };
-                 setExperiences(prev => [...prev, newExp]);
-                 setActivitiesSimple(prev => [...prev, { id: act.id, title: act.title }]);
-               }
-               setSelectedExperienceId(act.id);
-               setSubsection('details');
-            }} />
+            <Box>
+              <Alert severity="info" sx={{ mb: 2 }}>Create draft experiences (title, city, duration). Saving will push to n8n later.</Alert>
+            <ActivitiesSkeleton onToast={(m)=>setToast(m)} />
           </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'media' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
-              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Photos & Video</Typography>
+          <Box>
               <Alert severity="info" sx={{ mb: 2 }}>Add Google Drive links for photos/videos, or paste YouTube/Vimeo URLs.</Alert>
               <GridLikeMedia onToast={(m)=>setToast(m)} defaultActivityId={selectedExperienceId} />
           </Box>
@@ -2275,8 +2201,7 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'pricing' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
-            <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Pricing & Rates</Typography>
+          <Box>
             <Alert severity="info" sx={{ mb: 2 }}>Add pricing categories and rates. The first row will be used as the base rate for channels that support a single rate.</Alert>
             <Table size="small" sx={{ mb: 1 }}>
               <TableHead>
@@ -2290,10 +2215,10 @@ const PRIMARY_BUTTON_SX = {
               <TableBody>
                 {pricingRows.map((r, idx) => (
                   <TableRow key={idx}>
-                    <TableCell><TextField size="small" value={r.category} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, category:e.target.value}:x))} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} /></TableCell>
-                    <TableCell><TextField size="small" type="number" inputProps={{ min: 0, step: '0.01', style: { fontFamily: 'Nunito, sans-serif' } }} value={r.amount} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, amount:e.target.value}:x))} /></TableCell>
-                    <TableCell><TextField size="small" value={r.currency} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, currency:e.target.value}:x))} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} /></TableCell>
-                    <TableCell align="right"><Button size="small" color="error" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>setPricingRows(rows=>rows.filter((_,i)=>i!==idx))}>Remove</Button></TableCell>
+                    <TableCell><TextField size="small" value={r.category} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, category:e.target.value}:x))} /></TableCell>
+                    <TableCell><TextField size="small" type="number" inputProps={{ min: 0, step: '0.01' }} value={r.amount} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, amount:e.target.value}:x))} /></TableCell>
+                    <TableCell><TextField size="small" value={r.currency} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, currency:e.target.value}:x))} /></TableCell>
+                    <TableCell align="right"><Button size="small" color="error" onClick={()=>setPricingRows(rows=>rows.filter((_,i)=>i!==idx))}>Remove</Button></TableCell>
                   </TableRow>
                 ))}
                 {pricingRows.length === 0 && (
@@ -2304,9 +2229,11 @@ const PRIMARY_BUTTON_SX = {
             {pricingRows.length === 0 && (
               <Alert severity="info" sx={{ mb: 2 }}>Add at least one pricing row (category, amount, currency).</Alert>
             )}
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
-              <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
+            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+              <Button size="small" variant="outlined" onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
+            </Stack>
+            <Stack direction="row" spacing={1}>
+              <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={async ()=>{
                 const currencies = new Set(pricingRows.map(r=>r.currency).filter(Boolean));
                 if (currencies.size > 1) { setToast('Use a single currency across pricing rows'); return; }
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
@@ -2322,33 +2249,19 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'details' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Product Details</Typography>
-              <FormControl size="small" sx={{ minWidth: 200 }}>
-                <InputLabel id="details-experience-select">Switch Experience</InputLabel>
-                <Select labelId="details-experience-select" label="Switch Experience" value={selectedExperienceId || ''} onChange={(e) => {
-                  const id = e.target.value as string;
-                  setSelectedExperienceId(id);
-                }}>
-                  {activitiesSimple.map(a => (<MenuItem key={a.id} value={a.id}>{a.title}</MenuItem>))}
-                </Select>
-              </FormControl>
-            </Stack>
-            {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit details.</Alert>)}
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="Title" value={details.title || ''} onChange={(e)=>setDetails(d=>({ ...d, title: e.target.value }))} fullWidth error={showFieldErrors && !String(details.title||'').trim()} helperText={showFieldErrors && !String(details.title||'').trim() ? 'Title is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Title" value={details.title || ''} onChange={(e)=>setDetails(d=>({ ...d, title: e.target.value }))} fullWidth error={showFieldErrors && !String(details.title||'').trim()} helperText={showFieldErrors && !String(details.title||'').trim() ? 'Title is required' : ''} />
                 </Stack>
-                <TextField label="Description" value={details.summary || ''} onChange={(e)=>setDetails(d=>({ ...d, summary: e.target.value }))} fullWidth multiline minRows={3} error={showFieldErrors && !String(details.summary||'').trim()} helperText={showFieldErrors && !String(details.summary||'').trim() ? 'Description is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <TextField label="Itinerary (optional)" value={(details as any).itinerary || ''} onChange={(e)=>setDetails(d=>({ ...d, itinerary: e.target.value } as any))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <TextField label="Meeting point (optional)" value={(details as any).meetingPoint || ''} onChange={(e)=>setDetails(d=>({ ...d, meetingPoint: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                <TextField label="Description" value={details.summary || ''} onChange={(e)=>setDetails(d=>({ ...d, summary: e.target.value }))} fullWidth multiline minRows={3} error={showFieldErrors && !String(details.summary||'').trim()} helperText={showFieldErrors && !String(details.summary||'').trim() ? 'Description is required' : ''} />
+                <TextField label="Itinerary (optional)" value={(details as any).itinerary || ''} onChange={(e)=>setDetails(d=>({ ...d, itinerary: e.target.value } as any))} fullWidth multiline minRows={3} />
+                <TextField label="Meeting point (optional)" value={(details as any).meetingPoint || ''} onChange={(e)=>setDetails(d=>({ ...d, meetingPoint: e.target.value } as any))} fullWidth />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="City" value={details.city || ''} onChange={(e)=>setDetails(d=>({ ...d, city: e.target.value }))} fullWidth error={showFieldErrors && !String(details.city||'').trim()} helperText={showFieldErrors && !String(details.city||'').trim() ? 'City is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  <TextField label="Duration (minutes)" type="number" inputProps={{ min: 0, step: 1, style: { fontFamily: 'Nunito, sans-serif' } }} value={details.durationMinutes || ''} onChange={(e)=>setDetails(d=>({ ...d, durationMinutes: e.target.value }))} fullWidth error={showFieldErrors && !String(details.durationMinutes||'').trim()} helperText={showFieldErrors && !String(details.durationMinutes||'').trim() ? 'Duration is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
+                  <TextField label="City" value={details.city || ''} onChange={(e)=>setDetails(d=>({ ...d, city: e.target.value }))} fullWidth error={showFieldErrors && !String(details.city||'').trim()} helperText={showFieldErrors && !String(details.city||'').trim() ? 'City is required' : ''} />
+                  <TextField label="Duration (minutes)" type="number" inputProps={{ min: 0, step: 1 }} value={details.durationMinutes || ''} onChange={(e)=>setDetails(d=>({ ...d, durationMinutes: e.target.value }))} fullWidth error={showFieldErrors && !String(details.durationMinutes||'').trim()} helperText={showFieldErrors && !String(details.durationMinutes||'').trim() ? 'Duration is required' : ''} />
                 </Stack>
                 {(() => {
                   const selectedCats = String(details.category || '').split(',').map(s=>s.trim()).filter(Boolean);
@@ -2369,89 +2282,31 @@ const PRIMARY_BUTTON_SX = {
                           ))}
                         </Select>
                       </FormControl>
-                      <TextField label="Max participants" type="number" inputProps={{ min: 1, step: 1, style: { fontFamily: 'Nunito, sans-serif' } }} value={details.maxParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, maxParticipants: e.target.value }))} fullWidth error={showFieldErrors && !String(details.maxParticipants||'').trim()} helperText={showFieldErrors && !String(details.maxParticipants||'').trim() ? 'Capacity is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
-                      <TextField label="Min participants" type="number" inputProps={{ min: 1, step: 1, style: { fontFamily: 'Nunito, sans-serif' } }} value={details.minParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, minParticipants: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
+                      <TextField label="Max participants" type="number" inputProps={{ min: 1, step: 1 }} value={details.maxParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, maxParticipants: e.target.value }))} fullWidth error={showFieldErrors && !String(details.maxParticipants||'').trim()} helperText={showFieldErrors && !String(details.maxParticipants||'').trim() ? 'Capacity is required' : ''} />
+                      <TextField label="Min participants" type="number" inputProps={{ min: 1, step: 1 }} value={details.minParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, minParticipants: e.target.value }))} fullWidth />
                     </Stack>
                   );
                 })()}
-                
-                {/* Story & Vibe Section */}
-                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mt: 3, mb: 1 }}>The Story & Vibe</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Unforgettable Feeling" value={details.unforgettableFeeling || ''} onChange={(e)=>setDetails(d=>({ ...d, unforgettableFeeling: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Authentic Echoes" value={details.authenticEchoes || ''} onChange={(e)=>setDetails(d=>({ ...d, authenticEchoes: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="A Moment of Magic" value={details.magicMoment || ''} onChange={(e)=>setDetails(d=>({ ...d, magicMoment: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Hidden Gem" value={details.hiddenGem || ''} onChange={(e)=>setDetails(d=>({ ...d, hiddenGem: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Community Connection" value={details.communityConnection || ''} onChange={(e)=>setDetails(d=>({ ...d, communityConnection: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Perfect Match" value={details.perfectMatch || ''} onChange={(e)=>setDetails(d=>({ ...d, perfectMatch: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Three Words" placeholder="e.g. Serene, Historical, Tasty" value={details.threeWords || ''} onChange={(e)=>setDetails(d=>({ ...d, threeWords: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                </Grid>
-
-                {/* Inclusions & Logistics */}
-                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mt: 3, mb: 1 }}>Inclusions & Requirements</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Included in Price" value={details.included || ''} onChange={(e)=>setDetails(d=>({ ...d, included: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="NOT Included" value={details.notIncluded || ''} onChange={(e)=>setDetails(d=>({ ...d, notIncluded: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField label="Participant Requirements" value={details.requirements || ''} onChange={(e)=>setDetails(d=>({ ...d, requirements: e.target.value }))} fullWidth multiline minRows={2} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                </Grid>
-
-                {/* Safety */}
-                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mt: 3, mb: 1 }}>Safety & Insurance</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField label="Safety Measures" value={details.safetyMeasures || ''} onChange={(e)=>setDetails(d=>({ ...d, safetyMeasures: e.target.value }))} fullWidth multiline minRows={2} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                  <TextField label="Insurance Information" value={details.insurance || ''} onChange={(e)=>setDetails(d=>({ ...d, insurance: e.target.value }))} fullWidth multiline minRows={2} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  </Grid>
-                </Grid>
-
-                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }}>
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Details</Button>
-                </Stack>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={onSaveDetails}>Save Details</Button>
               </>
             )}
           </Stack>
-          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'availability' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Availability & Schedule</Typography>
-            {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit availability.</Alert>)}
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="Scheduling mode" value={details.schedulingMode || ''} onChange={(e)=>setDetails(d=>({ ...d, schedulingMode: e.target.value }))} fullWidth error={showFieldErrors && !String(details.schedulingMode||'').trim()} helperText={showFieldErrors && !String(details.schedulingMode||'').trim() ? 'Scheduling mode is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  <TextField label="Start times / hours" value={details.startTimes || ''} onChange={(e)=>setDetails(d=>({ ...d, startTimes: e.target.value }))} fullWidth error={showFieldErrors && !String(details.startTimes||'').trim()} helperText={showFieldErrors && !String(details.startTimes||'').trim() ? 'Start times are required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Scheduling mode" value={details.schedulingMode || ''} onChange={(e)=>setDetails(d=>({ ...d, schedulingMode: e.target.value }))} fullWidth error={showFieldErrors && !String(details.schedulingMode||'').trim()} helperText={showFieldErrors && !String(details.schedulingMode||'').trim() ? 'Scheduling mode is required' : ''} />
+                  <TextField label="Start times / hours" value={details.startTimes || ''} onChange={(e)=>setDetails(d=>({ ...d, startTimes: e.target.value }))} fullWidth error={showFieldErrors && !String(details.startTimes||'').trim()} helperText={showFieldErrors && !String(details.startTimes||'').trim() ? 'Start times are required' : ''} />
                 </Stack>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="Cutoff / Lead time (hours)" value={details.cutoffHours || ''} onChange={(e)=>setDetails(d=>({ ...d, cutoffHours: e.target.value }))} fullWidth error={showFieldErrors && !String((details.cutoffHours||details.bookingLeadTime||'')).trim()} helperText={showFieldErrors && !String((details.cutoffHours||details.bookingLeadTime||'')).trim() ? 'Cutoff/Lead time is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  <TextField label="Max participants" value={details.maxParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, maxParticipants: e.target.value }))} fullWidth error={showFieldErrors && !String(details.maxParticipants||'').trim()} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Cutoff / Lead time (hours)" value={details.cutoffHours || ''} onChange={(e)=>setDetails(d=>({ ...d, cutoffHours: e.target.value }))} fullWidth error={showFieldErrors && !String((details.cutoffHours||details.bookingLeadTime||'')).trim()} helperText={showFieldErrors && !String((details.cutoffHours||details.bookingLeadTime||'')).trim() ? 'Cutoff/Lead time is required' : ''} />
+                  <TextField label="Max participants" value={details.maxParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, maxParticipants: e.target.value }))} fullWidth error={showFieldErrors && !String(details.maxParticipants||'').trim()} />
                 </Stack>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <FormControl fullWidth>
@@ -2460,45 +2315,36 @@ const PRIMARY_BUTTON_SX = {
                       {TIME_ZONES.map((tz)=> (<MenuItem key={tz} value={tz}>{tz}</MenuItem>))}
                     </Select>
                   </FormControl>
-                  <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth />
+                  <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth />
                 </Stack>
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Availability</Button>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={onSaveDetails}>Save Availability</Button>
               </>
             )}
           </Stack>
-          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'policies' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Policies & Requirements</Typography>
-            {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit policies.</Alert>)}
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
-                  <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                  <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
+                  <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth />
+                  <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth />
                 </Stack>
-                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Policies</Button>
-                </Stack>
+                <Button variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={onSaveDetails}>Save Policies</Button>
               </>
             )}
           </Stack>
-          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'distribution' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Channel Distribution</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to view distribution.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -2534,7 +2380,7 @@ const PRIMARY_BUTTON_SX = {
                       })()}
                     </Box>
                     <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                      <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} onClick={() => {
+                      <Button size="small" variant="outlined" onClick={() => {
                         try {
                           const pre = document.querySelector('[data-preview-payload]') as HTMLElement | null;
                           const text = pre ? pre.innerText : '';
@@ -2543,27 +2389,33 @@ const PRIMARY_BUTTON_SX = {
                         } catch { setToast('Copy failed'); }
                       }}>Copy JSON</Button>
                     </Stack>
-
+                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                      <Button size="small" variant="outlined" onClick={() => {
+                        try {
+                          const pre = document.querySelector('[data-preview-payload]') as HTMLElement | null;
+                          const text = pre ? pre.innerText : '';
+                          navigator.clipboard.writeText(text || '');
+                          alert('Payload copied to clipboard');
+                        } catch {}
+                      }}>Copy JSON</Button>
+                    </Stack>
                   </>
                 ); })()}
               </>
             )}
           </Stack>
-          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'validation' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Data Validation</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to validate.</Alert>)}
             {selectedExperienceId && (
               <>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={1} alignItems="center">
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<CheckIcon />} disabled={validating} onClick={runValidation}>{validating ? 'Validating…' : 'Run Validation'}</Button>
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<CheckIcon />} disabled={validating || experiences.length===0} onClick={async ()=>{
+                  <Button variant="outlined" disabled={validating} onClick={runValidation}>{validating ? 'Validating…' : 'Run Validation'}</Button>
+                  <Button variant="outlined" disabled={validating || experiences.length===0} onClick={async ()=>{
                     const results: Record<string, number> = {} as any;
                     for (const e of experiences) {
                       const issues = await (async ()=>{
@@ -2602,15 +2454,12 @@ const PRIMARY_BUTTON_SX = {
               </>
             )}
           </Stack>
-          </Box>
           </Fade>
         )}
 
         {section === 'experiences' && subsection === 'sync' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Channel Sync</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to sync.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -2628,7 +2477,7 @@ const PRIMARY_BUTTON_SX = {
                   ) : null; })()}
                 </Stack>
                 <Stack direction="row" spacing={1}>
-                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)' }} onClick={async ()=>{
+                  <Button size="small" variant="outlined" onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const a = experiences.find(e=>e.id===selectedExperienceId);
@@ -2640,7 +2489,7 @@ const PRIMARY_BUTTON_SX = {
                       setToast(j?.success ? 'Dry-run OK' : (j?.error || 'Dry-run failed'));
                     } catch (e:any) { setToast(e?.message||'Dry-run failed'); }
                   }}>Dry-run</Button>
-                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)' }} onClick={async ()=>{
+                  <Button size="small" variant="outlined" onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
                       const a = experiences.find(e=>e.id===selectedExperienceId);
@@ -2656,11 +2505,11 @@ const PRIMARY_BUTTON_SX = {
                 </Stack>
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }}
+                  sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}
                   onClick={syncSelected}
                   disabled={(validationMap[selectedExperienceId] ?? Infinity) !== 0}
                 >
-                  Publish Experience
+                  Sync to Bókun
                 </Button>
                 {(validationMap[selectedExperienceId] ?? Infinity) !== 0 && (
                   <Typography variant="caption" sx={{ color: '#a15b00' }}>
@@ -2670,31 +2519,123 @@ const PRIMARY_BUTTON_SX = {
               </>
             )}
           </Stack>
-          </Box>
           </Fade>
         )}
 
         {section === 'user' && (
           <Stack spacing={2}>
-            <Alert severity="info" icon={<WallpaperIcon />}>
-              To customize your portal background, use the <strong>Wallpaper Button</strong> in the bottom-right corner of the screen.
-            </Alert>
-            {bg && (
-              <Paper sx={{ p: 2, borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1, fontFamily: 'Nunito, sans-serif' }}>Current Background</Typography>
-                <Box sx={{ position: 'relative', pb: '40%', borderRadius: 1, overflow: 'hidden', bgcolor: '#e0e0e0' }}>
-                  <img src={bg.url} alt="Background" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                </Box>
-                {bg.authorName && <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#666' }}>Photo by {bg.authorName} on Unsplash</Typography>}
-              </Paper>
-            )}
-            <Button color="error" variant="outlined" disabled={!bg} onClick={async ()=>{
-                const token = AuthService.getToken();
-                setBg(null); saveCachedBackground(null, 'supplier');
-                try { await setUserBackground(token, null as any); } catch {}
-                try {trackBackgroundRemove('supplier');} catch {}
+            <Alert severity="info">Choose a background image for your portal (per-user).</Alert>
+            <Stack direction={{ xs:'column', sm:'row' }} spacing={1} alignItems={{ xs:'stretch', sm:'center' }}>
+              <TextField
+                size="small"
+                label="Search photos"
+                value={bgSearch}
+                onChange={(e)=>{
+                  const v = e.target.value;
+                  setBgSearch(v);
+                  if (!v.trim()) { setBgResults([]); setBgPage(1); setBgSeed((s)=>s+1); }
+                }}
+                fullWidth
+                InputProps={{
+                  endAdornment: bgSearch ? (
+                    <IconButton size="small" aria-label="Clear" onClick={()=>{ setBgSearch(''); setBgResults([]); setBgPage(1); setBgSeed((s)=>s+1); }}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ) : null
+                }}
+              />
+              <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} onClick={async ()=>{
+                try {
+                  setBgLoading(true);
+                  const results = await searchUnsplash(bgSearch.trim(), 1, 30);
+                  setBgResults(Array.isArray(results) ? results : []);
+                  setBgPage(1);
+                } catch {
+                  setBgResults([]);
+                } finally { setBgLoading(false); }
+              }}>Search</Button>
+              <Button size="small" onClick={()=>{ setBgSearch(''); setBgResults([]); setBgSeed((s)=>s+1); }}>Clear</Button>
+            </Stack>
+            <Box
+              sx={{ display:'grid', gridTemplateColumns: { xs:'1fr 1fr', sm:'repeat(3, 1fr)' }, gap: 1, maxHeight: 460, overflowY: 'auto' }}
+              onScroll={async (e:any)=>{
+                try {
+                  if (bgLoadingMore) return;
+                  const el = e.currentTarget as HTMLElement;
+                  const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 48;
+                  if (!nearBottom) return;
+                  setBgLoadingMore(true);
+                  const next = bgPage + 1;
+                  const more = bgSearch.trim() ? await searchUnsplash(bgSearch.trim(), next, 30) : [];
+                  const existing = new Set((bgResults||[]).map((x:any)=>x?.id));
+                  const merged = [...bgResults, ...more.filter((x:any)=> !existing.has(x?.id))];
+                  setBgResults(merged);
+                  setBgPage(next);
+                } finally { setBgLoadingMore(false); }
+              }}
+            >
+                {(!bgSearch.trim() && bgResults.length === 0 ? getCuratedBackgrounds().slice().sort(()=>Math.random()-0.5) : []).map((p, idx)=> (
+                  <Paper key={`cur_${idx}`} sx={{ p: 1, borderRadius: 2, overflow: 'hidden' }}>
+                    <Box
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Use curated background"
+                      sx={{ position:'relative', pb: '66%', borderRadius: 1, overflow:'hidden', background:'#e9eef2', cursor: 'pointer' }}
+                      onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
+                      onClick={async ()=>{
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+                      const next = { url: p.url, thumbUrl: p.thumbUrl } as PortalBackground;
+                      setBg(next);
+                      prefetchBackgroundImage(p.url);
+                      saveCachedBackground(next, 'user');
+                      try { await setUserBackground(token, next); } catch {}
+                      try { trackBackgroundChange('supplier', next); } catch {}
+                      setToast('Background updated');
+                    }}
+                    >
+                    <img src={p.thumbUrl || p.url} alt="" loading="lazy" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', background:'#e9eef2' }} />
+                    </Box>
+                  </Paper>
+                ))}
+                {bgResults.map((p:any)=>{
+                  const id = p?.id;
+                  const authorName = p?.user?.name || '';
+                  const authorUrl = p?.user?.links?.html || p?.user?.portfolio_url || '';
+                      const url = p?.urls?.full || p?.urls?.regular || '';
+                  const thumb = p?.urls?.small || p?.urls?.thumb || '';
+                  return (
+                    <Paper key={id} sx={{ p: 1, borderRadius: 2, overflow: 'hidden' }}>
+                      <Box sx={{ position:'relative', pb: '66%', borderRadius: 1, overflow:'hidden', background:'#e9eef2' }}>
+                        <img src={thumb} alt={`Unsplash: ${p?.alt_description || authorName || 'photo'}`} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }} />
+                      </Box>
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                        <Button size="small" variant="outlined" aria-label={`Use image by ${authorName || 'author'}`} onClick={async ()=>{
+                          const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+                          const next = { id, url, thumbUrl: thumb, authorName, authorUrl } as PortalBackground;
+                          setBg(next);
+                          prefetchBackgroundImage(url);
+                          saveCachedBackground(next, 'user');
+                          try { await trackDownload(id); } catch (e) { console.warn('unsplash track failed', e); }
+                          try { await setUserBackground(token, next); } catch {}
+                          try { trackBackgroundChange('supplier', next); } catch {}
+                          setToast('Background updated');
+                        }}>Use</Button>
+                      </Stack>
+                    </Paper>
+                  );
+                })}
+            </Box>
+            {(bgLoading || bgLoadingMore) && (<Skeleton variant="rectangular" height={80} />)}
+            <Stack direction="row" spacing={1}>
+              <Button size="small" color="error" variant="outlined" onClick={async ()=>{
+                const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+                setBg(null);
+                saveCachedBackground(null, 'user');
+                try { await setUserBackground(token, null); } catch {}
+                try { trackBackgroundRemove('supplier'); } catch {}
                 setToast('Background removed');
-            }}>Remove Background</Button>
+              }}>Remove Background</Button>
+            </Stack>
           </Stack>
         )}
 
@@ -2703,11 +2644,10 @@ const PRIMARY_BUTTON_SX = {
             {subsection === 'resources' && (
               <>
                 {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Information & Resources</Typography>
                 <List>
-                  <ListItemButton dense component="a" href="https://experiahub.com/supplier-agreement/" target="_blank"><ListItemText primary="Supplier Agreement" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', color: '#334155' }} /></ListItemButton>
-                  <ListItemButton dense component="a" href="https://experiahub.com/suppliers/" target="_blank"><ListItemText primary="Supplier Signup Info" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', color: '#334155' }} /></ListItemButton>
-                  <ListItemButton dense onClick={()=>setSupportOpen(true)}><ListItemText primary="Contact Support" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', color: '#334155' }} /></ListItemButton>
+                  <ListItemButton dense component="a" href="https://experiahub.com/supplier-agreement/" target="_blank"><ListItemText primary="Supplier Agreement" /></ListItemButton>
+                  <ListItemButton dense component="a" href="https://experiahub.com/suppliers/" target="_blank"><ListItemText primary="Supplier Signup Info" /></ListItemButton>
+                  <ListItemButton dense onClick={()=>setSupportOpen(true)}><ListItemText primary="Contact Support" /></ListItemButton>
                 </List>
               </>
             )}
@@ -2718,146 +2658,74 @@ const PRIMARY_BUTTON_SX = {
         )}
         </Paper>
         {/* Right rail */}
-
+        {section !== 'welcome' && (
+        <Paper sx={{ p: 2, borderRadius: 1, height: 'fit-content', position: 'sticky', top: 24, display: { xs: 'none', md: 'block' }, transition: 'all .3s ease' }}>
+          {section === 'company' && (
+            <List>
+              <ListItemButton selected={subsection==='profile'} onClick={()=>setSubsection('profile')}><ListItemText primary="Profile" /></ListItemButton>
+              <ListItemButton selected={subsection==='billing'} onClick={()=>setSubsection('billing')}><ListItemText primary="Billing" /></ListItemButton>
+              <ListItemButton selected={subsection==='legal'} onClick={()=>setSubsection('legal')}><ListItemText primary="Legal" /></ListItemButton>
+              <ListItemButton selected={subsection==='locations'} onClick={()=>setSubsection('locations')}><ListItemText primary="Locations" /></ListItemButton>
+              <ListItemButton selected={subsection.startsWith('payouts_')} onClick={()=>setSubsection('payouts_overview')}><ListItemText primary="Payouts" /></ListItemButton>
+            </List>
+          )}
+          {section === 'user' && (
+            <List>
+              <ListItemButton selected={subsection==='user_profile'} onClick={()=>setSubsection('user_profile')}><ListItemText primary="Profile" /></ListItemButton>
+              <ListItemButton selected={subsection==='user_security'} onClick={()=>setSubsection('user_security')}><ListItemText primary="Security" /></ListItemButton>
+            </List>
+          )}
+          {section === 'experiences' && (
+            <>
+              <FormControl size="small" fullWidth sx={{ mb: 1.5 }}>
+                <InputLabel id="exp-select-label">Selected Experience</InputLabel>
+                <Select labelId="exp-select-label" label="Selected Experience" value={selectedExperienceId} onChange={(e)=>setSelectedExperienceId(String(e.target.value))}>
+                  {activitiesSimple.map((a)=> (<MenuItem key={a.id} value={a.id}>{a.title}</MenuItem>))}
+                </Select>
+              </FormControl>
+              <List>
+                {(() => { const c = getSectionChecks(); return (
+                  <>
+                    <ListItemButton selected={subsection==='overview'} onClick={()=>setSubsection('overview')}><ListItemText primary="Overview" /></ListItemButton>
+                    <ListItemButton selected={subsection==='details'} onClick={()=>setSubsection('details')}>
+                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Details {c.details.ok ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label="Need" color="warning"/>}</Box>} />
+                    </ListItemButton>
+                    <ListItemButton selected={subsection==='media'} onClick={()=>setSubsection('media')}>
+                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Media {mediaOk ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label="Need" color="warning"/>}</Box>} />
+                    </ListItemButton>
+                    <ListItemButton selected={subsection==='pricing'} onClick={()=>setSubsection('pricing')}>
+                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Pricing {c.pricing.ok ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label="Need" color="warning"/>}</Box>} />
+                    </ListItemButton>
+                    <ListItemButton selected={subsection==='availability'} onClick={()=>setSubsection('availability')}>
+                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Availability {c.availability.ok ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label="Need" color="warning"/>}</Box>} />
+                    </ListItemButton>
+                    <ListItemButton selected={subsection==='policies'} onClick={()=>setSubsection('policies')}><ListItemText primary="Policies" /></ListItemButton>
+                    <ListItemButton selected={subsection==='distribution'} onClick={()=>setSubsection('distribution')}>
+                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Distribution {experiences.find(e=>e.id===selectedExperienceId)?.bokunProductId ? <Chip size="small" label="Linked" color="success"/> : <Chip size="small" label="Unlinked" color="default"/>}</Box>} />
+                    </ListItemButton>
+                    <ListItemButton selected={subsection==='validation'} onClick={()=>setSubsection('validation')}>
+                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Validation {c.validation.ok ? <Chip size="small" label="OK" color="success"/> : <Chip size="small" label={`${c.validation.count||0}`} color="warning"/>}</Box>} />
+                    </ListItemButton>
+                    <ListItemButton selected={subsection==='sync'} onClick={()=>setSubsection('sync')}>
+                      <ListItemText primary={<Box sx={{ display:'flex', alignItems:'center', gap:.5 }}>Sync {c.sync.ok ? <Chip size="small" label="Done" color="success"/> : <Chip size="small" label="Pending" color="default"/>}</Box>} />
+                    </ListItemButton>
+                  </>
+                ); })()}
+              </List>
+            </>
+          )}
+          {section === 'information' && (
+            <List>
+              <ListItemButton selected={subsection==='resources'} onClick={()=>setSubsection('resources')}><ListItemText primary="Resources" /></ListItemButton>
+            </List>
+        )}
+        </Paper>
+        )}
         <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)} message={toast || ''} />
       </Box>
       <SupportDialog open={supportOpen} onClose={()=>setSupportOpen(false)} defaultRole={'supplier'} appId={appId} />
-      
-      <Popover
-          open={Boolean(bgAnchorEl)}
-          anchorEl={bgAnchorEl}
-          onClose={() => { setBgAnchorEl(null); setBgSeed(0); }}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-          transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-          <Paper
-            sx={{ p: 2, width: 360, maxHeight: 420, overflowY: 'auto', borderRadius: 3 }}
-            onScroll={async (e:any)=>{
-              try {
-                if (!bgSearch.trim() || bgLoadingMore) return;
-                const el = e.currentTarget as HTMLElement;
-                const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 48;
-                if (!nearBottom) return;
-                setBgLoadingMore(true);
-                const next = bgPage + 1;
-                const more = await searchUnsplash(bgSearch.trim(), next, 30);
-                const existing = new Set((bgResults||[]).map((x:any)=>x?.id));
-                const merged = [...bgResults, ...more.filter((x:any)=> !existing.has(x?.id))];
-                setBgResults(merged);
-                setBgPage(next);
-              } finally { setBgLoadingMore(false); }
-            }}
-          >
-            <Stack spacing={1}>
-              <Stack direction="row" spacing={1}>
-                <TextField
-                  size="small"
-                  label="Search photos"
-                  value={bgSearch}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setBgSearch(v);
-                    if (!v.trim()) { setBgResults([]); setBgPage(1); setBgSeed(s => s + 1); }
-                  }}
-                  fullWidth
-                  InputProps={{
-                    endAdornment: bgSearch ? (
-                      <IconButton size="small" aria-label="Clear" onClick={() => { setBgSearch(''); setBgResults([]); setBgPage(1); setBgSeed(s => s + 1); }}>
-                        <ClearIcon fontSize="small" />
-                      </IconButton>
-                    ) : null
-                  }}
-                />
-                <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 700, borderRadius: 3 }} onClick={async ()=>{
-                  try {
-                    setBgLoading(true);
-                    const results = await searchUnsplash(bgSearch.trim(), 1, 30);
-                    setBgResults(Array.isArray(results)?results:[]);
-                    setBgPage(1);
-                  } finally { setBgLoading(false); }
-                }}>Go</Button>
-              </Stack>
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
-                {(!bgSearch.trim() && bgResults.length === 0 ? getCuratedBackgrounds().slice().sort(()=>Math.random()-0.5) : []).map((p, idx)=> (
-                  <Box
-                    key={`cur_${idx}`}
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Use curated background"
-                    sx={{ cursor: 'pointer', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
-                    onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
-                    onClick={async () => {
-                      const token = AuthService.getToken();
-                      const next = { url: p.url, thumbUrl: p.thumbUrl } as PortalBackground;
-                      setBg(next);
-                      prefetchBackgroundImage(p.url);
-                      saveCachedBackground(next, 'supplier');
-                      try { await setUserBackground(token, next); } catch {}
-                      try {trackBackgroundChange('supplier', next);} catch {}
-                      setBgAnchorEl(null);
-                    }}
-                  >
-                    <img src={p.thumbUrl || p.url} alt="" loading="lazy" style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block', background:'#e9eef2' }} />
-                  </Box>
-                ))}
-                {bgResults.map((p:any)=>{
-                  const id = p?.id; const url = p?.urls?.full || p?.urls?.regular || ''; const thumb = p?.urls?.small || p?.urls?.thumb || '';
-                  const authorName = p?.user?.name || ''; const authorUrl = p?.user?.links?.html || p?.user?.portfolio_url || '';
-                  return (
-                    <Box
-                      key={id}
-                      role="button"
-                      tabIndex={0}
-                      aria-label={`Use image by ${authorName || 'author'}`}
-                      sx={{ cursor: 'pointer', borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
-                      onKeyDown={async (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as any).click?.(); } }}
-                      onClick={async ()=>{
-                        const token = AuthService.getToken();
-                        const next = { id, url, thumbUrl: thumb, authorName, authorUrl } as PortalBackground;
-                        setBg(next);
-                        prefetchBackgroundImage(url);
-                        saveCachedBackground(next, 'supplier');
-                        try { await trackDownload(id); } catch (e) { console.warn('unsplash track failed', e); }
-                        try { await setUserBackground(token, next); } catch {}
-                        try {trackBackgroundChange('supplier', next);} catch {}
-                        setBgAnchorEl(null);
-                      }}
-                    >
-                      <img src={thumb} alt={`Unsplash: ${p?.alt_description || authorName || 'photo'}`} style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }} />
-                    </Box>
-                  );
-                })}
-
-              </Box>
-              {(bgLoading || bgLoadingMore) && (<Skeleton variant="rectangular" height={60} />)}
-              <Button size="small" color="error" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, borderRadius: 3 }} onClick={async ()=>{
-                const token = AuthService.getToken();
-                setBg(null); saveCachedBackground(null, 'supplier');
-                try { await setUserBackground(token, null as any); } catch {}
-                try {trackBackgroundRemove('supplier');} catch {}
-                setBgAnchorEl(null);
-              }}>Remove Background</Button>
-            </Stack>
-          </Paper>
-        </Popover>
-        <Fab
-          color="primary"
-          aria-label="Contact support"
-          onClick={()=>setSupportOpen(true)}
-          sx={{ position: 'fixed', right: 20, bottom: 24, zIndex: 2000, bgcolor: 'rgba(74,124,140,0.9)', '&:hover': { bgcolor: 'rgba(74,124,140,1)' } }}
-        >
-          <SupportAgentIcon />
-        </Fab>
-        <Fab
-          color="default"
-          aria-label="Background"
-          onClick={(e)=>{ setBgSeed((s)=>s+1); setBgAnchorEl(e.currentTarget); }}
-          sx={{ position: 'fixed', right: 20, bottom: 92, zIndex: 2000, bgcolor: 'rgba(255,255,255,0.9)', color: '#4a7c8c' }}
-        >
-          <WallpaperIcon />
-        </Fab>
-     </Box>
-    </>
+    </Box>
+    </BackgroundImage>
   );
 }
 

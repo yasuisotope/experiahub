@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import UserProfile from '@/components/profile/UserProfile';
 import { useWordPressAuth } from '@/contexts/WordPressContext';
-import MainLayout from '@/components/layout/MainLayout';
+
 import BackgroundImage from '@/components/BackgroundImage';
 import { getUserBackground, loadCachedBackground, saveCachedBackground, searchUnsplash, prefetchBackgroundImage, setUserBackground, trackDownload, getCuratedBackgrounds, type PortalBackground } from '@/services/backgroundService';
 import SupportDialog from '@/components/support/SupportDialog';
@@ -140,7 +140,7 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
-      <MainLayout>
+      <>
         <Box
           sx={{
             height: 'calc(100vh - 32px)',
@@ -340,7 +340,7 @@ export default function ProfilePage() {
         >
           <WallpaperIcon />
         </Fab>
-      </MainLayout>
+      </>
       </BackgroundImage>
     </ProtectedRoute>
   );

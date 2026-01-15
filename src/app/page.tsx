@@ -1,50 +1,91 @@
 'use client';
 
-import { Box, Typography } from '@mui/material';
-import MainLayout from '@/components/layout/MainLayout';
+import { Box, Typography, Button } from '@mui/material';
+import UserLayout from '@/components/layout/UserLayout';
 import Link from 'next/link';
+import BackgroundImage from '@/components/BackgroundImage';
+import { useWordPressAuth } from '@/contexts/WordPressContext';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
+  const { isLoggedIn, isLoading } = useWordPressAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && isLoggedIn) {
+      router.push('/chat');
+    }
+  }, [isLoggedIn, isLoading, router]);
+
+  // Premium Fallback Image (Luxury Travel)
+  const bgUrl = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80";
+
   return (
-    <MainLayout>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: 'calc(100vh - 32px)',
-          bgcolor: 'rgba(255, 255, 255, 0.25)',
-          backdropFilter: 'blur(12px)',
-          gap: 2,
-        }}
-      >
-        <Typography variant="h3" component="h1" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 600, letterSpacing: '-0.02em' }}>
-          Experia
-        </Typography>
-        <Typography variant="h6" sx={{ color: '#555', fontFamily: 'Nunito, sans-serif', fontWeight: 400, mb: 2 }}>
-          Your personal travel assistant
-        </Typography>
-        <Link href="/chat" style={{ textDecoration: 'none' }}>
+    <UserLayout>
+      <BackgroundImage imageUrl={bgUrl} overlayOpacity={0.3}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100dvh',
+            textAlign: 'center',
+            p: 2
+          }}
+        >
           <Box
             sx={{
-              bgcolor: '#4A7C8C',
-              color: 'white',
-              px: 4,
-              py: 1.5,
+              p: 6,
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(16px)',
               borderRadius: '24px',
-              fontFamily: 'Nunito, sans-serif',
-              fontWeight: 500,
-              transition: 'background-color 0.2s',
-              '&:hover': {
-                bgcolor: '#3A6370',
-              },
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 3,
+              maxWidth: '600px',
+              width: '100%'
             }}
           >
-            Start Chatting
+            <Typography variant="h2" component="h1" sx={{ color: '#FFFFFF', fontFamily: 'Cormorant Garamond, serif', fontWeight: 600, letterSpacing: '-0.02em', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+              Experia
+            </Typography>
+            <Typography variant="h5" sx={{ color: '#F0F0F0', fontFamily: 'Urbanist, sans-serif', fontWeight: 300, letterSpacing: '0.05em' }}>
+              Your Personal Travel Assistant
+            </Typography>
+            
+            <Link href="/chat" style={{ textDecoration: 'none', width: '100%' }}>
+              <Button
+                fullWidth
+                size="large"
+                sx={{
+                  bgcolor: '#FFFFFF',
+                  color: '#010057',
+                  px: 4,
+                  py: 1.8,
+                  borderRadius: '12px',
+                  fontFamily: 'Urbanist, sans-serif',
+                  fontWeight: 600,
+                  fontSize: '1.1rem',
+                  textTransform: 'none',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    bgcolor: '#F0F0F0',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                  },
+                }}
+              >
+                Start Chatting
+              </Button>
+            </Link>
           </Box>
-        </Link>
-      </Box>
-    </MainLayout>
+        </Box>
+      </BackgroundImage>
+    </UserLayout>
   );
 }

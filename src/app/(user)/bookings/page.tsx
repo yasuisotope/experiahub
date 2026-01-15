@@ -4,7 +4,7 @@ import React from 'react';
 import { Box, Typography, Paper, Stack, Tabs, Tab, Button, CircularProgress, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Drawer, ToggleButtonGroup, ToggleButton, Popover, Skeleton, Fab } from '@mui/material';
 import Link from 'next/link';
 import { CalendarMonth, AccessTime, LocationOn, Groups } from '@mui/icons-material';
-import MainLayout from '@/components/layout/MainLayout';
+
 import BackgroundImage from '@/components/BackgroundImage';
 import BokunBookingWidget from '@/components/BokunBookingWidget';
 import SupportDialog from '@/components/support/SupportDialog';
@@ -414,7 +414,7 @@ export default function BookingsPage() {
   }, []);
 
   return (
-    <MainLayout>
+    <>
       <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
       <Box
         sx={{
@@ -1224,6 +1224,6 @@ export default function BookingsPage() {
       <Fab color="default" aria-label="Background" onClick={(e)=>{ setBgSeed((s)=>s+1); setBgAnchorEl(e.currentTarget);} } sx={{ position: 'fixed', right: 20, bottom: 92, zIndex: 2000, bgcolor: 'rgba(255,255,255,0.9)', color: '#4a7c8c' }}>
         <WallpaperIcon />
       </Fab>
-    </MainLayout>
+    </>
   );
 }
