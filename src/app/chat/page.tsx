@@ -301,188 +301,132 @@ export default function ChatPage() {
     }
   };
 
-  // Show login form if not logged in
-  if (!isLoggedIn && !authLoading) {
-    return (
-      <Box
-        sx={{
-          height: 'calc(100vh - 32px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '12px',
-          maxWidth: 800,
-          margin: '0 auto',
-          backgroundColor: 'rgba(255, 255, 255, 0.25)',
-          backdropFilter: 'blur(12px)',
-        }}
-      >
-        <Paper
-          elevation={0}
-          sx={{
-            p: 4,
-            width: '100%',
-            maxWidth: 400,
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: '16px',
-          }}
-        >
-          <Box component="form" onSubmit={handleLogin} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box sx={{ textAlign: 'center', mb: 2 }}>
-              <h2 style={{ margin: 0, color: '#4a7c8c', fontFamily: 'Cormorant Garamond' }}>
-                Welcome to ExperiaHub Chat
-              </h2>
-              <p style={{ margin: '8px 0 0 0', color: '#666666', fontFamily: 'Urbanist' }}>
-                Please log in to start chatting
-              </p>
-            </Box>
-            
-            <TextField
-              label="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={isLoggingIn}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  fontFamily: 'Urbanist',
-                },
-              }}
-            />
-            
-            <TextField
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoggingIn}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  fontFamily: 'Urbanist',
-                },
-              }}
-            />
-            
-            {loginError && (
-              <Box sx={{ color: '#d32f2f', fontSize: '0.875rem', fontFamily: 'Urbanist' }}>
-                {loginError}
-              </Box>
-            )}
-            
-            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-              <Box
-                component="button"
-                type="submit"
-                disabled={isLoggingIn || !username.trim() || !password.trim()}
-                sx={{
-                  flex: 1,
-                  py: 1.5,
-                  px: 3,
-                  backgroundColor: 'rgba(74, 124, 140, 0.9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontFamily: 'Urbanist',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'rgba(74, 124, 140, 1)',
-                  },
-                  '&:disabled': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.12)',
-                    cursor: 'not-allowed',
-                  },
-                }}
-              >
-                {isLoggingIn ? 'Logging in...' : 'Log In'}
-              </Box>
-              <Typography
-              variant="h3"
-              component="h1"
-              sx={{
-                fontFamily: 'Playfair Display',
-                fontWeight: 600,
-                color: '#010057',
-                letterSpacing: '-0.02em',
-                mb: 2,
-                opacity: isOpening ? 1 : 0,
-                transform: isOpening ? 'translateY(0)' : 'translateY(10px)',
-                transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
-                transitionDelay: '0.2s',
-              }}
-            >
-              Experia
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{
-                fontFamily: 'Inter',
-                fontWeight: 400,
-                color: '#555',
-                opacity: isOpening ? 1 : 0,
-                transform: isOpening ? 'translateY(0)' : 'translateY(10px)',
-                transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
-                transitionDelay: '0.4s',
-              }}
-            >
-              Your personal travel assistant
-            </Typography>
-              
-              <Box
-                component="a"
-                href="https://experiahub.com/signup/"
-                sx={{
-                  flex: 1,
-                  py: 1.5,
-                  px: 3,
-                  backgroundColor: 'transparent',
-                  color: 'rgba(74, 124, 140, 0.9)',
-                  border: '1px solid rgba(74, 124, 140, 0.9)',
-                  borderRadius: '8px',
-                  fontFamily: 'Urbanist',
-                  fontSize: '0.9rem',
-                  textDecoration: 'none',
-                  textAlign: 'center',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  '&:hover': {
-                    backgroundColor: 'rgba(74, 124, 140, 0.1)',
-                  },
-                }}
-              >
-                Sign Up
-              </Box>
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
-    );
-  }
-
-  // Show loading state while checking auth
-  if (authLoading) {
-    return (
-      <Box
-        sx={{
-          height: 'calc(100vh - 32px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '12px',
-          maxWidth: 800,
-          margin: '0 auto',
-          backgroundColor: 'rgba(255, 255, 255, 0.25)',
-          backdropFilter: 'blur(12px)',
-        }}
-      >
-        <CircularProgress size={32} sx={{ color: 'rgba(74, 124, 140, 0.9)' }} />
-      </Box>
-    );
-  }
-
+  // Main Render
   return (
     <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
       <Box sx={{ position: 'relative' }}>
+        
+        {/* Loading State */}
+        {authLoading && (
+          <Box
+            sx={{
+              height: '100dvh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              backdropFilter: 'blur(12px)',
+            }}
+          >
+            <CircularProgress size={32} sx={{ color: 'rgba(74, 124, 140, 0.9)' }} />
+          </Box>
+        )}
+
+        {/* Login State */}
+        {!isLoggedIn && !authLoading && (
+          <Box
+            sx={{
+              height: '100dvh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              backdropFilter: 'blur(12px)',
+            }}
+          >
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                width: '100%',
+                maxWidth: 400,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: '16px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <Box component="form" onSubmit={handleLogin} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ textAlign: 'center', mb: 2 }}>
+                  <Typography variant="h4" component="h2" sx={{ m: 0, color: '#4a7c8c', fontFamily: 'Cormorant Garamond', fontWeight: 600 }}>
+                    Welcome to ExperiaHub
+                  </Typography>
+                  <Typography sx={{ mt: 1, color: '#666', fontFamily: 'Urbanist' }}>
+                    Please log in to start chatting
+                  </Typography>
+                </Box>
+                
+                <TextField
+                  label="Username"
+                  fullWidth
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={isLoggingIn}
+                  sx={{ '& .MuiOutlinedInput-root': { fontFamily: 'Urbanist' } }}
+                />
+                
+                <TextField
+                  label="Password"
+                  type="password"
+                  fullWidth
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoggingIn}
+                  sx={{ '& .MuiOutlinedInput-root': { fontFamily: 'Urbanist' } }}
+                />
+                
+                {loginError && (
+                  <Typography sx={{ color: '#d32f2f', fontSize: '0.875rem', fontFamily: 'Urbanist', textAlign: 'center' }}>
+                    {loginError}
+                  </Typography>
+                )}
+                
+                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                  <Button
+                    type="submit"
+                    fullWidth
+                    disabled={isLoggingIn || !username.trim() || !password.trim()}
+                    sx={{
+                      py: 1.5,
+                      bgcolor: 'rgba(74, 124, 140, 0.9)',
+                      color: 'white',
+                      fontFamily: 'Urbanist',
+                      textTransform: 'none',
+                      fontSize: '1rem',
+                      '&:hover': { bgcolor: 'rgba(74, 124, 140, 1)' },
+                      '&:disabled': { bgcolor: 'rgba(0, 0, 0, 0.12)' },
+                    }}
+                  >
+                    {isLoggingIn ? 'Logging in...' : 'Log In'}
+                  </Button>
+                  
+                  <Button
+                    component="a"
+                    href="https://experiahub.com/signup/"
+                    target="_blank"
+                    fullWidth
+                    sx={{
+                      py: 1.5,
+                      color: 'rgba(74, 124, 140, 0.9)',
+                      borderColor: 'rgba(74, 124, 140, 0.9)',
+                      borderWidth: 1,
+                      borderStyle: 'solid',
+                      fontFamily: 'Urbanist',
+                      textTransform: 'none',
+                      fontSize: '1rem',
+                      '&:hover': { bgcolor: 'rgba(74, 124, 140, 0.1)', borderWidth: 1 },
+                    }}
+                  >
+                    Sign Up
+                  </Button>
+                </Box>
+              </Box>
+            </Paper>
+          </Box>
+        )}
+
+        {/* Chat Interface (Logged In) */}
+        {isLoggedIn && !authLoading && (
         <Box sx={{
           display: { xs: 'block', md: 'grid' },
           gridTemplateColumns: { md: selectedExperience ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr) 0px' },
