@@ -219,29 +219,57 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
          const nextMeta = { ...(current?.metadata || {}), background_url: payload.url };
          updates = { metadata: nextMeta };
     } else if (type === 'activities' && payload.activities) {
-        // Upsert multiple activities
-        // Assuming experiences table has (id, application_id, title, city, raw_data) columns or similar
-        // We'll map what we can and put the rest in raw_data
-        const rows = payload.activities.map((a: any) => ({
-            id: a.id, // Ensure this is a UUID if table requires it. If 'row_' it might fail if table has UUID constraint.
-                      // If fail, we might need to let DB gen UUID and return it?
-                      // For now, assume table allows text or client-gen UUID.
-            application_id: appId,
-            title: a.title,
-            city: a.city,
-            raw_data: a,
-            updated_at: new Date().toISOString()
-        }));
+        const toUpsert: any[] = [];
+        const toInsert: any[] = [];
+        const tempIdMap: Record<string, any> = {};
+
+        // Helper to check for valid UUID (simple regex)
+        const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+        payload.activities.forEach((a: any) => {
+            const row = {
+                id: isUUID(a.id) ? a.id : undefined, // Let DB generate ID if temp
+                application_id: appId,
+                title: a.title,
+                city: a.city,
+                raw_data: { ...a, _temp_id: a.id }, // Store temp ID to map back
+                updated_at: new Date().toISOString()
+            };
+            
+            if (isUUID(a.id)) {
+                toUpsert.push(row);
+            } else {
+                tempIdMap[a.id] = row;
+                toInsert.push(row);
+            }
+        });
         
-        // Use insert with upsert option
-        // Note: ID conflict will update
-        const { error } = await supabase.from('experiences').upsert(rows, { onConflict: 'id' });
-        if (error) {
-             console.error('[N8N Proxy] Direct Save Activities Error:', error);
-             return { success: false, error: error.message };
+        // 1. Upsert existing
+        if (toUpsert.length > 0) {
+             const { error } = await supabase.from('experiences').upsert(toUpsert, { onConflict: 'id' });
+             if (error) {
+                 console.error('[N8N Proxy] Upsert Error:', error);
+                 return { success: false, error: error.message };
+             }
         }
-        console.log(`[N8N Proxy] Direct Save Success for Activities (${appId})`);
-        return { success: true };
+
+        // 2. Insert new
+        const idMappings: Record<string, string> = {};
+        if (toInsert.length > 0) {
+            const { data, error } = await supabase.from('experiences').insert(toInsert).select('id, raw_data');
+            if (error) {
+                 console.error('[N8N Proxy] Insert Error:', error);
+                 return { success: false, error: error.message };
+            }
+            // Map back using _temp_id in raw_data
+            (data || []).forEach((inserted: any) => {
+                const temp = inserted.raw_data?._temp_id;
+                if (temp) idMappings[temp] = inserted.id;
+            });
+        }
+
+        console.log(`[N8N Proxy] Saved Activities (${toUpsert.length} updated, ${toInsert.length} inserted)`);
+        return { success: true, idMappings } as any; // Cast to bypass strict return type signature if needed, or update signature
     }
     
     if (Object.keys(updates).length > 0) {

@@ -252,16 +252,29 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
     if (!appId) { onToast('Missing application ID'); return; }
     setSaving(true);
     try {
-      const payload = { applicationId: appId, activities: rows.map(({ id, ...rest }) => rest) };
+      const payload = { applicationId: appId, activities: rows.map(({ id, ...rest }) => ({ ...rest, id })) };
       const res = await fetch(`${N8N_BASE}/supplier/activities/save`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
       const json = await parseJsonSafe(res) || {};
-      if (res.ok && !json.success && !json.error) {
-         // tolerate empty success if HTTP 200
-      } else if (!json.success) throw new Error(json.error || 'Save failed');
+      
+      if (!res.ok) {
+           throw new Error(json.error || `Server Error ${res.status}`);
+      }
+      
+      if (json.idMappings) {
+           // Update temp IDs to real IDs
+           setRows(prev => prev.map(r => {
+                if (json.idMappings[r.id]) {
+                     return { ...r, id: json.idMappings[r.id] };
+                }
+                return r;
+           }));
+      }
+
       onToast('Activities saved');
     } catch (e: any) {
+      console.error('Save Error:', e);
       onToast(e.message || 'Save failed');
     } finally { setSaving(false); }
   };
