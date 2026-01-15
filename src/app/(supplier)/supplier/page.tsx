@@ -44,7 +44,7 @@ const defaultTimeZone = 'Asia/Tokyo';
 
 // GridLikeMedia definition moved to @/components/supplier/GridLikeMedia.tsx
 
-function ActivitiesSkeleton({ experiences, onUpdate, onToast, onEditDetails }: { experiences: any[]; onUpdate: React.Dispatch<React.SetStateAction<any[]>>; onToast: (m: string) => void; onEditDetails?: (activity: any) => void }) {
+function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDetails }: { experiences: any[]; onUpdate: React.Dispatch<React.SetStateAction<any[]>>; onSave: (exps: any[]) => Promise<void>; onToast: (m: string) => void; onEditDetails?: (activity: any) => void }) {
   type Activity = {
     id: string;
     title: string;
@@ -224,8 +224,9 @@ function ActivitiesSkeleton({ experiences, onUpdate, onToast, onEditDetails }: {
       baseRate,
       bokunProductId: editing?.bokunProductId || ''
     };
-    if (editing) setRows((rs) => rs.map((r) => (r.id === editing.id ? next : r)));
-    else setRows((rs) => [next, ...rs]);
+    const updatedRows = editing ? rows.map((r) => (r.id === editing.id ? next : r)) : [next, ...rows];
+    setRows(updatedRows);
+    onSave(updatedRows); // Persist immediately
     setOpen(false); resetForm();
   };
 
@@ -332,23 +333,35 @@ function ActivitiesSkeleton({ experiences, onUpdate, onToast, onEditDetails }: {
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4, alignItems: 'center', justifyContent: 'space-between' }}>
         <Stack direction="row" spacing={2} alignItems="center">
-          <TextField size="small" label="Search" value={filterText} onChange={(e)=>setFilterText(e.target.value)} sx={{ maxWidth: 220, bgcolor: 'white' }} />
-          <FormControl size="small" sx={{ minWidth: 140 }}>
-            <InputLabel id="sort-by-label" sx={{ bgcolor: 'white', px: 0.5 }}>Sort by</InputLabel>
-            <Select labelId="sort-by-label" label="Sort by" value={sortKey} onChange={(e)=>setSortKey(e.target.value as any)} sx={{ bgcolor: 'white' }}>
-              <MenuItem value="title">Title</MenuItem>
-              <MenuItem value="city">City</MenuItem>
-              <MenuItem value="durationMinutes">Duration</MenuItem>
-              <MenuItem value="price">Price</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel id="sort-dir-label" sx={{ bgcolor: 'white', px: 0.5 }}>Order</InputLabel>
-            <Select labelId="sort-dir-label" label="Order" value={sortDir} onChange={(e)=>setSortDir(e.target.value as any)} sx={{ bgcolor: 'white' }}>
-              <MenuItem value="asc">Ascending</MenuItem>
-              <MenuItem value="desc">Descending</MenuItem>
-            </Select>
-          </FormControl>
+          <TextField 
+        placeholder="Filter experiences..." 
+        size="small" 
+        value={filterText} 
+        onChange={(e) => setFilterText(e.target.value)} 
+        sx={{ bgcolor: '#fff', borderRadius: 1 }}
+      />
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Select 
+            size="small" 
+            value={sortKey} 
+            onChange={(e) => setSortKey(e.target.value as any)}
+            sx={{ bgcolor: '#fff', borderRadius: 1 }}
+        >
+          <MenuItem value="title">Title</MenuItem>
+          <MenuItem value="city">City</MenuItem>
+          <MenuItem value="durationMinutes">Duration</MenuItem>
+          <MenuItem value="price">Price</MenuItem>
+        </Select>
+        <Select 
+            size="small" 
+            value={sortDir} 
+            onChange={(e) => setSortDir(e.target.value as any)}
+            sx={{ bgcolor: '#fff', borderRadius: 1 }}
+        >
+          <MenuItem value="asc">Ascending</MenuItem>
+          <MenuItem value="desc">Descending</MenuItem>
+        </Select>
+      </Box>
         </Stack>
         <Stack direction="row" spacing={1}>
           <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}>Add</Button>
@@ -1696,7 +1709,9 @@ const PRIMARY_BUTTON_SX = {
     );
   }
 
-  // Logged-in view with left sidebar
+  // Transparency State
+  const [isTransparent, setIsTransparent] = React.useState(true);
+
   // Logged-in view with left sidebar
   return (
     // <BackgroundImage ...> replaced with fragment or direct Box to fix build error
@@ -1714,7 +1729,18 @@ const PRIMARY_BUTTON_SX = {
       }}>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '240px 1fr' }, gap: 3, maxWidth: 1280, mx: 'auto' }}>
         {/* Sidebar */}
-        <Paper sx={{ p: 2, borderRadius: 1, height: 'fit-content', position: 'sticky', top: 24, width: { md: 230 }, transition: 'all .3s ease' }}>
+        <Paper sx={{ 
+          p: 2, 
+          borderRadius: 1, 
+          height: 'fit-content', 
+          position: 'sticky', 
+          top: 24, 
+          width: { md: 230 }, 
+          transition: 'all .3s ease',
+          bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
+          backdropFilter: isTransparent ? 'blur(12px)' : 'none',
+          border: '1px solid rgba(255,255,255,0.4)'
+        }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
             <img
               src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png"
@@ -1729,19 +1755,19 @@ const PRIMARY_BUTTON_SX = {
 
           
           <List>
-            <ListItemButton selected={section==='welcome'} onClick={() => { setSection('welcome'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='welcome'?{ bgcolor:'#F0F4F6' }:{}) }}>
+            <ListItemButton selected={section==='welcome'} onClick={() => { setSection('welcome'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='welcome'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
               <ListItemText primary="Welcome" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='welcome'?700:500 }} />
             </ListItemButton>
-            <ListItemButton selected={section==='company'} onClick={() => { setSection('company'); setTab(0); setSubsection('profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='company'?{ bgcolor:'#F0F4F6' }:{}) }}>
+            <ListItemButton selected={section==='company'} onClick={() => { setSection('company'); setTab(0); setSubsection('profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='company'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
               <ListItemText primary="Company" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='company'?700:500 }} />
             </ListItemButton>
-            <ListItemButton selected={section==='user'} onClick={() => { setSection('user'); setTab(0); setSubsection('user_profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='user'?{ bgcolor:'#F0F4F6' }:{}) }}>
+            <ListItemButton selected={section==='user'} onClick={() => { setSection('user'); setTab(0); setSubsection('user_profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='user'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
               <ListItemText primary="User" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='user'?700:500 }} />
             </ListItemButton>
-            <ListItemButton selected={section==='experiences'} onClick={() => { setSection('experiences'); setTab(0); setSubsection('overview'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='experiences'?{ bgcolor:'#F0F4F6' }:{}) }}>
+            <ListItemButton selected={section==='experiences'} onClick={() => { setSection('experiences'); setTab(0); setSubsection('overview'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='experiences'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
               <ListItemText primary="Experiences" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='experiences'?700:500 }} />
             </ListItemButton>
-            <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='information'?{ bgcolor:'#F0F4F6' }:{}) }}>
+            <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('help'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='information'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
               <ListItemText primary="Information" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='information'?700:500 }} />
             </ListItemButton>
           </List>
@@ -1764,10 +1790,15 @@ const PRIMARY_BUTTON_SX = {
             
           <Box sx={{ mt: 'auto', pt: 2 }}>
             <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
+            <FormControlLabel
+               control={<Switch size="small" checked={isTransparent} onChange={(e)=>setIsTransparent(e.target.checked)} />}
+               label={<Typography variant="caption" sx={{ fontFamily:'Nunito, sans-serif' }}>Translucent UI</Typography>}
+               sx={{ mb: 1, ml: 0.5 }}
+            />
             <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
+              <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
               {isLoggedIn ? (
-                <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, '&:hover': { borderColor: '#FECACA', bgcolor: '#FEF2F2', color: '#DC2626' } }}>Log out</Button>
+                <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#FECACA', bgcolor: '#FEF2F2', color: '#DC2626' } }}>Log out</Button>
               ) : (
                 <Button variant="contained" size="small" fullWidth sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 700 }} onClick={() => { setHasBegun(false); }}>Sign in</Button>
               )}
@@ -1779,12 +1810,13 @@ const PRIMARY_BUTTON_SX = {
         <Paper sx={{
           p: 3,
           borderRadius: 1,
-          bgcolor: 'rgba(255,255,255,0.8)',
+          bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
           color: '#3b4850',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          backdropFilter: isTransparent ? 'blur(12px)' : 'none',
+          WebkitBackdropFilter: isTransparent ? 'blur(12px)' : 'none',
           boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
-          transition: 'transform .25s ease, opacity .25s ease'
+          transition: 'transform .25s ease, opacity .25s ease',
+          border: isTransparent ? '1px solid rgba(255,255,255,0.4)' : 'none'
         }}>
         {/* Header block: Row 1 title, Row 2 meta */}
         <Box sx={{ mb: 2 }}>
@@ -2254,6 +2286,7 @@ const PRIMARY_BUTTON_SX = {
             <ActivitiesSkeleton 
               experiences={experiences} 
               onUpdate={setExperiences} 
+              onSave={saveAllExperiences}
               onToast={(m)=>setToast(m)} 
               onEditDetails={(act: any) => {
                 const e = act as Experience;
