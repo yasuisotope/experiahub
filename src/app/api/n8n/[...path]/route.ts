@@ -87,7 +87,7 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  const profile = await handleDirectGet('user_profile', targetUrl, authHeader);
                  return NextResponse.json({ success: true, profile: profile || {}, stub: true, direct: true });
              }
-              if (targetUrl.includes('supplier/user/background/get') || targetUrl.includes('auth/user/background/get')) {
+              if (targetUrl.includes('supplier/user/background/get') || targetUrl.includes('auth/user/background/get') || targetUrl.includes('auth/user/background/set')) {
                  return NextResponse.json({ success: true, background: null, stub: true });
              }
         }

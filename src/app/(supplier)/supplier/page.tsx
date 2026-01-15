@@ -427,14 +427,12 @@ function ActivitiesSkeleton({ onToast, onEditDetails }: { onToast: (m: string) =
       <Table size="small">
         <TableHead>
           <TableRow>
-          <TableRow>
             <TableCell sx={{ fontWeight: 'bold' }}>Title</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>City</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Duration (min)</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Price</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Bókun</TableCell>
             <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
-          </TableRow>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -1728,14 +1726,13 @@ const PRIMARY_BUTTON_SX = {
             </ListItemButton>
           </List>
 
-          <Stack spacing={1} sx={{ mt: 2, mb: 2, px: 1, textAlign: 'center' }}>
-            {/* Updated Identity Section */}
-            <Box sx={{ py: 1, px: 1 }}>
-              <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 800, color: '#010057', lineHeight: 1.3, fontSize: '1.1rem', mb: 0.5 }}>
+          <Stack spacing={1} sx={{ mt: 2, mb: 2, px: 2, textAlign: 'center', bgcolor: 'rgba(1,0,87,0.03)', borderRadius: 2, py: 2, border: '1px solid rgba(1,0,87,0.05)' }}>
+            <Box sx={{ py: 0 }}>
+              <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 800, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
                 {user?.display_name || userDisplayName || statusData?.businessName || companyBilling.companyName || 'ExperiaHub Partner'}
               </Typography>
               {appId && (
-                <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', display: 'block', fontSize: '0.8rem', letterSpacing: '0.02em', fontWeight: 600 }}>
+                <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', display: 'block', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.8 }}>
                   ID: {appId}
                 </Typography>
               )}
@@ -1744,14 +1741,13 @@ const PRIMARY_BUTTON_SX = {
 
 
           
-
-
+            
           <Box sx={{ mt: 'auto', pt: 2 }}>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 700 }}>Refresh</Button>
+              <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
               {isLoggedIn ? (
-                <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 700 }}>Log out</Button>
+                <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, '&:hover': { borderColor: '#FECACA', bgcolor: '#FEF2F2', color: '#DC2626' } }}>Log out</Button>
               ) : (
                 <Button variant="contained" size="small" fullWidth sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 700 }} onClick={() => { setHasBegun(false); }}>Sign in</Button>
               )}
@@ -1840,23 +1836,7 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && (
           <Box sx={{ mb: 3 }}>
-            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                 <FormControl size="small" sx={{ minWidth: 240 }}>
-                   <InputLabel id="exp-sel-label" sx={{ fontFamily: 'Nunito, sans-serif' }}>Select Experience</InputLabel>
-                   <Select 
-                    labelId="exp-sel-label" 
-                    label="Select Experience" 
-                    value={selectedExperienceId} 
-                    onChange={(e)=>setSelectedExperienceId(String(e.target.value))} 
-                    sx={{ fontFamily: 'Nunito, sans-serif' }}
-                   >
-                     {activitiesSimple.map((a)=> (
-                        <MenuItem key={a.id} value={a.id} sx={{ fontFamily: 'Nunito, sans-serif' }}>{a.title}</MenuItem>
-                     ))}
-                   </Select>
-                 </FormControl>
-                 {!selectedExperienceId && <Typography variant="caption" color="error">Select an experience to edit.</Typography>}
-            </Stack>
+
             {selectedExperienceId && (() => {
                const c = getSectionChecks();
                return (
