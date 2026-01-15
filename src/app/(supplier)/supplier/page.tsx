@@ -1703,7 +1703,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.15.2155_FIX_V15
+              Build: 2026.01.15.2200_FIX_V16
             </Typography>
           </Box>
         </Paper>

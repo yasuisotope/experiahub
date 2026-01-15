@@ -42,3 +42,4 @@ We use a mock backend to provide necessary data and handle JWT authentication as
 Need further help? Reach out to community
 <br/>
 💬 [Join us on Discord](https://discord.com/invite/p2E2WhCb6s)
+Deploy V16
