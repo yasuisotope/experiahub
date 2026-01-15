@@ -1249,7 +1249,7 @@ const PRIMARY_BUTTON_SX = {
 
   const saveAllExperiences = async (nextExperiences: Experience[]) => {
     if (!appId) return;
-    const payload = { applicationId: appId, activities: nextExperiences.map(({ id, ...rest }) => rest) };
+    const payload = { applicationId: appId, activities: nextExperiences };
     const res = await fetch(`${N8N_BASE}/supplier/activities/save`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
@@ -1703,7 +1703,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.15.2200_FIX_V16
+              Build: 2026.01.15.2210_FIX_V17
             </Typography>
           </Box>
         </Paper>
