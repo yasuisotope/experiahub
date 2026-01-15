@@ -70,6 +70,16 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
                  return NextResponse.json({ success: true, stub: true, saved_direct: true });
              }
+             if (targetUrl.includes('auth/user/background/set')) {
+                  const res = await handleDirectSave('background', body, targetUrl, authHeader);
+                  if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+                  return NextResponse.json({ success: true, stub: true, saved_direct: true });
+             }
+             if (targetUrl.includes('supplier/activities/save') || targetUrl.includes('supplier/activities/sync')) {
+                 const res = await handleDirectSave('activities', body, targetUrl, authHeader);
+                 if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+                 return NextResponse.json({ success: true, stub: true, saved_direct: true });
+             }
 
              if (targetUrl.includes('supplier/company/billing/get')) {
                  const billing = await handleDirectGet('billing', targetUrl, authHeader);
@@ -87,8 +97,17 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  const profile = await handleDirectGet('user_profile', targetUrl, authHeader);
                  return NextResponse.json({ success: true, profile: profile || {}, stub: true, direct: true });
              }
-              if (targetUrl.includes('supplier/user/background/get') || targetUrl.includes('auth/user/background/get') || targetUrl.includes('auth/user/background/set')) {
-                 return NextResponse.json({ success: true, background: null, stub: true });
+              if (targetUrl.includes('supplier/user/background/get') || targetUrl.includes('auth/user/background/get')) {
+                 const bg = await handleDirectGet('background', targetUrl, authHeader);
+                 return NextResponse.json({ success: true, background: bg?.url || null, stub: true, direct: true });
+             }
+             if (targetUrl.includes('supplier/activities/list')) {
+                 const appId = new URL(targetUrl).searchParams.get('applicationId');
+                 if (appId) {
+                    const acts = await handleDirectListActivities(appId, authHeader);
+                    return NextResponse.json({ success: true, activities: acts, stub: true, direct: true });
+                 }
+                 return NextResponse.json({ success: true, activities: [], stub: true });
              }
         }
 
@@ -143,7 +162,7 @@ export async function PUT(req: NextRequest, ctx: any) { return proxyRequest(req,
 export async function PATCH(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 export async function DELETE(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 
-async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
+async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile'|'background'|'activities', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
   try {
     if (!body || !(body instanceof Blob)) return { success: false, error: 'Invalid Body' };
     const text = await body.text();
@@ -194,6 +213,35 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             contact_name: payload.displayName,
             contact_phone: payload.phone
         };
+    } else if (type === 'background') {
+         // Need to fetch current generic metadata first to preserve other fields
+         const { data: current } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
+         const nextMeta = { ...(current?.metadata || {}), background_url: payload.url };
+         updates = { metadata: nextMeta };
+    } else if (type === 'activities' && payload.activities) {
+        // Upsert multiple activities
+        // Assuming experiences table has (id, application_id, title, city, raw_data) columns or similar
+        // We'll map what we can and put the rest in raw_data
+        const rows = payload.activities.map((a: any) => ({
+            id: a.id, // Ensure this is a UUID if table requires it. If 'row_' it might fail if table has UUID constraint.
+                      // If fail, we might need to let DB gen UUID and return it?
+                      // For now, assume table allows text or client-gen UUID.
+            application_id: appId,
+            title: a.title,
+            city: a.city,
+            raw_data: a,
+            updated_at: new Date().toISOString()
+        }));
+        
+        // Use insert with upsert option
+        // Note: ID conflict will update
+        const { error } = await supabase.from('experiences').upsert(rows, { onConflict: 'id' });
+        if (error) {
+             console.error('[N8N Proxy] Direct Save Activities Error:', error);
+             return { success: false, error: error.message };
+        }
+        console.log(`[N8N Proxy] Direct Save Success for Activities (${appId})`);
+        return { success: true };
     }
     
     if (Object.keys(updates).length > 0) {
@@ -218,7 +266,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
   }
 }
 
-async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile', url: string, authHeader: string | null) {
+async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile'|'background', url: string, authHeader: string | null) {
   try {
     const u = new URL(url);
     const appId = u.searchParams.get('applicationId');
@@ -265,9 +313,36 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
              phone: data.contact_phone,
              email: data.contact_email
         };
+    } else if (type === 'background') {
+        return {
+            url: data.metadata?.background_url || null
+        };
     }
   } catch (e) {
       console.error('[N8N Proxy] Direct Get Exception:', e);
       return null;
   }
+}
+
+async function handleDirectListActivities(applicationId: string, authHeader: string | null) {
+    try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseKey) return null;
+        
+        const options: any = {};
+        if (authHeader) options.global = { headers: { Authorization: authHeader } };
+        const supabase = createClient(supabaseUrl, supabaseKey, options);
+
+        const { data, error } = await supabase.from('experiences').select('*').eq('application_id', applicationId);
+        if (error) { console.error('List Activities Error:', error); return []; }
+        
+        return (data || []).map((row: any) => ({
+            ...row.raw_data, // Expand stored JSON
+            id: row.id, // Ensure ID matches
+            title: row.title,
+            applicationId: row.application_id
+        }));
+
+    } catch (e) { return []; }
 }
