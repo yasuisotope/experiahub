@@ -7,6 +7,7 @@
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab } from '@mui/material';
+import { FormControlLabel, Switch } from '@mui/material';
 // BackgroundImage removed
 
 import ClearIcon from '@mui/icons-material/Clear';
