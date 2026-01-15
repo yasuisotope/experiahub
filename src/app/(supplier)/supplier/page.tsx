@@ -202,6 +202,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onToast, onEditDetails }: {
   const submitForm = () => {
     if (!title.trim()) { onToast('Title required'); return; }
     const next: Activity = {
+      ...editing, // Preserve existing fields (like authenticEchoes) NOT managed by this form!
       id: editing?.id || `row_${Date.now()}`,
       title,
       summary,
@@ -1705,7 +1706,11 @@ const PRIMARY_BUTTON_SX = {
         py: 6,
         px: 2,
         bgcolor: 'rgba(255, 255, 255, 0.25)',
-        backgroundImage: 'radial-gradient(circle at 20% 10%, rgba(1, 0, 87, 0.05), transparent 45%), radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 40%)'
+        backgroundImage: bg?.url ? `url("${bg.url}")` : 'radial-gradient(circle at 20% 10%, rgba(1, 0, 87, 0.05), transparent 45%), radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 40%)',
+        backgroundSize: bg?.url ? 'cover' : undefined,
+        backgroundPosition: bg?.url ? 'center' : undefined,
+        backgroundAttachment: bg?.url ? 'fixed' : undefined,
+        backgroundRepeat: 'no-repeat'
       }}>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '240px 1fr' }, gap: 3, maxWidth: 1280, mx: 'auto' }}>
         {/* Sidebar */}
