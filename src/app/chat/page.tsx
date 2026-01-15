@@ -427,6 +427,7 @@ export default function ChatPage() {
 
         {/* Chat Interface (Logged In) */}
         {isLoggedIn && !authLoading && (
+        <>
         <Box sx={{
           display: { xs: 'block', md: 'grid' },
           gridTemplateColumns: { md: selectedExperience ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr) 0px' },
@@ -449,7 +450,6 @@ export default function ChatPage() {
           transitionProperty: 'max-width'
         }}>
           {/* Inline header row for chat list area */}
-          {/* removed duplicate top Contact Support button; FAB remains */}
           <Box ref={messagesContainerRef as any} sx={{ 
           overflowY: 'auto', 
             p: { xs: 1, sm: 2 },
@@ -480,11 +480,6 @@ export default function ChatPage() {
             const bubbleUrlMatch = !message.isUser ? displayContent.match(/https:\/\/app\.experiahub\.com\/signup\?next=\/chat&sid[^\s"']+/) : null;
             const finalSignupUrl = effectiveSignupUrl || (bubbleUrlMatch ? bubbleUrlMatch[0] : null);
             const showSignup = Boolean(finalSignupUrl);
-
-            console.log('Message content:', message.content);
-            console.log('Parsed response:', parsedResponse);
-            console.log('Has signup prompt:', hasSignupPrompt, 'ShowSignup:', showSignup);
-            console.log('Signup URL:', finalSignupUrl);
 
             // Prefer structured experiences; synthesize from text when missing
             const structuredList = (!message.isUser && Array.isArray((message as any).experiences)) ? (message as any).experiences : [];
@@ -671,13 +666,7 @@ export default function ChatPage() {
               <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.2s infinite' }} />
               <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.4s infinite' }} />
             </Box>
-            <style jsx>{`
-              @keyframes blink {
-                0% { opacity: 0.2; transform: translateY(0px); }
-                50% { opacity: 1; transform: translateY(-2px); }
-                100% { opacity: 0.2; transform: translateY(0px); }
-              }
-            `}</style>
+            
           </Paper>
         </Box>
       )}
@@ -763,6 +752,9 @@ export default function ChatPage() {
       <DetailsPanel exp={selectedExperience} onClose={handleCloseDetails} />
     </Box>
     </Box>
+    </>
+    )}
+    
     <Dialog
       open={listWidgetOpen}
       onClose={() => setListWidgetOpen(false)}
@@ -942,8 +934,6 @@ export default function ChatPage() {
   >
     <WallpaperIcon />
   </Fab>
-      </Box>
-      )}
       </Box>
     </BackgroundImage>
   );
