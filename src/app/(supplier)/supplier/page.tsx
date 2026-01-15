@@ -407,7 +407,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
                       onToast('Experience duplicated');
                     }}>Duplicate</Button>
                     <Button size="small" variant="outlined" sx={{ ml: 1, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }} onClick={()=>onEditDetails && onEditDetails(r)}>Add Details</Button>
-                    <Button size="small" variant="contained" disabled={!isPublishable(r)} sx={{ ml: 1, bgcolor: isPublishable(r)?'#010057':'#ccc', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Publish</Button>
+                    <Button size="small" variant="contained" sx={{ ml: 1, bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Publish</Button>
                   </>
                 )}
               </TableCell>
@@ -1703,7 +1703,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.15.2210_FIX_V17
+              Build: 2026.01.15.2220_FIX_V18
             </Typography>
           </Box>
         </Paper>
@@ -1742,6 +1742,7 @@ const PRIMARY_BUTTON_SX = {
           transition: 'all .3s ease',
           bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
           backdropFilter: isTransparent ? 'blur(12px)' : 'none',
+          color: '#0F172A',
           border: '1px solid rgba(255,255,255,0.4)'
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
@@ -1817,6 +1818,7 @@ const PRIMARY_BUTTON_SX = {
           color: '#3b4850',
           backdropFilter: isTransparent ? 'blur(12px)' : 'none',
           WebkitBackdropFilter: isTransparent ? 'blur(12px)' : 'none',
+          color: '#0F172A',
           boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
           transition: 'transform .25s ease, opacity .25s ease',
           border: isTransparent ? '1px solid rgba(255,255,255,0.4)' : 'none'
