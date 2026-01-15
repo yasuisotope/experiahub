@@ -942,7 +942,9 @@ export default function ChatPage() {
   >
     <WallpaperIcon />
   </Fab>
-  </Box>
-</BackgroundImage>
-);
+      </Box>
+      )}
+      </Box>
+    </BackgroundImage>
+  );
 }
