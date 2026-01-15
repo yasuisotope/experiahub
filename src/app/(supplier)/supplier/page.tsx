@@ -649,8 +649,15 @@ export default function SupplierPortalPage() {
         const topics = ['nature','city','ocean','mountains','forest','sky','beach','night','sunset','architecture'];
         const q = topics[Math.floor(Math.random() * topics.length)];
         const results = await searchUnsplash(q, 1, 30);
-        setBgResults(Array.isArray(results) ? results : []);
+        if (Array.isArray(results) && results.length > 0) {
+          setBgResults(results);
+        } else {
+           // Fallback if Unsplash key is invalid or quota exceeded
+          setBgResults(getCuratedBackgrounds()); 
+        }
         setBgPage(1);
+      } catch {
+        setBgResults(getCuratedBackgrounds());
       } finally {
         setBgLoading(false);
       }
@@ -961,7 +968,10 @@ const PRIMARY_BUTTON_SX = {
 
         // A. Fetch Onboarding Status (Primary Source for New Suppliers / Supabase)
         // Updated to v2 to bypass ghost workflows
-        const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status-v2?applicationId=${encodeURIComponent(appId)}`, { headers });
+        const statusRes = await fetch(`${N8N_BASE}/supplier/onboarding/status-v2?applicationId=${encodeURIComponent(appId)}`, { 
+          headers,
+          cache: 'no-store'
+        });
         
         if (statusRes.ok) {
           const fetchedStatus = await parseJsonSafe(statusRes);
@@ -1698,22 +1708,7 @@ const PRIMARY_BUTTON_SX = {
             Supplier Portal
           </Typography>
 
-          <Stack spacing={2} sx={{ mb: 2, px: 1 }}>
-            {/* Identity Card */}
-            {/* Identity Card */}
-            {/* Identity Card */}
-            <Box sx={{ mb: 3, py: 2, px: 1, border: '1px solid #E2E8F0', textAlign: 'center', borderRadius: 3, bgcolor: '#FFFFFF' }}>
-              <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
-                {user?.display_name || userDisplayName || statusData?.businessName || companyBilling.companyName || 'ExperiaHub Partner'}
-              </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', fontWeight: 600 }}>
-                {user?.email || statusData?.fullName || statusData?.email || 'Guest User'}
-              </Typography>
-              <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#94A3B8', display: 'block', mt: 0.5 }}>
-                ID: {appId || '—'}
-              </Typography>
-            </Box>
-          </Stack>
+
           
           <List>
             <ListItemButton selected={section==='welcome'} onClick={() => { setSection('welcome'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='welcome'?{ bgcolor:'#F0F4F6' }:{}) }}>
@@ -1732,6 +1727,20 @@ const PRIMARY_BUTTON_SX = {
               <ListItemText primary="Information" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='information'?700:500 }} />
             </ListItemButton>
           </List>
+
+          <Stack spacing={1} sx={{ mt: 2, mb: 2, px: 1, textAlign: 'center' }}>
+            {/* Updated Identity Section */}
+            <Box sx={{ py: 1, px: 1 }}>
+              <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 800, color: '#010057', lineHeight: 1.3, fontSize: '1.1rem', mb: 0.5 }}>
+                {user?.display_name || userDisplayName || statusData?.businessName || companyBilling.companyName || 'ExperiaHub Partner'}
+              </Typography>
+              {appId && (
+                <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', display: 'block', fontSize: '0.8rem', letterSpacing: '0.02em', fontWeight: 600 }}>
+                  ID: {appId}
+                </Typography>
+              )}
+            </Box>
+          </Stack>
 
 
           
