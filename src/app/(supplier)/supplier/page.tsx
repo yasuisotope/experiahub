@@ -697,6 +697,8 @@ const PRIMARY_BUTTON_SX = {
   const [hasBegun, setHasBegun] = React.useState(false);
   const [showAuth, setShowAuth] = React.useState(false);
   const [authTab, setAuthTab] = React.useState<'login' | 'signup'>('login');
+  // Transparency State - Moved to top level to avoid conditional hook error
+  const [isTransparent, setIsTransparent] = React.useState(true);
   const [username, setUsername] = React.useState('');
   
   // Force 'signup' tab if we have an appId (Onboarding Flow)
@@ -1701,7 +1703,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.15.2135_FIX_V11
+              Build: 2026.01.15.2140_FIX_V12
             </Typography>
           </Box>
         </Paper>
@@ -1711,7 +1713,7 @@ const PRIMARY_BUTTON_SX = {
   }
 
   // Transparency State
-  const [isTransparent, setIsTransparent] = React.useState(true);
+
 
   // Logged-in view with left sidebar
   return (
