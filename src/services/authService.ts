@@ -40,7 +40,7 @@ export class AuthService {
   private static readonly TOKEN_KEY = 'wp_token';
   private static readonly USER_KEY = 'wp_user';
 
-  static async login(username: string, password: string): Promise<AuthResponse> {
+  static async login(username: string, password: string, persist: boolean = true): Promise<AuthResponse> {
     try {
       const response = await fetch(`${this.AUTH_BASE_URL}`, {
         method: 'POST',
@@ -54,7 +54,7 @@ export class AuthService {
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.success && persist) {
         // Store authentication data
         localStorage.setItem(this.TOKEN_KEY, data.token);
         localStorage.setItem(this.USER_KEY, JSON.stringify({
@@ -76,7 +76,7 @@ export class AuthService {
     }
   }
 
-  static async register(username: string, email: string, password: string, applicationId?: string): Promise<RegisterResponse> {
+  static async register(username: string, email: string, password: string, applicationId?: string, persist: boolean = true): Promise<RegisterResponse> {
     try {
       const response = await fetch(`${this.AUTH_BASE_URL}/register`, {
         method: 'POST',
@@ -92,7 +92,7 @@ export class AuthService {
 
       const data = await response.json();
 
-      if (data.success && data.token) {
+      if (data.success && data.token && persist) {
         // Optionally store authentication data if registration returns a token
         localStorage.setItem(this.TOKEN_KEY, data.token);
         localStorage.setItem(this.USER_KEY, JSON.stringify({

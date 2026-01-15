@@ -12,7 +12,7 @@ import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItem
 import ClearIcon from '@mui/icons-material/Clear';
 import Image from 'next/image';
 import { Add as AddIcon, Edit as EditIcon, DeleteOutline as DeleteOutlineIcon, Close as CloseIcon, CheckCircleOutline as CheckCircleOutlineIcon, Apartment as ApartmentIcon, PersonOutline as PersonOutlineIcon, Collections as CollectionsIcon, ContentCopy as ContentCopyIcon, Share as ShareIcon, Save as SaveIcon, PlayArrow as PlayArrowIcon, Check as CheckIcon, Sync as SyncIcon, Key as KeyIcon, VpnKey as VpnKeyIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { useWordPressAuth } from '@/contexts/WordPressContext';
+import { useSupplierAuth } from '@/contexts/SupplierAuthContext';
 import { AuthService } from '@/services/authService';
 import OnboardingForm from '@/components/supplier/OnboardingForm';
 import SupportDialog from '@/components/support/SupportDialog';
@@ -603,7 +603,7 @@ function useSupplierAppIdInternal() {
 // function useSupplierAppId() removed as it was buggy. Logic is now inside component.
 
 export default function SupplierPortalPage() {
-  const { isLoggedIn, isLoading, logout, login } = useWordPressAuth() as any;
+  const { isLoggedIn, isLoading, logout, login } = useSupplierAuth() as any;
   const appId = useSupplierAppIdInternal();
   const [bg, setBg] = React.useState<PortalBackground | null>(null);
   const [bgAnchorEl, setBgAnchorEl] = React.useState<HTMLElement | null>(null);
