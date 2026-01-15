@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Trigger Vercel rebuild V11
   compiler: {
     emotion: true
   },
