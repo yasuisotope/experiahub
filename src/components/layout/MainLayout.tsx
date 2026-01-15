@@ -369,7 +369,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       )}
 
       {/* Main Content (no reserved right column; Chat page manages its own details grid) */}
-      <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', height: '100dvh', overflow: 'hidden', position: 'relative', zIndex: 2 }}>
+      <Box sx={{ flexGrow: 1, bgcolor: 'transparent', height: '100dvh', overflow: 'hidden', position: 'relative', zIndex: 2 }}>
         <Box sx={{ overflow: 'hidden' }}>{children}</Box>
       </Box>
 

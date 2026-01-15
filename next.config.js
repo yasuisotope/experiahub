@@ -5,6 +5,13 @@ const nextConfig = {
   },
   transpilePackages: ['@mui/material'],
   output: 'standalone',
+  /*
+  async rewrites() {
+    // Disabled to prevent infinite redirect loops until WORDPRESS_URL is confirmed.
+    // const WP_URL = process.env.WORDPRESS_URL || 'https://experiahub.com';
+    return [];
+  }
+  */
   poweredByHeader: false,
   reactStrictMode: false,
   swcMinify: true,
