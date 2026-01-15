@@ -216,7 +216,9 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     } else if (type === 'background') {
          // Need to fetch current generic metadata first to preserve other fields
          const { data: current } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
-         const nextMeta = { ...(current?.metadata || {}), background_url: payload.url };
+         // Payload might be { url: "..." } or { background: { url: "..." } } depending on caller
+         const freshUrl = payload.url || payload.background?.url;
+         const nextMeta = { ...(current?.metadata || {}), background_url: freshUrl };
          updates = { metadata: nextMeta };
     } else if (type === 'activities' && payload.activities) {
         const toUpsert: any[] = [];
