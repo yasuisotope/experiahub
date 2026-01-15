@@ -375,12 +375,12 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell sx={{ fontWeight: 'bold' }}>Title</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>City</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Duration (min)</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Price</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Bókun</TableCell>
-            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Title</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 'bold' }}>City</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Duration (min)</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Price</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Bókun</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -389,26 +389,28 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
             .sort((a,b)=>{ const va=(a as any)[sortKey]||''; const vb=(b as any)[sortKey]||''; const comp=String(va).localeCompare(String(vb),undefined,{numeric:true,sensitivity:'base'}); return sortDir==='asc'?comp:-comp; })
             .map((r) => (
             <TableRow key={r.id} hover>
-              <TableCell>{inlineId===r.id ? <TextField size="small" value={r.title} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,title:e.target.value}:x))} /> : r.title}</TableCell>
-              <TableCell>{inlineId===r.id ? <TextField size="small" value={r.city} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,city:e.target.value}:x))} /> : r.city}</TableCell>
-              <TableCell>{inlineId===r.id ? <TextField size="small" value={r.durationMinutes} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,durationMinutes:e.target.value}:x))} /> : r.durationMinutes}</TableCell>
-              <TableCell>{inlineId===r.id ? <TextField size="small" value={r.price||''} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,price:e.target.value}:x))} /> : (r.price||'')}</TableCell>
-              <TableCell>{r.bokunProductId ? <Typography variant="caption" sx={{ color: '#2e7d32' }}>{r.bokunProductId}</Typography> : <Typography variant="caption" sx={{ color: '#999' }}>—</Typography>}</TableCell>
-              <TableCell align="right">
+              <TableCell align="center">{inlineId===r.id ? <TextField size="small" value={r.title} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,title:e.target.value}:x))} /> : r.title}</TableCell>
+              <TableCell align="center">{inlineId===r.id ? <TextField size="small" value={r.city} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,city:e.target.value}:x))} /> : r.city}</TableCell>
+              <TableCell align="center">{inlineId===r.id ? <TextField size="small" value={r.durationMinutes} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,durationMinutes:e.target.value}:x))} /> : r.durationMinutes}</TableCell>
+              <TableCell align="center">{inlineId===r.id ? <TextField size="small" value={r.price||''} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,price:e.target.value}:x))} /> : (r.price||'')}</TableCell>
+              <TableCell align="center">{r.bokunProductId ? <Typography variant="caption" sx={{ color: '#2e7d32' }}>{r.bokunProductId}</Typography> : <Typography variant="caption" sx={{ color: '#999' }}>—</Typography>}</TableCell>
+              <TableCell align="center">
                 {inlineId===r.id ? (
                   <Button size="small" onClick={()=>setInlineId(null)}>Done</Button>
                 ) : (
-                  <>
-                    <IconButton onClick={() => { setInlineId(r.id); }} size="small"><EditIcon /></IconButton>
-                    <IconButton onClick={() => { if (window.confirm('Delete this experience?')) remove(r.id); }} size="small" color="error"><DeleteOutlineIcon /></IconButton>
-                    <Button size="small" variant="outlined" sx={{ ml: 1 }} onClick={() => {
+                  <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <IconButton onClick={() => { setInlineId(r.id); }} size="small"><EditIcon fontSize="small" /></IconButton>
+                      <IconButton onClick={() => { if (window.confirm('Delete this experience?')) remove(r.id); }} size="small" color="error"><DeleteOutlineIcon fontSize="small" /></IconButton>
+                    </Box>
+                    <Button size="small" variant="outlined" onClick={() => {
                       const copy = { ...r, id: `row_${Date.now()}` as string, title: r.title ? `${r.title} (Copy)` : 'Untitled (Copy)', bokunProductId: '' } as any;
                       setRows(rs => [copy, ...rs]);
                       onToast('Experience duplicated');
                     }}>Duplicate</Button>
-                    <Button size="small" variant="outlined" sx={{ ml: 1, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }} onClick={()=>onEditDetails && onEditDetails(r)}>Add Details</Button>
-                    <Button size="small" variant="contained" sx={{ ml: 1, bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Publish</Button>
-                  </>
+                    <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057', whiteSpace: 'nowrap' }} onClick={()=>onEditDetails && onEditDetails(r)}>Add Details</Button>
+                    <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Publish</Button>
+                  </Box>
                 )}
               </TableCell>
             </TableRow>
@@ -1702,8 +1704,8 @@ const PRIMARY_BUTTON_SX = {
                 ID: {appId || 'NONE'}
               </Typography>
             </Stack>
-            <Typography variant="caption" sx={{ display: 'block', color: '#CBD5E1' }}>
-              Build: 2026.01.15.2220_FIX_V18
+            <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
+              Build: 2026.01.15.2230_FIX_V19
             </Typography>
           </Box>
         </Paper>
