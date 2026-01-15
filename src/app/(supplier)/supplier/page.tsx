@@ -599,7 +599,7 @@ function useSupplierAppIdInternal() {
 // function useSupplierAppId() removed as it was buggy. Logic is now inside component.
 
 export default function SupplierPortalPage() {
-  const { isLoggedIn, isLoading, logout, login } = useSupplierAuth() as any;
+  const { isLoggedIn, isLoading, logout, login, user } = useSupplierAuth() as any;
   const appId = useSupplierAppIdInternal();
   const [bg, setBg] = React.useState<PortalBackground | null>(null);
   const [bgAnchorEl, setBgAnchorEl] = React.useState<HTMLElement | null>(null);
@@ -1704,10 +1704,10 @@ const PRIMARY_BUTTON_SX = {
             {/* Identity Card */}
             <Box sx={{ mb: 3, py: 2, px: 1, border: '1px solid #E2E8F0', textAlign: 'center', borderRadius: 3, bgcolor: '#FFFFFF' }}>
               <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
-                {statusData?.businessName || 'ExperiaHub Partner'}
+                {user?.display_name || userDisplayName || statusData?.businessName || companyBilling.companyName || 'ExperiaHub Partner'}
               </Typography>
               <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', fontWeight: 600 }}>
-                {statusData?.fullName || statusData?.email || 'Guest User'}
+                {user?.email || statusData?.fullName || statusData?.email || 'Guest User'}
               </Typography>
               <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#94A3B8', display: 'block', mt: 0.5 }}>
                 ID: {appId || '—'}
