@@ -348,28 +348,55 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         
         // 1. Upsert existing
         // 1. Update Existing (Sequential to avoid 'No suitable key' bulk error)
-        // We use UPDATE instead of UPSERT because we know ID exists.
-        // If ID doesn't exist (e.g. wiped DB), this will just fail to update (count=0), which is safer than crashing.
+        // Helper for Admin Fallback
+        const getAdminClient = () => {
+             const sk = process.env.SUPABASE_SERVICE_ROLE_KEY;
+             if (!sk) return null;
+             return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, sk, {
+                auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+             });
+        };
+
         for (const row of toUpsert) {
-             const { data, error } = await supabase
+             let { data, error } = await supabase
                 .from('experiences')
                 .update(row)
                 .eq('id', row.id)
                 .select();
              
+             // RETRY WITH ADMIN CLIENT IF JWT ERROR
+             if (error && (error.message?.includes('No suitable key') || error.message?.includes('signature'))) {
+                 console.warn(`[N8N Proxy] Retrying Update ${row.id} with Admin Client due to JWT error...`);
+                 const admin = getAdminClient();
+                 if (admin) {
+                     const retry = await admin.from('experiences').update(row).eq('id', row.id).select();
+                     data = retry.data;
+                     error = retry.error;
+                 }
+             }
+
              if (error) {
                  console.error('[N8N Proxy] Update Error:', error);
                  return { success: false, error: error.message };
              }
 
-                // If row didn't exist, UPDATE returns 0 rows (data=[]). We must INSERT it.
+             // If row didn't exist, UPDATE returns 0 rows (data=[]). We must INSERT it.
              if (!data || data.length === 0) {
                  console.log(`[N8N Proxy] Row ${row.id} not found for update, inserting instead.`);
-                 const { error: insertError } = await supabase.from('experiences').insert(row);
+                 let { error: insertError } = await supabase.from('experiences').insert(row);
+                 
+                 // RETRY WITH ADMIN CLIENT
+                 if (insertError && (insertError.message?.includes('No suitable key') || insertError.message?.includes('signature'))) {
+                     console.warn(`[N8N Proxy] Retrying Insert ${row.id} with Admin Client...`);
+                     const admin = getAdminClient();
+                     if (admin) {
+                         const retryI = await admin.from('experiences').insert(row);
+                         insertError = retryI.error;
+                     }
+                 }
+
                  if (insertError) {
                      console.error('[N8N Proxy] Fallback Insert Error:', insertError);
-                     // IGNORE "No suitable key" error if using Service Key and just return success? No, data won't be saved.
-                     // But we can try to insert without user_id?
                      return { success: false, error: insertError.message };
                  }
              }
@@ -378,7 +405,19 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // 2. Insert new
         const idMappings: Record<string, string> = {};
         if (toInsert.length > 0) {
-            const { data, error } = await supabase.from('experiences').insert(toInsert).select('id, raw_data');
+            let { data, error } = await supabase.from('experiences').insert(toInsert).select('id, raw_data');
+            
+            // RETRY WITH ADMIN CLIENT
+            if (error && (error.message?.includes('No suitable key') || error.message?.includes('signature'))) {
+                  console.warn(`[N8N Proxy] Retrying Bulk Insert with Admin Client...`);
+                  const admin = getAdminClient();
+                  if (admin) {
+                      const retry = await admin.from('experiences').insert(toInsert).select('id, raw_data');
+                      data = retry.data;
+                      error = retry.error;
+                  }
+            }
+
             if (error) {
                  console.error('[N8N Proxy] Insert Error:', error);
                  return { success: false, error: error.message };
