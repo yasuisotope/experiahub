@@ -57,14 +57,8 @@ export default function BookingsView() {
 
   // Computed KPIs based on filtered bookings
   const filteredBookings = bookings.filter(b => {
-    const bookingDate = new Date(b.date);
-    const now = new Date();
-    const cutoff = new Date();
-    cutoff.setMonth(now.getMonth() + timeRange);
-    // Allow seeing past bookings in calendar? Usually yes. But let's filter for KPIs.
-    // For Calendar, we might want to show EVERYTHING.
-    // Let's apply filter for both for consistency, or maybe loose filter for Calendar.
-    return true; // Show all for now, filter logic handles visual range
+    // For Calendar, might want fewer filters, but for KPI alignment, stick to timeRange
+    return true; 
   });
 
   // KPI calculations restricted to range
@@ -73,6 +67,7 @@ export default function BookingsView() {
       const now = new Date();
       const cutoff = new Date();
       cutoff.setMonth(now.getMonth() + timeRange);
+      // Simple range check
       return d >= now && d <= cutoff;
   });
 
@@ -255,7 +250,47 @@ export default function BookingsView() {
                         />
                     </Box>
                 )}
-      </Paper>
+            </Paper>
+          </Grid>
+          
+          {/* Side Panel: Activity & Revenue */}
+          <Grid item xs={12} lg={4}>
+             <Stack spacing={3}>
+                 {/* Revenue Trend Placeholder */}
+                 <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: 'white', border: '1px solid #E2E8F0' }}>
+                     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+                         <TrendingUpIcon sx={{ color: '#010057' }} />
+                         <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Monthly Revenue</Typography>
+                     </Stack>
+                     <Box sx={{ height: 100, display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+                         {[40, 65, 30, 80, 55, 90].map((h, i) => (
+                             <Box key={i} sx={{ flex: 1, bgcolor: i===5 ? '#010057' : '#E2E8F0', height: `${h}%`, borderRadius: '4px 4px 0 0', transition: 'all .3s' }} />
+                         ))}
+                     </Box>
+                     <Typography variant="caption" sx={{ display:'block', mt:1, textAlign:'center', color:'#64748B', fontFamily:'Nunito, sans-serif' }}>Last 6 months performance</Typography>
+                 </Paper>
+
+                 {/* Recent Activity */}
+                 <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: 'white', border: '1px solid #E2E8F0' }}>
+                    <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Recent Activity</Typography>
+                    <Stack spacing={2}>
+                        {RECENT_ACTIVITY.map((act, i) => (
+                            <Box key={i} sx={{ display:'flex', gap: 2 }}>
+                                <Box sx={{ 
+                                    width: 8, height: 8, borderRadius: '50%', mt: 0.8,
+                                    bgcolor: act.type === 'booking' ? '#10B981' : act.type === 'cancel' ? '#EF4444' : '#3B82F6' 
+                                }} />
+                                <Box>
+                                    <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, color: '#334155' }}>{act.text}</Typography>
+                                    <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#94A3B8' }}>{act.time}</Typography>
+                                </Box>
+                            </Box>
+                        ))}
+                    </Stack>
+                 </Paper>
+             </Stack>
+          </Grid>
+      </Grid>
 
       {/* Details Dialog */}
       <Dialog open={!!selectedEvent} onClose={()=>setSelectedEvent(null)} maxWidth="sm" fullWidth>
@@ -306,7 +341,6 @@ export default function BookingsView() {
              )}
         </DialogActions>
       </Dialog>
-
     </Box>
   );
 }
