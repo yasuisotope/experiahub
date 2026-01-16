@@ -486,9 +486,9 @@ export default function BookingsView() {
                             plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
                             headerToolbar={{
-                                left: 'prev,next today',
-                                center: 'title',
-                                right: ''
+                                left: 'title',
+                                center: '',
+                                right: 'prev,next today'
                             }}
                             events={calendarEvents}
                             eventClick={(info) => {
@@ -525,9 +525,39 @@ export default function BookingsView() {
                          <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Monthly Revenue</Typography>
                      </Stack>
                      <Box sx={{ height: 100, display: 'flex', alignItems: 'flex-end', gap: 1 }}>
-                         {[40, 65, 30, 80, 55, 90].map((h, i) => (
-                             <Box key={i} sx={{ flex: 1, bgcolor: i===5 ? '#010057' : '#E2E8F0', height: `${h}%`, borderRadius: '4px 4px 0 0', transition: 'all .3s' }} />
-                         ))}
+                         {(() => {
+                            // Dynamic Last 6 Months Revenue
+                            const months = [];
+                            const today = new Date();
+                            // Generate last 6 months (inclusive current)
+                            for (let i = 5; i >= 0; i--) {
+                                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                                months.push(d);
+                            }
+                            
+                            const data = months.map(m => {
+                                const revenue = kpiBookings
+                                    .filter(b => {
+                                        const bd = new Date(b.date);
+                                        return bd.getMonth() === m.getMonth() && bd.getFullYear() === m.getFullYear() && b.status !== 'Cancelled';
+                                    })
+                                    .reduce((sum, b) => sum + Number(b.price), 0);
+                                return { month: m.toLocaleString('default', { month: 'short' }), revenue };
+                            });
+                            
+                            const maxRev = Math.max(...data.map(d => d.revenue), 100); // Baseline scale
+
+                            return data.map((d, i) => (
+                                <Box key={i} title={`${d.month}: $${d.revenue.toLocaleString()}`} sx={{ 
+                                    flex: 1, 
+                                    bgcolor: i === 5 ? '#010057' : '#E2E8F0', 
+                                    height: `${Math.max((d.revenue / maxRev) * 100, 10)}%`, 
+                                    borderRadius: '4px 4px 0 0', 
+                                    transition: 'all .3s',
+                                    '&:hover': { bgcolor: '#C5A059' }
+                                }} />
+                            ));
+                         })()}
                      </Box>
                      <Typography variant="caption" sx={{ display:'block', mt:1, textAlign:'center', color:'#64748B', fontFamily:'Nunito, sans-serif' }}>Last 6 months performance</Typography>
                  </Paper>
