@@ -368,7 +368,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
       </Box>
         </Stack>
         <Stack direction="row" spacing={1}>
-          <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#C5A059', '&:hover': { bgcolor: '#B08D45' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#fff', fontWeight: 700 }}>Add</Button>
+          <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#C5A059' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#fff', fontWeight: 700 }}>Add</Button>
           <Button variant="outlined" onClick={saveAll} disabled={saving} sx={{ borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>{saving ? 'Saving…' : 'Save all'}</Button>
           {undo && (
             <Button size="small" onClick={() => { setRows((rs)=>[undo.row, ...rs]); setUndo(null); setTimeout(()=>onToast('Restored'), 0); }}>Undo</Button>
