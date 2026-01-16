@@ -240,8 +240,16 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             const row: any = {
                 application_id: appId,
                 title: a.title,
-                raw_data: { ...a, _temp_id: a.id, Build: '2026.01.15.2425_FIX_V28' }, // Store temp ID to map back
-                updated_at: new Date().toISOString()
+                raw_data: { ...a, _temp_id: a.id, Build: '2026.01.16.2505_FIX_V34' }, // Updated Build ID
+                updated_at: new Date().toISOString(),
+                // Explicit Mapping to ensure data appears in Supabase Table Views and isn't just hidden in raw_data
+                city: a.city || null,
+                description: a.summary || a.description || null, // Map 'summary' to 'description'
+                duration_minutes: a.durationMinutes ? parseInt(a.durationMinutes) : null,
+                price: a.price ? parseFloat(a.price) : (a.baseRate ? parseFloat(a.baseRate) : null),
+                currency: a.currency || null,
+                bokun_product_id: a.bokunProductId || null,
+                category: a.category || null
             };
             if (isUUID(a.id)) {
                 row.id = a.id;
