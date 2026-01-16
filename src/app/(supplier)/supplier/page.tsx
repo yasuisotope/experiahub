@@ -1146,6 +1146,10 @@ const PRIMARY_BUTTON_SX = {
   React.useEffect(() => {
     const current = experiences.find(e => e.id === selectedExperienceId);
     if (current) {
+        // Prevent overwriting form data if we are just dealing with an ID update/sync for the SAME experience
+        // We assume 'details.id' is kept in sync via saveAllExperiences when IDs change.
+        if (details?.id === current.id) return;
+
       const next: any = { ...current };
       if ((!next.currency || !String(next.currency).trim()) && defaultCurrency) next.currency = defaultCurrency;
       if ((!next.timeZone || !String(next.timeZone).trim()) && defaultTimeZone) next.timeZone = defaultTimeZone;
@@ -1725,7 +1729,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
-              Build: 2026.01.15.2400_FIX_V26
+              Build: 2026.01.15.2415_FIX_V27
             </Typography>
           </Box>
         </Paper>
