@@ -1308,11 +1308,19 @@ const PRIMARY_BUTTON_SX = {
     const loadRemote = async () => {
       if (!appId) return;
       try {
-        const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`);
+        const timestamp = new Date().getTime();
+        // FORCE CACHE BUSTING: Add timestamp and headers to prevent stale reads
+        const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}&_t=${timestamp}`, {
+            method: 'GET',
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0' }
+        });
         const json = await parseJsonSafe(res);
-        if (json?.success && Array.isArray(json.activities)) {
-          const remoteRows = json.activities.map((a: any, i: number) => ({
-            id: a.id || `row_${i}`,
+        if (json?.activities) {
+          const remoteRows = json.activities.map((a: any) => ({
+            id: a.id || `row_${Math.random().toString(36).substr(2, 9)}`,
+            // Extract Build ID if present for debugging
+            _build: a.Build,
             title: a.title || '',
             summary: a.summary || a.description || '',
             city: a.city || '',
