@@ -1725,7 +1725,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
-              Build: 2026.01.15.2330_FIX_V24
+              Build: 2026.01.15.2345_FIX_V25
             </Typography>
           </Box>
         </Paper>
@@ -1742,9 +1742,11 @@ const PRIMARY_BUTTON_SX = {
     // <BackgroundImage ...> replaced with fragment or direct Box to fix build error
     <>
       <Box sx={{
-        minHeight: '100vh',
-        py: 6,
+        minHeight: '100vh', // Ensure full viewport background
+        height: '100vh',
+        py: 4, // Reduce padding to fit content better
         px: 2,
+        overflow: 'hidden', // Prevent body scroll
         bgcolor: 'rgba(255, 255, 255, 0.25)',
         backgroundImage: bg?.url ? `url("${bg.url}")` : 'radial-gradient(circle at 20% 10%, rgba(1, 0, 87, 0.05), transparent 45%), radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 40%)',
         backgroundSize: bg?.url ? 'cover' : undefined,
@@ -1752,19 +1754,15 @@ const PRIMARY_BUTTON_SX = {
         backgroundAttachment: bg?.url ? 'fixed' : undefined,
         backgroundRepeat: 'no-repeat'
       }}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '240px 1fr' }, gap: 3, maxWidth: 1280, mx: 'auto' }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '250px 1fr' }, gap: 3, maxWidth: 1400, mx: 'auto', height: '100%' }}>
         {/* Sidebar */}
         <Paper sx={{ 
           p: 3, 
           borderRadius: 2, 
-          mt: '10vh',
-          minHeight: '75vh',
-          height: '100%', // Stretch to match grid height
+          height: 'calc(100% - 32px)', // Fill grid height minus padding correction
           display: 'flex',
           flexDirection: 'column', 
-          // position: 'sticky', // Remove sticky to allow natural height matching in grid
-          // top: '10vh', 
-          width: { md: 250 }, 
+          width: '100%', 
           transition: 'all .3s ease',
           bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
           backdropFilter: isTransparent ? 'blur(12px)' : 'none',
@@ -1841,10 +1839,9 @@ const PRIMARY_BUTTON_SX = {
         {/* Main content */}
         <Paper sx={{
           p: 3,
-          borderRadius: 2, // Match border radius
-          mt: '10vh', // Match top margin
-          minHeight: '75vh', // Match min height
-          height: '100%', // Stretch to match grid height
+          borderRadius: 2,
+          height: 'calc(100% - 32px)', // Match sidebar height
+          overflowY: 'auto', // Enable scroll within the card
           bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
           color: '#3b4850',
           backdropFilter: isTransparent ? 'blur(12px)' : 'none',
