@@ -117,6 +117,11 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  }
                  return NextResponse.json({ success: true, activities: [], stub: true });
              }
+
+             // INTERCEPT Media Get 404 -> Return empty lists to prevent UI errors
+             if (targetUrl.includes('supplier/media/get')) {
+                 return NextResponse.json({ success: true, photosDriveUrls: [], videosDriveUrls: [], stub: true, direct: true });
+             }
         }
 
         // FAIL-SAFE STUB: If Save returns 500 (DB Schema error), return Fake Success to unblock UI
