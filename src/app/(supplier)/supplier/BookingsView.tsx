@@ -1,15 +1,20 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Box, Typography, Stack, Grid, Paper, Select, MenuItem, FormControl, InputLabel, 
   Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton, Button,
-  Card, CardContent
+  Card, CardContent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import GroupIcon from '@mui/icons-material/Group';
 import EventIcon from '@mui/icons-material/Event';
 import CancelIcon from '@mui/icons-material/Cancel';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import listPlugin from '@fullcalendar/list';
+import interactionPlugin from '@fullcalendar/interaction';
 
 // Mock Data Types
 interface Booking {
@@ -32,8 +37,10 @@ const MOCK_BOOKINGS: Booking[] = [
 ];
 
 export default function BookingsView() {
-  const [timeRange, setTimeRange] = useState<number>(1); // Months
+  const [timeRange, setTimeRange] = useState<number>(6); // Default 6 Months
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
+  const [selectedEvent, setSelectedEvent] = useState<Booking | null>(null);
 
   // Computed KPIs based on filtered bookings
   const filteredBookings = bookings.filter(b => {
@@ -41,12 +48,33 @@ export default function BookingsView() {
     const now = new Date();
     const cutoff = new Date();
     cutoff.setMonth(now.getMonth() + timeRange);
-    return bookingDate >= now && bookingDate <= cutoff;
+    // Allow seeing past bookings in calendar? Usually yes. But let's filter for KPIs.
+    // For Calendar, we might want to show EVERYTHING.
+    // Let's apply filter for both for consistency, or maybe loose filter for Calendar.
+    return true; // Show all for now, filter logic handles visual range
   });
 
-  const totalRevenue = filteredBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.price, 0);
-  const totalPax = filteredBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.pax, 0);
-  const totalCount = filteredBookings.filter(b => b.status !== 'Cancelled').length;
+  // KPI calculations restricted to range
+  const kpiBookings = bookings.filter(b => {
+      const d = new Date(b.date);
+      const now = new Date();
+      const cutoff = new Date();
+      cutoff.setMonth(now.getMonth() + timeRange);
+      return d >= now && d <= cutoff;
+  });
+
+  const totalRevenue = kpiBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.price, 0);
+  const totalPax = kpiBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.pax, 0);
+  const totalCount = kpiBookings.filter(b => b.status !== 'Cancelled').length;
+
+  const calendarEvents = bookings.map(b => ({
+      id: b.id,
+      title: `${b.customerName} (${b.pax})`,
+      date: b.date,
+      backgroundColor: b.status === 'Confirmed' ? '#10B981' : b.status === 'Cancelled' ? '#EF4444' : '#F59E0B',
+      borderColor: 'transparent',
+      extendedProps: { ...b }
+  }));
 
   return (
     <Box sx={{ p: 4, bgcolor: 'transparent', minHeight: '80vh' }}>
@@ -56,19 +84,32 @@ export default function BookingsView() {
         <Typography variant="h4" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>
           Bookings Dashboard
         </Typography>
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <Select 
-            value={timeRange} 
-            onChange={(e) => setTimeRange(Number(e.target.value))}
-            sx={{ bgcolor: 'white', borderRadius: 1, fontFamily: 'Nunito, sans-serif' }}
-          >
-            <MenuItem value={1}>Next 1 Month</MenuItem>
-            <MenuItem value={2}>Next 2 Months</MenuItem>
-            <MenuItem value={3}>Next 3 Months</MenuItem>
-            <MenuItem value={6}>Next 6 Months</MenuItem>
-            <MenuItem value={12}>Next 12 Months</MenuItem>
-          </Select>
-        </FormControl>
+        
+        <Stack direction="row" spacing={2}>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+            <Select 
+                value={timeRange} 
+                onChange={(e) => setTimeRange(Number(e.target.value))}
+                sx={{ bgcolor: 'white', borderRadius: 1, fontFamily: 'Nunito, sans-serif' }}
+            >
+                <MenuItem value={1}>Next 1 Month</MenuItem>
+                <MenuItem value={3}>Next 3 Months</MenuItem>
+                <MenuItem value={6}>Next 6 Months</MenuItem>
+                <MenuItem value={12}>Next 12 Months</MenuItem>
+            </Select>
+            </FormControl>
+
+            <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(e, v) => v && setViewMode(v)}
+                size="small"
+                sx={{ bgcolor:'white', borderRadius:1 }}
+            >
+                <ToggleButton value="list"><FormatListBulletedIcon /></ToggleButton>
+                <ToggleButton value="calendar"><CalendarMonthIcon /></ToggleButton>
+            </ToggleButtonGroup>
+        </Stack>
       </Stack>
 
       {/* KPI Cards */}
@@ -77,8 +118,9 @@ export default function BookingsView() {
           <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: 'white', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box sx={{ p: 1.5, borderRadius: '50%', bgcolor: '#EFF6FF', color: '#010057' }}><EventIcon /></Box>
             <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Total Bookings</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Active Bookings</Typography>
               <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#0F172A' }}>{totalCount}</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
             </Box>
           </Paper>
         </Grid>
@@ -90,6 +132,7 @@ export default function BookingsView() {
               <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#0F172A' }}>
                 ¥{totalRevenue.toLocaleString()}
               </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
             </Box>
           </Paper>
         </Grid>
@@ -99,13 +142,15 @@ export default function BookingsView() {
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Passengers (Pax)</Typography>
               <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#0F172A' }}>{totalPax}</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
             </Box>
           </Paper>
         </Grid>
       </Grid>
 
-      {/* Booking Table */}
-      <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+      {/* View Content */}
+      <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #E2E8F0', overflow: 'hidden', minHeight: 400, bgcolor:'white', p: viewMode==='calendar'?2:0 }}>
+        {viewMode === 'list' ? (
         <Table>
           <TableHead sx={{ bgcolor: '#F8FAFC' }}>
             <TableRow>
@@ -120,7 +165,7 @@ export default function BookingsView() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredBookings.length > 0 ? filteredBookings.map((b) => (
+            {kpiBookings.length > 0 ? kpiBookings.map((b) => (
               <TableRow key={b.id} hover>
                 <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, color: '#010057' }}>{b.id}</TableCell>
                 <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.experienceTitle}</TableCell>
@@ -164,16 +209,83 @@ export default function BookingsView() {
             )}
           </TableBody>
         </Table>
+        ) : (
+            <Box sx={{ fontFamily: 'Nunito, sans-serif' }}>
+                 <style dangerouslySetInnerHTML={{__html: `
+                    .fc-toolbar-title { font-family: 'Agrandir', serif !important; color: #010057; }
+                    .fc-button-primary { background-color: #010057 !important; border-color: #010057 !important; }
+                    .fc-button-active { background-color: #C5A059 !important; border-color: #C5A059 !important; }
+                    .fc-daygrid-day-number { font-family: 'Nunito', sans-serif; color: #334155; }
+                    .fc-col-header-cell-cushion { font-family: 'Nunito', sans-serif; color: #64748B; font-weight: 700; }
+                 `}} />
+                 <FullCalendar
+                    plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
+                    initialView="dayGridMonth"
+                    headerToolbar={{
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,listWeek'
+                    }}
+                    events={calendarEvents}
+                    eventClick={(info) => {
+                        const b = info.event.extendedProps as Booking;
+                        setSelectedEvent(b);
+                    }}
+                    height="auto"
+                 />
+            </Box>
+        )}
       </Paper>
 
-      {/* Calendar Placeholder (Visual) */}
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 4, mb: 2 }}>
-        <CalendarMonthIcon sx={{ color: '#010057' }} />
-        <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', color: '#010057', fontWeight: 600 }}>Booking Calendar</Typography>
-      </Stack>
-      <Paper elevation={0} sx={{ p:4, textAlign:'center', border: '1px dashed #CBD5E1', borderRadius: 2, bgcolor: '#F8FAFC' }}>
-         <Typography variant="body1" color="text.secondary">Calendar View Coming Soon...</Typography>
-      </Paper>
+      {/* Details Dialog */}
+      <Dialog open={!!selectedEvent} onClose={()=>setSelectedEvent(null)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontFamily: 'Agrandir, serif', borderBottom: '1px solid #eee' }}>Booking Details</DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+            {selectedEvent && (
+                <Stack spacing={2} sx={{ mt: 2 }}>
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography color="text.secondary">Booking ID:</Typography>
+                        <Typography fontWeight={700}>{selectedEvent.id}</Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography color="text.secondary">Status:</Typography>
+                        <Chip label={selectedEvent.status} size="small" color={selectedEvent.status==='Confirmed'?'success':selectedEvent.status==='Cancelled'?'error':'warning'} />
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography color="text.secondary">Experience:</Typography>
+                        <Typography fontWeight={700}>{selectedEvent.experienceTitle}</Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography color="text.secondary">Customer:</Typography>
+                        <Typography fontWeight={700}>{selectedEvent.customerName}</Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography color="text.secondary">Date:</Typography>
+                        <Typography fontWeight={700}>{new Date(selectedEvent.date).toLocaleDateString()}</Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography color="text.secondary">Pax:</Typography>
+                        <Typography fontWeight={700}>{selectedEvent.pax} people</Typography>
+                    </Stack>
+                     <Stack direction="row" justifyContent="space-between">
+                        <Typography color="text.secondary">Total Price:</Typography>
+                        <Typography fontWeight={700}>{selectedEvent.currency} {selectedEvent.price.toLocaleString()}</Typography>
+                    </Stack>
+                </Stack>
+            )}
+        </DialogContent>
+        <DialogActions sx={{ borderTop: '1px solid #eee', p: 2 }}>
+             <Button onClick={()=>setSelectedEvent(null)} sx={{ color: '#64748B' }}>Close</Button>
+             {selectedEvent?.status !== 'Cancelled' && (
+                 <Button color="error" variant="outlined" onClick={() => {
+                     if(window.confirm('Cancel booking?')){
+                         setBookings(prev => prev.map(x => x.id === selectedEvent!.id ? { ...x, status: 'Cancelled' } : x));
+                         setSelectedEvent(null);
+                     }
+                 }}>Cancel Booking</Button>
+             )}
+        </DialogActions>
+      </Dialog>
 
     </Box>
   );
