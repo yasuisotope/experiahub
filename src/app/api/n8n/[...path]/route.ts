@@ -129,20 +129,29 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  return NextResponse.json({ success: true, background: bg?.url || null, stub: true, direct: true });
              }
              if (path.includes('supplier/activities/list')) {
-                 console.log('[N8N Proxy] Intercepting List Activities request');
+                 console.log('[N8N Proxy] INTERCEPTION HIT for List Activities');
                  // Try getting appId from targetUrl first
                  let appId = new URL(targetUrl).searchParams.get('applicationId');
                  // If not found, try getting from the incoming request URL (req.nextUrl)
                  if (!appId) {
                      appId = request.nextUrl.searchParams.get('applicationId');
                  }
+                 console.log(`[N8N Proxy] AppID identified: ${appId}`);
 
                  if (appId) {
                     const acts = await handleDirectListActivities(appId, authHeader);
-                    return NextResponse.json({ success: true, activities: acts || [], stub: true, direct: true });
+                    console.log(`[N8N Proxy] Retrieved acts type: ${typeof acts}, isArray: ${Array.isArray(acts)}`);
+                    return NextResponse.json({ 
+                        success: true, 
+                        activities: acts || [], 
+                        stub: true, 
+                        direct: true,
+                        debug_hit: true,
+                        count: acts?.length 
+                    });
                  }
                  console.warn('[N8N Proxy] Missing appId for activities list');
-                 return NextResponse.json({ success: true, activities: [], stub: true });
+                 return NextResponse.json({ success: true, activities: [], stub: true, debug_hit: true, error: 'No App ID' });
              }
 
              // INTERCEPT Media Get 404 -> Return empty lists to prevent UI errors
