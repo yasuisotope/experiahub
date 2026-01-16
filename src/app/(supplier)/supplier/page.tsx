@@ -1717,7 +1717,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
-              Build: 2026.01.15.2245_FIX_V20
+              Build: 2026.01.15.2255_FIX_V21
             </Typography>
           </Box>
         </Paper>
@@ -1747,12 +1747,14 @@ const PRIMARY_BUTTON_SX = {
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '240px 1fr' }, gap: 3, maxWidth: 1280, mx: 'auto' }}>
         {/* Sidebar */}
         <Paper sx={{ 
-          p: 2, 
-          borderRadius: 1, 
-          height: 'fit-content', 
+          p: 3, 
+          borderRadius: 2, 
+          height: { xs: 'auto', md: 'calc(100vh - 48px)' },
+          display: 'flex',
+          flexDirection: 'column', 
           position: 'sticky', 
           top: 24, 
-          width: { md: 230 }, 
+          width: { md: 250 }, 
           transition: 'all .3s ease',
           bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
           backdropFilter: isTransparent ? 'blur(12px)' : 'none',
