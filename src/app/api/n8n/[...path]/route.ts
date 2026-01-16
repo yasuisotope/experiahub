@@ -241,6 +241,22 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // Helper to check for valid UUID (simple regex)
         const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
+        // ATTEMPT TO GET USER ID for RLS COMPLIANCE
+        let userId: string | null = null;
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            userId = user?.id || null;
+            if (!userId && authHeader) {
+                // specific hack if getUser fails but we have token (sometimes needed for edge)
+                const token = authHeader.replace('Bearer ', '');
+                const { data: { user: u2 } } = await supabase.auth.getUser(token);
+                userId = u2?.id || null;
+            }
+        } catch (e) {
+             console.warn('[N8N Proxy] Could not fetch user_id for RLS ownership:', e);
+        }
+        console.log(`[N8N Proxy] Saving with User ID: ${userId || 'ANONYMOUS/SERVICE'}`);
+
         payload.activities.forEach((a: any) => {
             const rawObj = { 
                 ...a, 
@@ -253,12 +269,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 perfectMatch: a.perfectMatch || null,
                 threeWords: a.threeWords || null,
                 _temp_id: a.id, 
-                Build: 'V59_FORCE_STRINGIFY' 
+                Build: 'V66_USER_ID_FIX' 
             };
 
             const row: any = {
                 application_id: appId,
                 title: a.title,
+                user_id: userId, // CRITICAL: Assign ownership
                 // FORCE STRINGIFY: Safest overlap for TEXT vs JSONB columns. prevents [object Object].
                 raw_data: JSON.stringify(rawObj),
                 updated_at: new Date().toISOString(),
@@ -274,6 +291,8 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             
             console.log(`[N8N Proxy] Processing Activity ${a.id}:`, { title: a.title, dataSize: row.raw_data.length });
             if (isUUID(a.id)) {
+                // Don't overwrite owner on update unless necessary? 
+                // Actually, if we are editing, we are the owner or admin.
                 row.id = a.id;
                 toUpsert.push(row);
             } else {
