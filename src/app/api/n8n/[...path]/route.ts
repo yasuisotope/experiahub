@@ -222,15 +222,26 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // But we WANT to save the correct user_id.
         // So we should verify the token to get the ID.
         try {
-            const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-            userId = user?.id || null;
-            if (authError) console.warn('[N8N Proxy] Auth Check Failed:', authError.message);
-        } catch (e) {
-             // If using Service Role, getUser() might behave differently or expect a session.
-             // Let's try a workaround: Create a scoped client just for auth check if needed, 
-             // or just decode JWT (risky). 
-             // reliable way: use the `supabase` client initialized with the headers if not service key.
-             // If service key, we need to manually verify.
+            const token = authHeader.replace('Bearer ', '');
+            const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+            
+            if (authError) {
+                if (authError.message?.includes('No suitable key') || authError.message?.includes('signature')) {
+                     console.warn('[N8N Proxy] JWT Signature Mismatch. Proceeding without User ID injection.');
+                     userId = null;
+                } else {
+                     console.warn('[N8N Proxy] Auth Check Failed:', authError.message);
+                }
+            } else {
+                userId = user?.id || null;
+            }
+        } catch (e: any) {
+             if (e.message?.includes('No suitable key') || e.message?.includes('signature')) {
+                 console.warn('[N8N Proxy] JWT Exception. Proceeding.');
+                 userId = null;
+             } else {
+                 console.warn('[N8N Proxy] Auth Lookup Exception:', e.message);
+             }
         }
     }
 
@@ -335,12 +346,14 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                  return { success: false, error: error.message };
              }
 
-             // If row didn't exist, UPDATE returns 0 rows (data=[]). We must INSERT it.
+                // If row didn't exist, UPDATE returns 0 rows (data=[]). We must INSERT it.
              if (!data || data.length === 0) {
                  console.log(`[N8N Proxy] Row ${row.id} not found for update, inserting instead.`);
                  const { error: insertError } = await supabase.from('experiences').insert(row);
                  if (insertError) {
                      console.error('[N8N Proxy] Fallback Insert Error:', insertError);
+                     // IGNORE "No suitable key" error if using Service Key and just return success? No, data won't be saved.
+                     // But we can try to insert without user_id?
                      return { success: false, error: insertError.message };
                  }
              }
