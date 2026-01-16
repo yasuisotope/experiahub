@@ -30,17 +30,18 @@ interface Booking {
   currency: string;
   status: 'Confirmed' | 'Pending' | 'Cancelled' | 'Completed';
   avatar?: string;
+  avatarUrl?: string;
 }
 
 const MOCK_BOOKINGS: Booking[] = [
-  { id: 'BK-1001', customerName: 'Alice Smith', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-02-15', pax: 2, price: 15000, currency: 'JPY', status: 'Confirmed', avatar: 'AS' },
-  { id: 'BK-1002', customerName: 'Bob Jones', experienceTitle: 'Samurai Experience', date: '2026-02-18', pax: 4, price: 40000, currency: 'JPY', status: 'Confirmed', avatar: 'BJ' },
-  { id: 'BK-1003', customerName: 'Charlie Brown', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-03-01', pax: 1, price: 7500, currency: 'JPY', status: 'Pending', avatar: 'CB' },
+  { id: 'BK-1001', customerName: 'Alice Smith', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-02-15', pax: 2, price: 15000, currency: 'JPY', status: 'Confirmed', avatar: 'AS', avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80' },
+  { id: 'BK-1002', customerName: 'Bob Jones', experienceTitle: 'Samurai Experience', date: '2026-02-18', pax: 4, price: 40000, currency: 'JPY', status: 'Confirmed', avatar: 'BJ', avatarUrl: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80' },
+  { id: 'BK-1003', customerName: 'Charlie Brown', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-03-01', pax: 1, price: 7500, currency: 'JPY', status: 'Pending', avatar: 'CB', avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' },
   { id: 'BK-1004', customerName: 'Diana Prince', experienceTitle: 'Hidden Shrine Walk', date: '2026-03-10', pax: 3, price: 12000, currency: 'JPY', status: 'Cancelled', avatar: 'DP' },
   { id: 'BK-1005', customerName: 'Evan Wright', experienceTitle: 'Samurai Experience', date: '2026-04-05', pax: 2, price: 20000, currency: 'JPY', status: 'Confirmed', avatar: 'EW' },
-  { id: 'BK-1006', customerName: 'Fiona Green', experienceTitle: 'Geisha District Tour', date: '2026-04-12', pax: 2, price: 18000, currency: 'JPY', status: 'Pending', avatar: 'FG' },
+  { id: 'BK-1006', customerName: 'Fiona Green', experienceTitle: 'Geisha District Tour', date: '2026-04-12', pax: 2, price: 18000, currency: 'JPY', status: 'Pending', avatar: 'FG', avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80' },
   { id: 'BK-1007', customerName: 'George Hill', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-05-01', pax: 6, price: 45000, currency: 'JPY', status: 'Confirmed', avatar: 'GH' },
-  { id: 'BK-1008', customerName: 'Hannah Lee', experienceTitle: 'Bamboo Forest Walk', date: '2026-05-20', pax: 2, price: 10000, currency: 'JPY', status: 'Confirmed', avatar: 'HL' },
+  { id: 'BK-1008', customerName: 'Hannah Lee', experienceTitle: 'Bamboo Forest Walk', date: '2026-05-20', pax: 2, price: 10000, currency: 'JPY', status: 'Confirmed', avatar: 'HL', avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80' },
 ];
 
 const RECENT_ACTIVITY = [
@@ -56,6 +57,7 @@ export default function BookingsView() {
   const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
   const [selectedEvent, setSelectedEvent] = useState<Booking | null>(null);
   const [isAddBookingOpen, setIsAddBookingOpen] = useState(false);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
   // Computed KPIs based on filtered bookings
   const filteredBookings = bookings.filter(b => {
@@ -85,6 +87,17 @@ export default function BookingsView() {
       borderColor: 'transparent',
       extendedProps: { ...b }
   }));
+
+  const handleOpenAdd = () => {
+      setEditingBooking(null);
+      setIsAddBookingOpen(true);
+  };
+
+  const handleOpenEdit = (booking: Booking) => {
+      setEditingBooking(booking);
+      setIsAddBookingOpen(true);
+      setSelectedEvent(null); // Close details if open
+  };
 
   return (
     <Box sx={{ p: 4, bgcolor: 'transparent', minHeight: '80vh' }}>
@@ -178,12 +191,12 @@ export default function BookingsView() {
                 </TableHead>
                 <TableBody>
                     {kpiBookings.length > 0 ? kpiBookings.map((b) => (
-                    <TableRow key={b.id} hover>
+                    <TableRow key={b.id} hover onClick={() => setSelectedEvent(b)} sx={{ cursor: 'pointer' }}>
                         <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, color: '#010057' }}>{b.id}</TableCell>
                         <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.experienceTitle}</TableCell>
                         <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>
                             <Stack direction="row" spacing={1} alignItems="center">
-                                <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: '#E2E8F0', color: '#64748B' }}>{b.avatar}</Avatar>
+                                <Avatar src={b.avatarUrl} sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: '#E2E8F0', color: '#64748B' }}>{b.avatar}</Avatar>
                                 <Typography variant="body2" sx={{ fontFamily:'Nunito, sans-serif' }}>{b.customerName}</Typography>
                             </Stack>
                         </TableCell>
@@ -202,21 +215,16 @@ export default function BookingsView() {
                         />
                         </TableCell>
                         <TableCell align="right">
-                            {b.status !== 'Cancelled' && (
-                                <Button 
-                                    size="small" 
-                                    color="error" 
-                                    startIcon={<CancelIcon />} 
-                                    onClick={() => {
-                                        if (window.confirm('Cancel this booking?')) {
-                                            setBookings(prev => prev.map(x => x.id === b.id ? { ...x, status: 'Cancelled' } : x));
-                                        }
-                                    }}
-                                    sx={{ textTransform:'none', fontFamily: 'Nunito, sans-serif' }}
-                                >
-                                    Cancel
-                                </Button>
-                            )}
+                           <Button 
+                                size="small"
+                                sx={{ color: '#64748B', minWidth: 0, p: 1 }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenEdit(b);
+                                }}
+                            >
+                                Edit
+                            </Button>
                         </TableCell>
                     </TableRow>
                     )) : (
@@ -262,7 +270,7 @@ export default function BookingsView() {
                  <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: 'white', border: '1px solid #E2E8F0' }}>
                      <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Quick Actions</Typography>
                      <Stack spacing={2}>
-                         <Button variant="outlined" startIcon={<EventIcon />} onClick={() => setIsAddBookingOpen(true)} sx={{ justifyContent: 'flex-start', fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#334155', textTransform: 'none', '&:hover': { borderColor: '#010057', bgcolor: '#F1F5F9' } }}>
+                         <Button variant="outlined" startIcon={<EventIcon />} onClick={handleOpenAdd} sx={{ justifyContent: 'flex-start', fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#334155', textTransform: 'none', '&:hover': { borderColor: '#010057', bgcolor: '#F1F5F9' } }}>
                              Manually Add Booking
                          </Button>
                          <Button variant="outlined" startIcon={<CalendarMonthIcon />} sx={{ justifyContent: 'flex-start', fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#334155', textTransform: 'none', '&:hover': { borderColor: '#010057', bgcolor: '#F1F5F9' } }}>
@@ -313,21 +321,20 @@ export default function BookingsView() {
         <DialogContent sx={{ pt: 3 }}>
             {selectedEvent && (
                 <Stack spacing={2} sx={{ mt: 2 }}>
+                    <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                        <Avatar src={selectedEvent.avatarUrl} sx={{ width: 64, height: 64, bgcolor: '#010057', fontSize: '1.5rem' }}>{selectedEvent.avatar}</Avatar>
+                        <Box>
+                            <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600 }}>{selectedEvent.customerName}</Typography>
+                             <Chip label={selectedEvent.status} size="small" color={selectedEvent.status==='Confirmed'?'success':selectedEvent.status==='Cancelled'?'error':'warning'} />
+                        </Box>
+                    </Stack>
                     <Stack direction="row" justifyContent="space-between">
                         <Typography color="text.secondary">Booking ID:</Typography>
                         <Typography fontWeight={700}>{selectedEvent.id}</Typography>
                     </Stack>
                     <Stack direction="row" justifyContent="space-between">
-                        <Typography color="text.secondary">Status:</Typography>
-                        <Chip label={selectedEvent.status} size="small" color={selectedEvent.status==='Confirmed'?'success':selectedEvent.status==='Cancelled'?'error':'warning'} />
-                    </Stack>
-                    <Stack direction="row" justifyContent="space-between">
                         <Typography color="text.secondary">Experience:</Typography>
                         <Typography fontWeight={700}>{selectedEvent.experienceTitle}</Typography>
-                    </Stack>
-                    <Stack direction="row" justifyContent="space-between">
-                        <Typography color="text.secondary">Customer:</Typography>
-                        <Typography fontWeight={700}>{selectedEvent.customerName}</Typography>
                     </Stack>
                     <Stack direction="row" justifyContent="space-between">
                         <Typography color="text.secondary">Date:</Typography>
@@ -346,53 +353,72 @@ export default function BookingsView() {
         </DialogContent>
         <DialogActions sx={{ borderTop: '1px solid #eee', p: 2 }}>
              <Button onClick={()=>setSelectedEvent(null)} sx={{ color: '#64748B' }}>Close</Button>
+             
              {selectedEvent?.status !== 'Cancelled' && (
-                 <Button color="error" variant="outlined" onClick={() => {
-                     if(window.confirm('Cancel booking?')){
-                         setBookings(prev => prev.map(x => x.id === selectedEvent!.id ? { ...x, status: 'Cancelled' } : x));
-                         setSelectedEvent(null);
-                     }
-                 }}>Cancel Booking</Button>
+                 <>
+                     <Button 
+                        variant="outlined"
+                        onClick={() => selectedEvent && handleOpenEdit(selectedEvent)}
+                        sx={{ color: '#010057', borderColor: '#010057' }}
+                     >
+                         Edit Booking
+                     </Button>
+                     <Button color="error" variant="outlined" onClick={() => {
+                         if(window.confirm('Cancel booking?')){
+                             setBookings(prev => prev.map(x => x.id === selectedEvent!.id ? { ...x, status: 'Cancelled' } : x));
+                             setSelectedEvent(null);
+                         }
+                     }}>Cancel Booking</Button>
+                 </>
              )}
         </DialogActions>
       </Dialog>
 
-      {/* Add Booking Modal */}
+      {/* Add/Edit Booking Modal */}
       <Dialog open={isAddBookingOpen} onClose={() => setIsAddBookingOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontFamily: 'Agrandir, serif', color: '#010057' }}>Add Manual Booking</DialogTitle>
+        <DialogTitle sx={{ fontFamily: 'Agrandir, serif', color: '#010057' }}>{editingBooking ? 'Edit Booking' : 'Add Manual Booking'}</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
             <Stack spacing={3} sx={{ mt: 1 }}>
                 <FormControl fullWidth size="small">
                     <InputLabel>Experience</InputLabel>
-                    <Select label="Experience" defaultValue="">
-                        <MenuItem value="Tea Ceremony">Kyoto Tea Ceremony</MenuItem>
-                        <MenuItem value="Samurai">Samurai Experience</MenuItem>
-                        <MenuItem value="Bamboo">Bamboo Forest Walk</MenuItem>
+                    <Select label="Experience" defaultValue={editingBooking?.experienceTitle || "Kyoto Tea Ceremony"}>
+                        <MenuItem value="Kyoto Tea Ceremony">Kyoto Tea Ceremony</MenuItem>
+                        <MenuItem value="Samurai Experience">Samurai Experience</MenuItem>
+                        <MenuItem value="Bamboo Forest Walk">Bamboo Forest Walk</MenuItem>
                     </Select>
                 </FormControl>
-                <TextField label="Customer Name" fullWidth size="small" />
-                <TextField label="Date" type="date" fullWidth size="small" InputLabelProps={{ shrink: true }} />
+                <TextField label="Customer Name" fullWidth size="small" defaultValue={editingBooking?.customerName || ''} />
+                <TextField label="Date" type="date" fullWidth size="small" InputLabelProps={{ shrink: true }} defaultValue={editingBooking?.date ? editingBooking.date.split('T')[0] : ''} />
                 <Stack direction="row" spacing={2}>
-                    <TextField label="Pax" type="number" fullWidth size="small" />
-                    <TextField label="Price (JPY)" type="number" fullWidth size="small" />
+                    <TextField label="Pax" type="number" fullWidth size="small" defaultValue={editingBooking?.pax || ''} />
+                    <TextField label="Price (JPY)" type="number" fullWidth size="small" defaultValue={editingBooking?.price || ''} />
                 </Stack>
             </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2, borderTop: '1px solid #eee' }}>
             <Button onClick={() => setIsAddBookingOpen(false)} sx={{ color: '#64748B' }}>Cancel</Button>
             <Button variant="contained" onClick={() => {
-                // Mock Add
-                const newB: Booking = {
-                    id: `BK-${1000 + bookings.length + 1}`,
-                    customerName: 'New Customer',
-                    experienceTitle: 'Manual Booking',
-                    date: new Date().toISOString(),
-                    pax: 2, price: 10000, currency: 'JPY', status: 'Confirmed', avatar: 'NC'
-                };
-                setBookings([...bookings, newB]);
+                if (editingBooking) {
+                     // Update existing
+                     setBookings(prev => prev.map(b => b.id === editingBooking.id ? { 
+                         ...b, 
+                         customerName: 'Updated Customer', // In real app, bind to state
+                         pax: 2 // Mock update
+                     } : b));
+                } else {
+                    // Create new
+                    const newB: Booking = {
+                        id: `BK-${1000 + bookings.length + 1}`,
+                        customerName: 'New Customer',
+                        experienceTitle: 'Manual Booking',
+                        date: new Date().toISOString(),
+                        pax: 2, price: 10000, currency: 'JPY', status: 'Confirmed', avatar: 'NC'
+                    };
+                    setBookings([...bookings, newB]);
+                }
                 setIsAddBookingOpen(false);
             }} sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif' }}>
-                Create Booking
+                {editingBooking ? 'Save Changes' : 'Create Booking'}
             </Button>
         </DialogActions>
       </Dialog>
