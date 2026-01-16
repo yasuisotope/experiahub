@@ -40,6 +40,7 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
         return NextResponse.json({ 
             success: true, 
             onboarded: true, 
+            exists: true, // CRITICAL: Required for frontend to validate session
             applicationId: request.nextUrl.searchParams.get('applicationId'),
             businessName: 'ExperiaHub Supplier', 
             email: 'supplier@experiahub.com',

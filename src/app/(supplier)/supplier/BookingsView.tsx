@@ -256,6 +256,19 @@ export default function BookingsView() {
           {/* Side Panel: Activity & Revenue */}
           <Grid item xs={12} lg={4}>
              <Stack spacing={3}>
+                 {/* Quick Actions */}
+                 <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: 'white', border: '1px solid #E2E8F0' }}>
+                     <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Quick Actions</Typography>
+                     <Stack spacing={2}>
+                         <Button variant="outlined" startIcon={<EventIcon />} sx={{ justifyContent: 'flex-start', fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#334155', textTransform: 'none', '&:hover': { borderColor: '#010057', bgcolor: '#F1F5F9' } }}>
+                             Manually Add Booking
+                         </Button>
+                         <Button variant="outlined" startIcon={<CalendarMonthIcon />} sx={{ justifyContent: 'flex-start', fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#334155', textTransform: 'none', '&:hover': { borderColor: '#010057', bgcolor: '#F1F5F9' } }}>
+                             Block Dates
+                         </Button>
+                     </Stack>
+                 </Paper>
+
                  {/* Revenue Trend Placeholder */}
                  <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: 'white', border: '1px solid #E2E8F0' }}>
                      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
