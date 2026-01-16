@@ -55,8 +55,7 @@ const RECENT_ACTIVITY = [
 ];
 
 export default function BookingsView() {
-  const [timeRange, setTimeRange] = useState<number>(6); // Default 6 Months
-  const [showPast, setShowPast] = useState(false);
+  const [filterType, setFilterType] = useState<string>('future_6');
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -169,17 +168,53 @@ export default function BookingsView() {
   const kpiBookings = bookings.filter(b => {
       const d = new Date(b.date);
       const now = new Date();
-      const cutoff = new Date();
-      cutoff.setMonth(now.getMonth() + timeRange);
+      now.setHours(0,0,0,0);
       
-      if (showPast) return d <= cutoff;
-
-      return d >= now && d <= cutoff;
+      switch (filterType) {
+          case 'all': return true;
+          case 'past_all': return d < now;
+          case 'past_1': {
+              const start = new Date(now); start.setMonth(now.getMonth() - 1);
+              return d < now && d >= start;
+          }
+          case 'past_2': {
+              const start = new Date(now); start.setMonth(now.getMonth() - 2);
+              return d < now && d >= start;
+          }
+          case 'past_6': {
+              const start = new Date(now); start.setMonth(now.getMonth() - 6);
+              return d < now && d >= start;
+          }
+          case 'future_all': return d >= now;
+          case 'future_1': {
+              const end = new Date(now); end.setMonth(now.getMonth() + 1);
+              return d >= now && d <= end;
+          }
+          case 'future_2': {
+              const end = new Date(now); end.setMonth(now.getMonth() + 2);
+              return d >= now && d <= end;
+          }
+          case 'future_6': {
+              const end = new Date(now); end.setMonth(now.getMonth() + 6);
+              return d >= now && d <= end;
+          }
+          default: return true;
+      }
   });
 
   const totalRevenue = kpiBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.price, 0);
   const totalPax = kpiBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.pax, 0);
   const totalCount = kpiBookings.filter(b => b.status !== 'Cancelled').length;
+
+  let filterLabel = "All bookings";
+  if (filterType === 'past_all') filterLabel = "Past bookings";
+  else if (filterType === 'past_1') filterLabel = "Past 1 month";
+  else if (filterType === 'past_2') filterLabel = "Past 2 months";
+  else if (filterType === 'past_6') filterLabel = "Past 6 months";
+  else if (filterType === 'future_all') filterLabel = "All Future bookings";
+  else if (filterType === 'future_1') filterLabel = "Next 1 month";
+  else if (filterType === 'future_2') filterLabel = "Next 2 months";
+  else if (filterType === 'future_6') filterLabel = "Next 6 months";
 
   const handleRequestSort = (property: keyof Booking) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -251,42 +286,7 @@ export default function BookingsView() {
           Bookings Dashboard
         </Typography>
         
-        <Stack direction="row" spacing={2} alignItems="center">
-            <TextField 
-                placeholder="Search bookings..." 
-                size="small" 
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                sx={{ bgcolor: 'white', borderRadius: 1 }}
-            />
-            <FormControlLabel  
-                control={<Checkbox checked={showPast} onChange={(e) => setShowPast(e.target.checked)} size="small" />} 
-                label={<Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color:'#64748B' }}>Show Past</Typography>}
-            />
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-            <Select 
-                value={timeRange} 
-                onChange={(e) => setTimeRange(Number(e.target.value))}
-                sx={{ bgcolor: 'white', borderRadius: 1, fontFamily: 'Nunito, sans-serif' }}
-            >
-                <MenuItem value={1}>Next 1 Month</MenuItem>
-                <MenuItem value={3}>Next 3 Months</MenuItem>
-                <MenuItem value={6}>Next 6 Months</MenuItem>
-                <MenuItem value={12}>Next 12 Months</MenuItem>
-            </Select>
-            </FormControl>
-
-            <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={(e, v) => v && setViewMode(v)}
-                size="small"
-                sx={{ bgcolor:'white', borderRadius:1 }}
-            >
-                <ToggleButton value="list" sx={{ width: 120 }}><FormatListBulletedIcon /></ToggleButton>
-                <ToggleButton value="calendar" sx={{ width: 120 }}><CalendarMonthIcon /></ToggleButton>
-            </ToggleButtonGroup>
-        </Stack>
+        {/* Controls moved to Toolbar */}
       </Stack>
 
       {/* KPI Cards */}
@@ -297,7 +297,7 @@ export default function BookingsView() {
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Active Bookings</Typography>
               <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, color: '#0F172A' }}>{totalCount}</Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>{filterLabel}</Typography>
             </Box>
           </Paper>
         </Grid>
@@ -309,7 +309,7 @@ export default function BookingsView() {
               <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, color: '#0F172A' }}>
                 {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalRevenue)}
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>{filterLabel}</Typography>
             </Box>
           </Paper>
         </Grid>
@@ -319,7 +319,7 @@ export default function BookingsView() {
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Passengers (Pax)</Typography>
               <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, color: '#0F172A' }}>{totalPax}</Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>{filterLabel}</Typography>
             </Box>
           </Paper>
         </Grid>
@@ -328,7 +328,48 @@ export default function BookingsView() {
       <Grid container spacing={3}>
           {/* Main Content (Table / Calendar) */}
           <Grid item xs={12} lg={8}>
-            <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #E2E8F0', overflow: 'hidden', minHeight: 400, bgcolor:'white', p: viewMode==='calendar'?2:0 }}>
+            <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #E2E8F0', overflow: 'hidden', minHeight: 400, bgcolor:'white', p: 0 }}>
+                
+                {/* Internal Toolbar */}
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ p: 2, borderBottom: '1px solid #E2E8F0', bgcolor: '#F8FAFC' }}>
+                     <TextField 
+                        placeholder="Search..." 
+                        size="small" 
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        sx={{ bgcolor: 'white', borderRadius: 1, flexGrow: 1 }}
+                    />
+                     
+                     <FormControl size="small" sx={{ minWidth: 180 }}>
+                        <Select 
+                            value={filterType} 
+                            onChange={(e) => setFilterType(e.target.value)}
+                            sx={{ bgcolor: 'white', borderRadius: 1, fontFamily: 'Nunito, sans-serif' }}
+                        >
+                            <MenuItem value="all">All bookings</MenuItem>
+                            <MenuItem value="past_all">All Past</MenuItem>
+                            <MenuItem value="past_1">Past 1 month</MenuItem>
+                            <MenuItem value="past_2">Past 2 months</MenuItem>
+                            <MenuItem value="past_6">Past 6 months</MenuItem>
+                            <MenuItem value="future_all">All Future</MenuItem>
+                            <MenuItem value="future_1">Next 1 month</MenuItem>
+                            <MenuItem value="future_2">Next 2 months</MenuItem>
+                            <MenuItem value="future_6">Next 6 months</MenuItem>
+                        </Select>
+                    </FormControl>
+
+                     <ToggleButtonGroup
+                        value={viewMode}
+                        exclusive
+                        onChange={(e, v) => v && setViewMode(v)}
+                        size="small"
+                        sx={{ bgcolor:'white', borderRadius:1 }}
+                    >
+                        <ToggleButton value="list"><FormatListBulletedIcon /></ToggleButton>
+                        <ToggleButton value="calendar"><CalendarMonthIcon /></ToggleButton>
+                    </ToggleButtonGroup>
+                </Stack>
+
                 {viewMode === 'list' ? (
                 <>
                 <Box sx={{ overflowX: 'auto', width: '100%' }}>
