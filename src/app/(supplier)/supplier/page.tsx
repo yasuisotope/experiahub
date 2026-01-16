@@ -2339,7 +2339,7 @@ const PRIMARY_BUTTON_SX = {
                             </Box>
                           )}
                         >
-                          <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#010057' }}>{label}</Typography>
+                          <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#010057', display: 'block', mt: 0.5, lineHeight: 1.2 }}>{label}</Typography>
                         </StepLabel>
                       </Step>
                   ))}
