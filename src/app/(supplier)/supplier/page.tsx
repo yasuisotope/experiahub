@@ -1330,6 +1330,9 @@ const PRIMARY_BUTTON_SX = {
         const json = await parseJsonSafe(res);
         console.log('[Supplier] LoadRemote Response:', json);
         if (json?.activities) {
+          const count = json.activities.length;
+          setToast(count > 0 ? `Loaded ${count} experiences` : 'No experiences found');
+          
           const remoteRows = json.activities.map((a: any) => ({
             id: a.id || `row_${Math.random().toString(36).substr(2, 9)}`,
             // Extract Build ID if present for debugging
