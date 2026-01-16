@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 async function proxyRequest(request: NextRequest, { params }: { params: { path: string[] } }) {
   const path = params.path.join('/');
   const searchParams = request.nextUrl.searchParams.toString();
+  console.log(`[N8N Proxy] Incoming: ${request.method} /${path}${searchParams ? '?' + searchParams : ''}`);
   const queryString = searchParams ? `?${searchParams}` : '';
 
   let n8nEnv = process.env.NEXT_PUBLIC_N8N_API_URL || process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
@@ -127,7 +128,8 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  const bg = await handleDirectGet('background', targetUrl, authHeader);
                  return NextResponse.json({ success: true, background: bg?.url || null, stub: true, direct: true });
              }
-             if (targetUrl.includes('supplier/activities/list')) {
+             if (path.includes('supplier/activities/list')) {
+                 console.log('[N8N Proxy] Intercepting List Activities request');
                  // Try getting appId from targetUrl first
                  let appId = new URL(targetUrl).searchParams.get('applicationId');
                  // If not found, try getting from the incoming request URL (req.nextUrl)
