@@ -1340,7 +1340,7 @@ const PRIMARY_BUTTON_SX = {
     }, 1500);
     return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [details, pricingRows, subsection, selectedExperienceId]);
+  }, [details, pricingRows, subsection, selectedExperienceId, experiences]);
 
   const fetchHasAnyPhotoFor = async (activityIdForCheck?: string): Promise<boolean> => {
     if (!appId) return false;
@@ -1725,7 +1725,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
-              Build: 2026.01.15.2315_FIX_V23
+              Build: 2026.01.15.2330_FIX_V24
             </Typography>
           </Box>
         </Paper>
@@ -1757,13 +1757,13 @@ const PRIMARY_BUTTON_SX = {
         <Paper sx={{ 
           p: 3, 
           borderRadius: 2, 
-          mt: '10vh', // Adjust to balance
-          minHeight: '75vh', // Ensure substantial height
-          height: 'fit-content',
+          mt: '10vh',
+          minHeight: '75vh',
+          height: '100%', // Stretch to match grid height
           display: 'flex',
           flexDirection: 'column', 
-          position: 'sticky', 
-          top: '10vh', 
+          // position: 'sticky', // Remove sticky to allow natural height matching in grid
+          // top: '10vh', 
           width: { md: 250 }, 
           transition: 'all .3s ease',
           bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
@@ -1844,6 +1844,7 @@ const PRIMARY_BUTTON_SX = {
           borderRadius: 2, // Match border radius
           mt: '10vh', // Match top margin
           minHeight: '75vh', // Match min height
+          height: '100%', // Stretch to match grid height
           bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
           color: '#3b4850',
           backdropFilter: isTransparent ? 'blur(12px)' : 'none',
