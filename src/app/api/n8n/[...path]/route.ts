@@ -48,8 +48,8 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
     // If upstream error, include debug info in header or body if JSON
     if (!response.ok) {
         
-        // STUB LOGIC: Handle known missing workflows to prevent UI errors
-        if (response.status === 404) {
+        // FAILOVER LOGIC: Handle 404 (Missing Workflow) OR 502/503/504 (Bad Gateway/Timeout)
+        if (response.status === 404 || response.status === 502 || response.status === 503 || response.status === 504) {
              if (targetUrl.includes('supplier/company/billing/save')) {
                  const res = await handleDirectSave('billing', body, targetUrl, authHeader);
                  if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
@@ -233,8 +233,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 id: isUUID(a.id) ? a.id : undefined, // Let DB generate ID if temp
                 application_id: appId,
                 title: a.title,
-                city: a.city,
-                raw_data: { ...a, _temp_id: a.id }, // Store temp ID to map back
+                raw_data: { ...a, _temp_id: a.id, Build: '2026.01.15.2425_FIX_V28' }, // Store temp ID to map back
                 updated_at: new Date().toISOString()
             };
             
