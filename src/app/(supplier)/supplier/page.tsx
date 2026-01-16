@@ -1384,7 +1384,10 @@ const PRIMARY_BUTTON_SX = {
             return merged;
           });
         }
-      } catch {}
+      } catch (e: any) {
+        console.error('[Supplier] LoadRemote Error:', e);
+        setToast('Failed to load experiences: ' + (e?.message || 'Unknown'));
+      }
     };
     loadRemote();
   }, [appId]);
