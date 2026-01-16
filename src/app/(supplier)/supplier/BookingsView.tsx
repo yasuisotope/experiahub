@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { 
   Box, Typography, Stack, Grid, Paper, Select, MenuItem, FormControl, InputLabel, 
   Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton, Button,
-  Card, CardContent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogActions
+  Card, CardContent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogActions,
+  LinearProgress, Avatar
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -11,6 +12,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import EventIcon from '@mui/icons-material/Event';
 import CancelIcon from '@mui/icons-material/Cancel';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
@@ -26,14 +28,25 @@ interface Booking {
   price: number;
   currency: string;
   status: 'Confirmed' | 'Pending' | 'Cancelled' | 'Completed';
+  avatar?: string;
 }
 
 const MOCK_BOOKINGS: Booking[] = [
-  { id: 'BK-1001', customerName: 'Alice Smith', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-02-15', pax: 2, price: 15000, currency: 'JPY', status: 'Confirmed' },
-  { id: 'BK-1002', customerName: 'Bob Jones', experienceTitle: 'Samurai Experience', date: '2026-02-18', pax: 4, price: 40000, currency: 'JPY', status: 'Confirmed' },
-  { id: 'BK-1003', customerName: 'Charlie Brown', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-03-01', pax: 1, price: 7500, currency: 'JPY', status: 'Pending' },
-  { id: 'BK-1004', customerName: 'Diana Prince', experienceTitle: 'Hidden Shrine Walk', date: '2026-03-10', pax: 3, price: 12000, currency: 'JPY', status: 'Cancelled' },
-  { id: 'BK-1005', customerName: 'Evan Wright', experienceTitle: 'Samurai Experience', date: '2026-04-05', pax: 2, price: 20000, currency: 'JPY', status: 'Confirmed' },
+  { id: 'BK-1001', customerName: 'Alice Smith', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-02-15', pax: 2, price: 15000, currency: 'JPY', status: 'Confirmed', avatar: 'AS' },
+  { id: 'BK-1002', customerName: 'Bob Jones', experienceTitle: 'Samurai Experience', date: '2026-02-18', pax: 4, price: 40000, currency: 'JPY', status: 'Confirmed', avatar: 'BJ' },
+  { id: 'BK-1003', customerName: 'Charlie Brown', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-03-01', pax: 1, price: 7500, currency: 'JPY', status: 'Pending', avatar: 'CB' },
+  { id: 'BK-1004', customerName: 'Diana Prince', experienceTitle: 'Hidden Shrine Walk', date: '2026-03-10', pax: 3, price: 12000, currency: 'JPY', status: 'Cancelled', avatar: 'DP' },
+  { id: 'BK-1005', customerName: 'Evan Wright', experienceTitle: 'Samurai Experience', date: '2026-04-05', pax: 2, price: 20000, currency: 'JPY', status: 'Confirmed', avatar: 'EW' },
+  { id: 'BK-1006', customerName: 'Fiona Green', experienceTitle: 'Geisha District Tour', date: '2026-04-12', pax: 2, price: 18000, currency: 'JPY', status: 'Pending', avatar: 'FG' },
+  { id: 'BK-1007', customerName: 'George Hill', experienceTitle: 'Kyoto Tea Ceremony', date: '2026-05-01', pax: 6, price: 45000, currency: 'JPY', status: 'Confirmed', avatar: 'GH' },
+  { id: 'BK-1008', customerName: 'Hannah Lee', experienceTitle: 'Bamboo Forest Walk', date: '2026-05-20', pax: 2, price: 10000, currency: 'JPY', status: 'Confirmed', avatar: 'HL' },
+];
+
+const RECENT_ACTIVITY = [
+    { text: 'New booking from Alice Smith', time: '2 hours ago', type: 'booking' },
+    { text: 'Payment received for BK-1002', time: '5 hours ago', type: 'payment' },
+    { text: 'Booking BK-1004 cancelled by user', time: '1 day ago', type: 'cancel' },
+    { text: 'New 5-star review for Samurai Experience', time: '2 days ago', type: 'review' },
 ];
 
 export default function BookingsView() {
@@ -106,8 +119,8 @@ export default function BookingsView() {
                 size="small"
                 sx={{ bgcolor:'white', borderRadius:1 }}
             >
-                <ToggleButton value="list"><FormatListBulletedIcon /></ToggleButton>
-                <ToggleButton value="calendar"><CalendarMonthIcon /></ToggleButton>
+                <ToggleButton value="list" sx={{ width: 60 }}><FormatListBulletedIcon /></ToggleButton>
+                <ToggleButton value="calendar" sx={{ width: 60 }}><CalendarMonthIcon /></ToggleButton>
             </ToggleButtonGroup>
         </Stack>
       </Stack>
@@ -119,7 +132,7 @@ export default function BookingsView() {
             <Box sx={{ p: 1.5, borderRadius: '50%', bgcolor: '#EFF6FF', color: '#010057' }}><EventIcon /></Box>
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Active Bookings</Typography>
-              <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#0F172A' }}>{totalCount}</Typography>
+              <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, color: '#0F172A' }}>{totalCount}</Typography>
               <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
             </Box>
           </Paper>
@@ -129,7 +142,7 @@ export default function BookingsView() {
             <Box sx={{ p: 1.5, borderRadius: '50%', bgcolor: '#F0FDF4', color: '#10B981' }}><AttachMoneyIcon /></Box>
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Projected Revenue</Typography>
-              <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#0F172A' }}>
+              <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, color: '#0F172A' }}>
                 ¥{totalRevenue.toLocaleString()}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
@@ -141,100 +154,107 @@ export default function BookingsView() {
             <Box sx={{ p: 1.5, borderRadius: '50%', bgcolor: '#FFF7ED', color: '#F97316' }}><GroupIcon /></Box>
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Passengers (Pax)</Typography>
-              <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#0F172A' }}>{totalPax}</Typography>
+              <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, color: '#0F172A' }}>{totalPax}</Typography>
               <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
             </Box>
           </Paper>
         </Grid>
       </Grid>
 
-      {/* View Content */}
-      <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #E2E8F0', overflow: 'hidden', minHeight: 400, bgcolor:'white', p: viewMode==='calendar'?2:0 }}>
-        {viewMode === 'list' ? (
-        <Table>
-          <TableHead sx={{ bgcolor: '#F8FAFC' }}>
-            <TableRow>
-              <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Booking ID</TableCell>
-              <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Experience</TableCell>
-              <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Customer</TableCell>
-              <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Date</TableCell>
-              <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Pax</TableCell>
-              <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Price</TableCell>
-              <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Status</TableCell>
-              <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B', textAlign:'right' }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {kpiBookings.length > 0 ? kpiBookings.map((b) => (
-              <TableRow key={b.id} hover>
-                <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, color: '#010057' }}>{b.id}</TableCell>
-                <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.experienceTitle}</TableCell>
-                <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.customerName}</TableCell>
-                <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{new Date(b.date).toLocaleDateString()}</TableCell>
-                <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.pax}</TableCell>
-                <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.currency} {b.price.toLocaleString()}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={b.status} 
-                    size="small"
-                    sx={{ 
-                      fontFamily: 'Nunito, sans-serif', fontWeight: 700,
-                      bgcolor: b.status === 'Confirmed' ? '#F0FDF4' : b.status === 'Cancelled' ? '#FEF2F2' : '#FFF7ED',
-                      color: b.status === 'Confirmed' ? '#166534' : b.status === 'Cancelled' ? '#991B1B' : '#C2410C'
-                    }} 
-                  />
-                </TableCell>
-                <TableCell align="right">
-                    {b.status !== 'Cancelled' && (
-                        <Button 
-                            size="small" 
-                            color="error" 
-                            startIcon={<CancelIcon />} 
-                            onClick={() => {
-                                if (window.confirm('Cancel this booking?')) {
-                                    setBookings(prev => prev.map(x => x.id === b.id ? { ...x, status: 'Cancelled' } : x));
-                                }
-                            }}
-                            sx={{ textTransform:'none', fontFamily: 'Nunito, sans-serif' }}
-                        >
-                            Cancel
-                        </Button>
+      <Grid container spacing={3}>
+          {/* Main Content (Table / Calendar) */}
+          <Grid item xs={12} lg={8}>
+            <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #E2E8F0', overflow: 'hidden', minHeight: 400, bgcolor:'white', p: viewMode==='calendar'?2:0 }}>
+                {viewMode === 'list' ? (
+                <Table>
+                <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+                    <TableRow>
+                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Booking ID</TableCell>
+                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Experience</TableCell>
+                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Customer</TableCell>
+                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Date</TableCell>
+                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Pax</TableCell>
+                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Price</TableCell>
+                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Status</TableCell>
+                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B', textAlign:'right' }}>Actions</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {kpiBookings.length > 0 ? kpiBookings.map((b) => (
+                    <TableRow key={b.id} hover>
+                        <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, color: '#010057' }}>{b.id}</TableCell>
+                        <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.experienceTitle}</TableCell>
+                        <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: '#E2E8F0', color: '#64748B' }}>{b.avatar}</Avatar>
+                                <Typography variant="body2" sx={{ fontFamily:'Nunito, sans-serif' }}>{b.customerName}</Typography>
+                            </Stack>
+                        </TableCell>
+                        <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{new Date(b.date).toLocaleDateString()}</TableCell>
+                        <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.pax}</TableCell>
+                        <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.currency} {b.price.toLocaleString()}</TableCell>
+                        <TableCell>
+                        <Chip 
+                            label={b.status} 
+                            size="small"
+                            sx={{ 
+                            fontFamily: 'Nunito, sans-serif', fontWeight: 700,
+                            bgcolor: b.status === 'Confirmed' ? '#F0FDF4' : b.status === 'Cancelled' ? '#FEF2F2' : '#FFF7ED',
+                            color: b.status === 'Confirmed' ? '#166534' : b.status === 'Cancelled' ? '#991B1B' : '#C2410C'
+                            }} 
+                        />
+                        </TableCell>
+                        <TableCell align="right">
+                            {b.status !== 'Cancelled' && (
+                                <Button 
+                                    size="small" 
+                                    color="error" 
+                                    startIcon={<CancelIcon />} 
+                                    onClick={() => {
+                                        if (window.confirm('Cancel this booking?')) {
+                                            setBookings(prev => prev.map(x => x.id === b.id ? { ...x, status: 'Cancelled' } : x));
+                                        }
+                                    }}
+                                    sx={{ textTransform:'none', fontFamily: 'Nunito, sans-serif' }}
+                                >
+                                    Cancel
+                                </Button>
+                            )}
+                        </TableCell>
+                    </TableRow>
+                    )) : (
+                    <TableRow>
+                        <TableCell colSpan={8} align="center" sx={{ py: 4, color: '#94A3B8', fontFamily: 'Nunito, sans-serif' }}>No bookings found for this period.</TableCell>
+                    </TableRow>
                     )}
-                </TableCell>
-              </TableRow>
-            )) : (
-              <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 4, color: '#94A3B8' }}>No bookings found for this period.</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        ) : (
-            <Box sx={{ fontFamily: 'Nunito, sans-serif' }}>
-                 <style dangerouslySetInnerHTML={{__html: `
-                    .fc-toolbar-title { font-family: 'Agrandir', serif !important; color: #010057; }
-                    .fc-button-primary { background-color: #010057 !important; border-color: #010057 !important; }
-                    .fc-button-active { background-color: #C5A059 !important; border-color: #C5A059 !important; }
-                    .fc-daygrid-day-number { font-family: 'Nunito', sans-serif; color: #334155; }
-                    .fc-col-header-cell-cushion { font-family: 'Nunito', sans-serif; color: #64748B; font-weight: 700; }
-                 `}} />
-                 <FullCalendar
-                    plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
-                    initialView="dayGridMonth"
-                    headerToolbar={{
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,listWeek'
-                    }}
-                    events={calendarEvents}
-                    eventClick={(info) => {
-                        const b = info.event.extendedProps as Booking;
-                        setSelectedEvent(b);
-                    }}
-                    height="auto"
-                 />
-            </Box>
-        )}
+                </TableBody>
+                </Table>
+                ) : (
+                    <Box sx={{ fontFamily: 'Nunito, sans-serif' }}>
+                        <style dangerouslySetInnerHTML={{__html: `
+                            .fc-toolbar-title { font-family: 'Agrandir', serif !important; color: #010057; }
+                            .fc-button-primary { background-color: #010057 !important; border-color: #010057 !important; }
+                            .fc-button-active { background-color: #C5A059 !important; border-color: #C5A059 !important; }
+                            .fc-daygrid-day-number { font-family: 'Nunito', sans-serif; color: #334155; }
+                            .fc-col-header-cell-cushion { font-family: 'Nunito', sans-serif; color: #64748B; font-weight: 700; }
+                        `}} />
+                        <FullCalendar
+                            plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
+                            initialView="dayGridMonth"
+                            headerToolbar={{
+                                left: 'prev,next today',
+                                center: 'title',
+                                right: 'dayGridMonth,listWeek'
+                            }}
+                            events={calendarEvents}
+                            eventClick={(info) => {
+                                const b = info.event.extendedProps as Booking;
+                                setSelectedEvent(b);
+                            }}
+                            height="auto"
+                        />
+                    </Box>
+                )}
       </Paper>
 
       {/* Details Dialog */}
