@@ -479,6 +479,7 @@ export default function BookingsView() {
                             .fc-toolbar-title { font-family: 'Agrandir', serif !important; color: #010057; }
                             .fc-button-primary { background-color: #010057 !important; border-color: #010057 !important; }
                             .fc-button-active { background-color: #C5A059 !important; border-color: #C5A059 !important; }
+                            .fc-header-toolbar { padding: 0 24px !important; }
                             .fc-daygrid-day-number { font-family: 'Nunito', sans-serif; color: #334155; }
                             .fc-col-header-cell-cushion { font-family: 'Nunito', sans-serif; color: #64748B; font-weight: 700; }
                         `}} />
