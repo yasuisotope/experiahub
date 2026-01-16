@@ -377,7 +377,8 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
              if (error) {
                  console.error('[N8N Proxy] Update Error:', error);
-                 return { success: false, error: error.message };
+                 const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+                 return { success: false, error: `${error.message} (AdminKey: ${sk})` };
              }
 
              // If row didn't exist, UPDATE returns 0 rows (data=[]). We must INSERT it.
@@ -397,7 +398,8 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
                  if (insertError) {
                      console.error('[N8N Proxy] Fallback Insert Error:', insertError);
-                     return { success: false, error: insertError.message };
+                     const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+                     return { success: false, error: `${insertError.message} (AdminKey: ${sk})` };
                  }
              }
         }
@@ -420,7 +422,8 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
             if (error) {
                  console.error('[N8N Proxy] Insert Error:', error);
-                 return { success: false, error: error.message };
+                 const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+                 return { success: false, error: `${error.message} (AdminKey: ${sk})` };
             }
             // Map back using _temp_id in raw_data
             (data || []).forEach((inserted: any) => {
