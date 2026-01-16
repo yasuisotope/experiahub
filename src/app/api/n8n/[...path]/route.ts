@@ -213,6 +213,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
     const supabase = createClient(supabaseUrl, supabaseKey, options);
 
+    // FIX: Retrieve User ID for RLS compliance
+    let userId: string | null = null;
+    if (authHeader) {
+        const { data: { user } } = await supabase.auth.getUser();
+        userId = user?.id || null;
+    }
+
     let updates: any = {};
     if (type === 'billing' && payload.billing) {
         updates = {
@@ -271,6 +278,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
             const row: any = {
                 application_id: appId,
+                user_id: userId, // Inject verified User ID
                 title: a.title,
                 // FORCE STRINGIFY: Safest overlap for TEXT vs JSONB columns. prevents [object Object].
                 raw_data: JSON.stringify(rawObj),

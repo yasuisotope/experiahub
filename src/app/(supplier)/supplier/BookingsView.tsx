@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Box, Typography, Stack, Grid, Paper, Select, MenuItem, FormControl, InputLabel, 
   Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton, Button,
   Card, CardContent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  LinearProgress, Avatar, TextField
+  LinearProgress, Avatar, TextField, TableSortLabel
 } from '@mui/material';
 
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -58,6 +58,8 @@ export default function BookingsView() {
   const [selectedEvent, setSelectedEvent] = useState<Booking | null>(null);
   const [isAddBookingOpen, setIsAddBookingOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const [orderBy, setOrderBy] = useState<keyof Booking>('date');
 
   // Computed KPIs based on filtered bookings
   const filteredBookings = bookings.filter(b => {
@@ -78,6 +80,35 @@ export default function BookingsView() {
   const totalRevenue = kpiBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.price, 0);
   const totalPax = kpiBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.pax, 0);
   const totalCount = kpiBookings.filter(b => b.status !== 'Cancelled').length;
+
+  const handleRequestSort = (property: keyof Booking) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const sortedBookings = useMemo(() => {
+    return [...kpiBookings].sort((a, b) => {
+        let valA = a[orderBy];
+        let valB = b[orderBy];
+
+        if (typeof valA === 'number' && typeof valB === 'number') {
+             return order === 'asc' ? valA - valB : valB - valA;
+        }
+        
+        if (orderBy === 'date') {
+             return order === 'asc' 
+                ? new Date(a.date).getTime() - new Date(b.date).getTime()
+                : new Date(b.date).getTime() - new Date(a.date).getTime();
+        }
+
+        const strA = String(valA || '').toLowerCase();
+        const strB = String(valB || '').toLowerCase();
+        if (strA < strB) return order === 'asc' ? -1 : 1;
+        if (strA > strB) return order === 'asc' ? 1 : -1;
+        return 0;
+    });
+  }, [kpiBookings, order, orderBy]);
 
   const calendarEvents = bookings.map(b => ({
       id: b.id,
@@ -180,18 +211,42 @@ export default function BookingsView() {
                 <Table sx={{ minWidth: 950 }}>
                 <TableHead sx={{ bgcolor: '#F8FAFC' }}>
                     <TableRow>
-                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Booking ID</TableCell>
-                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Experience</TableCell>
-                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Customer</TableCell>
-                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Date</TableCell>
-                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Pax</TableCell>
-                    <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Price</TableCell>
+                    <TableCell sortDirection={orderBy === 'id' ? order : false}>
+                        <TableSortLabel active={orderBy === 'id'} direction={orderBy === 'id' ? order : 'asc'} onClick={() => handleRequestSort('id')} sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B !important' }}>
+                        Booking ID
+                        </TableSortLabel>
+                    </TableCell>
+                    <TableCell>
+                         <TableSortLabel active={orderBy === 'experienceTitle'} direction={orderBy === 'experienceTitle' ? order : 'asc'} onClick={() => handleRequestSort('experienceTitle')} sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B !important' }}>
+                         Experience
+                         </TableSortLabel>
+                    </TableCell>
+                    <TableCell>
+                         <TableSortLabel active={orderBy === 'customerName'} direction={orderBy === 'customerName' ? order : 'asc'} onClick={() => handleRequestSort('customerName')} sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B !important' }}>
+                         Customer
+                         </TableSortLabel>
+                    </TableCell>
+                    <TableCell>
+                         <TableSortLabel active={orderBy === 'date'} direction={orderBy === 'date' ? order : 'asc'} onClick={() => handleRequestSort('date')} sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B !important' }}>
+                         Date
+                         </TableSortLabel>
+                    </TableCell>
+                    <TableCell>
+                         <TableSortLabel active={orderBy === 'pax'} direction={orderBy === 'pax' ? order : 'asc'} onClick={() => handleRequestSort('pax')} sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B !important' }}>
+                         Pax
+                         </TableSortLabel>
+                    </TableCell>
+                    <TableCell>
+                         <TableSortLabel active={orderBy === 'price'} direction={orderBy === 'price' ? order : 'asc'} onClick={() => handleRequestSort('price')} sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B !important' }}>
+                         Price
+                         </TableSortLabel>
+                    </TableCell>
                     <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B' }}>Status</TableCell>
                     <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#64748B', textAlign:'right' }}>Actions</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {kpiBookings.length > 0 ? kpiBookings.map((b) => (
+                    {sortedBookings.length > 0 ? sortedBookings.map((b) => (
                     <TableRow key={b.id} hover onClick={() => setSelectedEvent(b)} sx={{ cursor: 'pointer' }}>
                         <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, color: '#010057' }}>{b.id}</TableCell>
                         <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.experienceTitle}</TableCell>
