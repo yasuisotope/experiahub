@@ -230,6 +230,10 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     setRows(updatedRows);
     onSave(updatedRows); // Persist immediately
     setOpen(false); resetForm();
+    // If adding new, jump to details immediately
+    if (!editing && onEditDetails) {
+       onEditDetails(next);
+    }
   };
 
   const fetchHasAnyPhoto = React.useCallback(async (activityIdForCheck?: string): Promise<boolean> => {
