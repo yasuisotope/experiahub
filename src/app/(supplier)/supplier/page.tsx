@@ -1271,11 +1271,23 @@ const PRIMARY_BUTTON_SX = {
             return r;
        }));
        // If the currently selected experience just got a real ID, update selection
-       if (selectedExperienceId && json.idMappings[selectedExperienceId]) {
-          setSelectedExperienceId(json.idMappings[selectedExperienceId]);
-          // Also update details object if it still holds the old ID (though details usually doesn't strictly hold ID, it's safer)
-          setDetails(prev => ({ ...prev, id: json.idMappings[selectedExperienceId] }));
-       }
+       // If the currently selected experience just got a real ID, update selection (using functional update to capture latest state)
+       setSelectedExperienceId(currentId => {
+          if (currentId && json.idMappings[currentId]) {
+             const newId = json.idMappings[currentId];
+             // Also update details object only if it matches the current ID being updated
+             setDetails(prevDetails => {
+                 // Check if the details object conceptually belongs to the activity whose ID is changing
+                 // We assume if selectedExperienceId matches, details matches.
+                 if (prevDetails.id === currentId || currentId) { 
+                     return { ...prevDetails, id: newId };
+                 }
+                 return prevDetails;
+             });
+             return newId;
+          }
+          return currentId;
+       });
     }
   };
 
@@ -1705,7 +1717,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
-              Build: 2026.01.15.2230_FIX_V19
+              Build: 2026.01.15.2245_FIX_V20
             </Typography>
           </Box>
         </Paper>
@@ -1801,6 +1813,7 @@ const PRIMARY_BUTTON_SX = {
                label={<Typography variant="caption" sx={{ fontFamily:'Nunito, sans-serif' }}>Translucent UI</Typography>}
                sx={{ mb: 1, ml: 0.5 }}
             />
+            <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
               {isLoggedIn ? (
