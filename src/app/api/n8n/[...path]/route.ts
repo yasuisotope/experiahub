@@ -546,6 +546,8 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
     const options: any = {};
     if (!isServiceKey && authHeader) {
         options.global = { headers: { Authorization: authHeader } };
+    } else if (isServiceKey) {
+        options.auth = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false };
     }
     const supabase = createClient(supabaseUrl, supabaseKey, options);
 
