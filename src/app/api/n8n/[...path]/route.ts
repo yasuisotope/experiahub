@@ -196,6 +196,15 @@ export async function DELETE(req: NextRequest, ctx: any) { return proxyRequest(r
 async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile'|'background'|'activities'|'bookings', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
   try {
     if (!body || !(body instanceof Blob)) return { success: false, error: 'Invalid Body' };
+    
+    // DEBUG: Check Env Vars
+    console.log('[N8N Proxy] Env Debug:', {
+        URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        HAS_SERVICE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        SERVICE_KEY_LEN: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
+        NODE_ENV: process.env.NODE_ENV
+    });
+
     const text = await body.text();
     const payload = JSON.parse(text);
     const appId = payload.applicationId;
