@@ -368,7 +368,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
       </Box>
         </Stack>
         <Stack direction="row" spacing={1}>
-          <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}>Add</Button>
+          <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#C5A059', '&:hover': { bgcolor: '#B08D45' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#fff', fontWeight: 700 }}>Add</Button>
           <Button variant="outlined" onClick={saveAll} disabled={saving} sx={{ borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>{saving ? 'Saving…' : 'Save all'}</Button>
           {undo && (
             <Button size="small" onClick={() => { setRows((rs)=>[undo.row, ...rs]); setUndo(null); setTimeout(()=>onToast('Restored'), 0); }}>Undo</Button>
@@ -403,16 +403,16 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
                 ) : (
                   <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 1, alignItems: 'center', justifyContent: 'center' }}>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <IconButton onClick={() => { setInlineId(r.id); }} size="small"><EditIcon fontSize="small" /></IconButton>
+                      <IconButton onClick={() => { setInlineId(r.id); }} size="small" sx={{ color: '#4A7C8C' }}><EditIcon fontSize="small" /></IconButton>
                       <IconButton onClick={() => { if (window.confirm('Delete this experience?')) remove(r.id); }} size="small" color="error"><DeleteOutlineIcon fontSize="small" /></IconButton>
                     </Box>
                     <Button size="small" variant="outlined" onClick={() => {
                       const copy = { ...r, id: `row_${Date.now()}` as string, title: r.title ? `${r.title} (Copy)` : 'Untitled (Copy)', bokunProductId: '' } as any;
                       setRows(rs => [copy, ...rs]);
                       onToast('Experience duplicated');
-                    }}>Duplicate</Button>
-                    <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057', whiteSpace: 'nowrap' }} onClick={()=>onEditDetails && onEditDetails(r)}>Add Details</Button>
-                    <Button size="small" variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>onSync(r)}>Publish</Button>
+                    }} sx={{ color: '#4A7C8C', borderColor: 'rgba(74,124,140,0.5)' }}>Duplicate</Button>
+                    <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#4A7C8C', borderColor: '#4A7C8C', whiteSpace: 'nowrap', fontWeight: 700 }} onClick={()=>onEditDetails && onEditDetails(r)}>Add Details</Button>
+                    <Button size="small" variant="contained" sx={{ bgcolor: '#C5A059', '&:hover': { bgcolor: '#B08D45' }, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, color: '#fff' }} onClick={()=>onSync(r)}>Publish</Button>
                   </Box>
                 )}
               </TableCell>
