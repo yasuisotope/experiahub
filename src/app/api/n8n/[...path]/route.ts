@@ -264,10 +264,19 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         });
         
         // 1. Upsert existing
-        if (toUpsert.length > 0) {
-             const { error } = await supabase.from('experiences').upsert(toUpsert, { onConflict: 'id' });
+        // 1. Update Existing (Sequential to avoid 'No suitable key' bulk error)
+        // We use UPDATE instead of UPSERT because we know ID exists.
+        // If ID doesn't exist (e.g. wiped DB), this will just fail to update (count=0), which is safer than crashing.
+        for (const row of toUpsert) {
+             const { error } = await supabase
+                .from('experiences')
+                .update(row)
+                .eq('id', row.id);
+             
              if (error) {
-                 console.error('[N8N Proxy] Upsert Error:', error);
+                 console.error('[N8N Proxy] Update Error:', error);
+                 // Fallback: If update fails, maybe try insert? No, risky. 
+                 // Return error to debug.
                  return { success: false, error: error.message };
              }
         }
