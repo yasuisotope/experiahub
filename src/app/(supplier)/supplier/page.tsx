@@ -18,6 +18,7 @@ import { AuthService } from '@/services/authService';
 import OnboardingForm from '@/components/supplier/OnboardingForm';
 import SupportDialog from '@/components/support/SupportDialog';
 import GridLikeMedia from '@/components/supplier/GridLikeMedia';
+import BookingsView from './BookingsView';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
 import { getUserBackground, setUserBackground, searchUnsplash, trackDownload, loadCachedBackground, saveCachedBackground, getCuratedBackgrounds, prefetchBackgroundImage, type PortalBackground } from '@/services/backgroundService';
@@ -1938,6 +1939,9 @@ const PRIMARY_BUTTON_SX = {
             <ListItemButton selected={section==='experiences'} onClick={() => { setSection('experiences'); setTab(0); setSubsection('overview'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='experiences'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
               <ListItemText primary="Experiences" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='experiences'?700:500 }} />
             </ListItemButton>
+            <ListItemButton selected={section==='bookings'} onClick={() => { setSection('bookings'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='bookings'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
+              <ListItemText primary="Bookings" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='bookings'?700:500 }} />
+            </ListItemButton>
             <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='information'?{ bgcolor: isTransparent ? 'rgba(74,124,140,0.15)' : '#EAF4F6' }:{}) }}>
               <ListItemText primary="Information & Resources" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='information'?700:500 }} />
             </ListItemButton>
@@ -2548,6 +2552,12 @@ const PRIMARY_BUTTON_SX = {
               }}>Save Pricing</Button>
             </Stack>
           </Box>
+          </Fade>
+        )}
+
+        {section === 'bookings' && (
+          <Fade in timeout={250}>
+             <BookingsView />
           </Fade>
         )}
 
