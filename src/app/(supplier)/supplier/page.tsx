@@ -1180,11 +1180,12 @@ const PRIMARY_BUTTON_SX = {
   }, [selectedExperienceId, experiences]);
 
   // Persist experiences to localStorage to prevent data loss on reload
-  React.useEffect(() => {
-    if (appId && experiences.length > 0) {
-      try { localStorage.setItem(`supplier_experiences_${appId}`, JSON.stringify(experiences)); } catch {}
-    }
-  }, [experiences, appId]);
+  // Persist experiences to localStorage to prevent data loss on reload -- DISABLED to rely on remote
+  // React.useEffect(() => {
+  //   if (appId && experiences.length > 0) {
+  //     try { localStorage.setItem(`supplier_experiences_${appId}`, JSON.stringify(experiences)); } catch {}
+  //   }
+  // }, [experiences, appId]);
 
   // Sync experiences -> activitiesSimple
   React.useEffect(() => {
