@@ -330,6 +330,7 @@ export default function BookingsView() {
           <Grid item xs={12} lg={8}>
             <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #E2E8F0', overflow: 'hidden', minHeight: 400, bgcolor:'white', p: viewMode==='calendar'?2:0 }}>
                 {viewMode === 'list' ? (
+                <>
                 <Box sx={{ overflowX: 'auto', width: '100%' }}>
                 <Table sx={{ minWidth: 950 }}>
                 <TableHead sx={{ bgcolor: '#F8FAFC' }}>
@@ -430,6 +431,7 @@ export default function BookingsView() {
                         setPage(0);
                     }}
                 />
+                </>
                 ) : (
                     <Box sx={{ fontFamily: 'Nunito, sans-serif' }}>
                         <style dangerouslySetInnerHTML={{__html: `
