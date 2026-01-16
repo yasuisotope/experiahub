@@ -84,6 +84,7 @@ export default function BookingsView() {
                 price: row.price || 0,
                 status: row.status as any,
                 amount: row.price,
+                currency: row.currency || 'USD',
                 avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(row.customer_name)}&background=random`
             }));
             setBookings(mapped);
@@ -197,8 +198,8 @@ export default function BookingsView() {
                 size="small"
                 sx={{ bgcolor:'white', borderRadius:1 }}
             >
-                <ToggleButton value="list" sx={{ width: 60 }}><FormatListBulletedIcon /></ToggleButton>
-                <ToggleButton value="calendar" sx={{ width: 60 }}><CalendarMonthIcon /></ToggleButton>
+                <ToggleButton value="list" sx={{ width: 100 }}><FormatListBulletedIcon /></ToggleButton>
+                <ToggleButton value="calendar" sx={{ width: 100 }}><CalendarMonthIcon /></ToggleButton>
             </ToggleButtonGroup>
         </Stack>
       </Stack>
@@ -221,7 +222,7 @@ export default function BookingsView() {
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Projected Revenue</Typography>
               <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, color: '#0F172A' }}>
-                ¥{totalRevenue.toLocaleString()}
+                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalRevenue)}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'Nunito, sans-serif' }}>Next {timeRange} months</Typography>
             </Box>
