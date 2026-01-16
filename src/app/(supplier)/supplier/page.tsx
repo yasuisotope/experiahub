@@ -45,7 +45,7 @@ const defaultTimeZone = 'Asia/Tokyo';
 
 // GridLikeMedia definition moved to @/components/supplier/GridLikeMedia.tsx
 
-function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDetails }: { experiences: any[]; onUpdate: React.Dispatch<React.SetStateAction<any[]>>; onSave: (exps: any[]) => Promise<void>; onToast: (m: string) => void; onEditDetails?: (activity: any) => void }) {
+function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDetails, appId }: { experiences: any[]; onUpdate: React.Dispatch<React.SetStateAction<any[]>>; onSave: (exps: any[]) => Promise<void>; onToast: (m: string) => void; onEditDetails?: (activity: any) => void; appId: string }) {
   type Activity = {
     id: string;
     title: string;
@@ -110,7 +110,8 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
   const [saving, setSaving] = React.useState(false);
   const [rowErrors, setRowErrors] = React.useState<Record<string, string[]>>({});
   const [undo, setUndo] = React.useState<{ id: string; row: Activity } | null>(null);
-  const appId = React.useMemo(() => { try { return localStorage.getItem('supplier_application_id') || ''; } catch { return ''; } }, []);
+  // appId is now passed as prop
+
 
   const resetForm = () => {
     setTitle('');
@@ -2351,7 +2352,8 @@ const PRIMARY_BUTTON_SX = {
               experiences={experiences} 
               onUpdate={setExperiences} 
               onSave={saveAllExperiences}
-              onToast={(m)=>setToast(m)} 
+              onToast={(m)=>setToast(m)}
+              appId={appId} 
               onEditDetails={(act: any) => {
                 const e = act as Experience;
                 setSelectedExperienceId(e.id);
