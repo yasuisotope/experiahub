@@ -6,6 +6,9 @@ import {
   Card, CardContent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogActions,
   LinearProgress, Avatar, TextField, TableSortLabel
 } from '@mui/material';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -54,7 +57,41 @@ const RECENT_ACTIVITY = [
 export default function BookingsView() {
   const [timeRange, setTimeRange] = useState<number>(6); // Default 6 Months
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
-  const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchBookings() {
+        setLoading(true);
+        const params = new URLSearchParams(window.location.search);
+        const appId = params.get('applicationId') || 'SUP-543C66BA';
+
+        const { data, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('application_id', appId)
+            .order('date', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching bookings:', error);
+        } else if (data) {
+            const mapped: Booking[] = data.map((row: any) => ({
+                id: row.id,
+                experienceTitle: row.experience_title || 'Unknown',
+                customerName: row.customer_name || 'Unknown',
+                date: row.date,
+                pax: row.pax || 0,
+                price: row.price || 0,
+                status: row.status as any,
+                amount: row.price,
+                avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(row.customer_name)}&background=random`
+            }));
+            setBookings(mapped);
+        }
+        setLoading(false);
+    }
+    fetchBookings();
+  }, []);
   const [selectedEvent, setSelectedEvent] = useState<Booking | null>(null);
   const [isAddBookingOpen, setIsAddBookingOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
