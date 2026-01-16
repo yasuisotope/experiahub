@@ -268,16 +268,25 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // We use UPDATE instead of UPSERT because we know ID exists.
         // If ID doesn't exist (e.g. wiped DB), this will just fail to update (count=0), which is safer than crashing.
         for (const row of toUpsert) {
-             const { error } = await supabase
+             const { data, error } = await supabase
                 .from('experiences')
                 .update(row)
-                .eq('id', row.id);
+                .eq('id', row.id)
+                .select();
              
              if (error) {
                  console.error('[N8N Proxy] Update Error:', error);
-                 // Fallback: If update fails, maybe try insert? No, risky. 
-                 // Return error to debug.
                  return { success: false, error: error.message };
+             }
+
+             // If row didn't exist, UPDATE returns 0 rows (data=[]). We must INSERT it.
+             if (!data || data.length === 0) {
+                 console.log(`[N8N Proxy] Row ${row.id} not found for update, inserting instead.`);
+                 const { error: insertError } = await supabase.from('experiences').insert(row);
+                 if (insertError) {
+                     console.error('[N8N Proxy] Fallback Insert Error:', insertError);
+                     return { success: false, error: insertError.message };
+                 }
              }
         }
 
