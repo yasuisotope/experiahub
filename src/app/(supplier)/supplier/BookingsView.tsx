@@ -488,7 +488,7 @@ export default function BookingsView() {
                             headerToolbar={{
                                 left: 'prev,next today',
                                 center: 'title',
-                                right: 'dayGridMonth,listWeek'
+                                right: ''
                             }}
                             events={calendarEvents}
                             eventClick={(info) => {
