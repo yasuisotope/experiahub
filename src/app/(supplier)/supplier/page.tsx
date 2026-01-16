@@ -1460,10 +1460,10 @@ const PRIMARY_BUTTON_SX = {
     const issues: string[] = [];
     if (!a) { issues.push('No Experience selected'); return issues; }
     // Tier 1
-    if (!a.title?.trim()) issues.push('Tier 1: Title is required');
-    if (!(a.summary||'').trim()) issues.push('Tier 1: Description is required');
-    if (!(a.durationMinutes||'').trim()) issues.push('Tier 1: Duration (minutes) is required');
-    if (!(a.city||'').trim()) issues.push('Tier 1: City is required');
+    if (!(a.title?.trim())) issues.push('Tier 1: Title is required');
+    if (!(a.summary?.trim())) issues.push('Tier 1: Description is required');
+    if (!(a.durationMinutes?.toString().trim())) issues.push('Tier 1: Duration (minutes) is required');
+    if (!(a.city?.trim())) issues.push('Tier 1: City is required');
     if (!(a.category||'').trim()) issues.push('Tier 1: Category is required');
     const hasPhoto = await fetchHasAnyPhotoFor(a.id);
     if (!hasPhoto) issues.push('Tier 1: At least one photo is required');
