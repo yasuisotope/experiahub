@@ -1313,6 +1313,13 @@ const PRIMARY_BUTTON_SX = {
       const next = experiences.map(e => e.id === selectedExperienceId ? { ...e, ...details } as Experience : e);
       setExperiences(next);
       await saveAllExperiences(next);
+      // Assuming setOpen(false) is related to a modal or similar UI element
+      // setOpen(false); // This line was in the provided snippet but not in the original context. Keeping it commented as it might be context-dependent.
+      
+      // Force navigation to Experience Overview
+      setSection('experiences');
+      setTab(0);
+      setSubsection('overview');
       handleSaveSuccess('Experience');
     } catch (e: any) { setToast(e?.message || 'Save failed'); }
   };
