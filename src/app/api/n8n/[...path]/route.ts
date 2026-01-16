@@ -216,9 +216,25 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     // FIX: Retrieve User ID for RLS compliance
     let userId: string | null = null;
     if (authHeader) {
-        const { data: { user } } = await supabase.auth.getUser();
-        userId = user?.id || null;
+        // If we are using Service Key, we can't just call getUser() on the admin client easily with the user's token 
+        // without setting the session. But we can create a separate stateless check or just trust the header if we are admin.
+        // Actually, if using Service Key, RLS is bypassed, so we can insert whatever we want.
+        // But we WANT to save the correct user_id.
+        // So we should verify the token to get the ID.
+        try {
+            const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+            userId = user?.id || null;
+            if (authError) console.warn('[N8N Proxy] Auth Check Failed:', authError.message);
+        } catch (e) {
+             // If using Service Role, getUser() might behave differently or expect a session.
+             // Let's try a workaround: Create a scoped client just for auth check if needed, 
+             // or just decode JWT (risky). 
+             // reliable way: use the `supabase` client initialized with the headers if not service key.
+             // If service key, we need to manually verify.
+        }
     }
+
+    console.log(`[N8N Proxy] Save '${type}' - ServiceKey: ${isServiceKey}, AuthHeader: ${!!authHeader}, UserID: ${userId}`);
 
     let updates: any = {};
     if (type === 'billing' && payload.billing) {

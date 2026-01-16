@@ -167,8 +167,11 @@ export default function BookingsView() {
       const now = new Date();
       const cutoff = new Date();
       cutoff.setMonth(now.getMonth() + timeRange);
-      // Simple range check
-      return d >= now && d <= cutoff;
+      
+      const start = new Date();
+      start.setDate(now.getDate() - 30);
+
+      return d >= start && d <= cutoff;
   });
 
   const totalRevenue = kpiBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.price, 0);
@@ -254,8 +257,8 @@ export default function BookingsView() {
                 size="small"
                 sx={{ bgcolor:'white', borderRadius:1 }}
             >
-                <ToggleButton value="list" sx={{ width: 100 }}><FormatListBulletedIcon /></ToggleButton>
-                <ToggleButton value="calendar" sx={{ width: 100 }}><CalendarMonthIcon /></ToggleButton>
+                <ToggleButton value="list" sx={{ width: 120 }}><FormatListBulletedIcon /></ToggleButton>
+                <ToggleButton value="calendar" sx={{ width: 120 }}><CalendarMonthIcon /></ToggleButton>
             </ToggleButtonGroup>
         </Stack>
       </Stack>
