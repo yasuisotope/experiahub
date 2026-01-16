@@ -4,7 +4,7 @@ import {
   Box, Typography, Stack, Grid, Paper, Select, MenuItem, FormControl, InputLabel, 
   Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton, Button,
   Card, CardContent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  LinearProgress, Avatar, TextField, TableSortLabel
+  LinearProgress, Avatar, TextField, TableSortLabel, Checkbox, FormControlLabel
 } from '@mui/material';
 import { createClient } from '@supabase/supabase-js';
 
