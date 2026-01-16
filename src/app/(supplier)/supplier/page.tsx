@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab } from '@mui/material';
+import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab, Stepper, Step, StepLabel } from '@mui/material';
 import { FormControlLabel, Switch } from '@mui/material';
 // BackgroundImage removed
 
@@ -1729,7 +1729,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
-              Build: 2026.01.15.2425_FIX_V28
+              Build: 2026.01.15.2445_FIX_V29
             </Typography>
           </Box>
         </Paper>
@@ -1805,23 +1805,25 @@ const PRIMARY_BUTTON_SX = {
             </ListItemButton>
           </List>
 
-          <Stack spacing={1} sx={{ mt: 2, mb: 2, px: 2, textAlign: 'center', bgcolor: 'rgba(1,0,87,0.03)', borderRadius: 2, py: 2, border: '1px solid rgba(1,0,87,0.05)' }}>
-            <Box sx={{ py: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 800, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
-                {user?.display_name || userDisplayName || statusData?.businessName || companyBilling.companyName || 'ExperiaHub Partner'}
-              </Typography>
-              {appId && (
-                <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', display: 'block', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.8 }}>
-                  ID: {appId}
-                </Typography>
-              )}
-            </Box>
-          </Stack>
+
 
 
           
             
           <Box sx={{ mt: 'auto', pt: 2 }}>
+            <Stack spacing={1} sx={{ mb: 2, px: 2, textAlign: 'center', bgcolor: 'rgba(1,0,87,0.03)', borderRadius: 2, py: 2, border: '1px solid rgba(1,0,87,0.05)' }}>
+              <Box sx={{ py: 0 }}>
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 800, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
+                  {user?.display_name || userDisplayName || statusData?.businessName || companyBilling.companyName || 'ExperiaHub Partner'}
+                </Typography>
+                {appId && (
+                  <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', display: 'block', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.8 }}>
+                    ID: {appId}
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+
             <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <FormControlLabel
                control={<Switch size="small" checked={isTransparent} onChange={(e)=>setIsTransparent(e.target.checked)} />}
@@ -2319,6 +2321,30 @@ const PRIMARY_BUTTON_SX = {
           <Fade in timeout={250}>
             <Box sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Experience Overview</Typography>
+
+              {/* Graphic Steps */}
+              <Box sx={{ mb: 4, p: 2, bgcolor: isTransparent ? 'rgba(255,255,255,0.4)' : '#F8FAFC', borderRadius: 2 }}>
+                <Stepper activeStep={-1} alternativeLabel connector={<Box sx={{ flex: '1 1 auto', borderTop: '1px solid #E2E8F0', mt: 1.5 }} />}>
+                  {['Add Experience', 'Add Details', 'Add Photos', 'Set Pricing', 'Publish'].map((label, index) => (
+                      <Step key={label}>
+                        <StepLabel 
+                          StepIconComponent={() => (
+                            <Box sx={{ 
+                              width: 24, height: 24, borderRadius: '50%', 
+                              bgcolor: '#010057', color: '#fff', 
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                              fontWeight: 700, fontSize: '0.75rem' 
+                            }}>
+                              {index + 1}
+                            </Box>
+                          )}
+                        >
+                          <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#010057' }}>{label}</Typography>
+                        </StepLabel>
+                      </Step>
+                  ))}
+                </Stepper>
+              </Box>
 
             <ActivitiesSkeleton 
               experiences={experiences} 
