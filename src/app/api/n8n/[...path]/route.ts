@@ -101,6 +101,11 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
                  return NextResponse.json({ success: true, stub: true, saved_direct: true });
              }
+             if (targetUrl.includes('supplier/bookings/sync')) {
+                 const res = await handleDirectSave('bookings', body, targetUrl, authHeader);
+                 if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+                 return NextResponse.json({ success: true, stub: true, saved_direct: true });
+             }
 
              if (targetUrl.includes('supplier/company/billing/get')) {
                  const billing = await handleDirectGet('billing', targetUrl, authHeader);
@@ -188,7 +193,7 @@ export async function PUT(req: NextRequest, ctx: any) { return proxyRequest(req,
 export async function PATCH(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 export async function DELETE(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 
-async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile'|'background'|'activities', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
+async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile'|'background'|'activities'|'bookings', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
   try {
     if (!body || !(body instanceof Blob)) return { success: false, error: 'Invalid Body' };
     const text = await body.text();
@@ -305,6 +310,34 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
          const freshUrl = payload.url || payload.background?.url;
          const nextMeta = { ...(current?.metadata || {}), background_url: freshUrl };
          updates = { metadata: nextMeta };
+    } else if (type === 'bookings' && payload.bookings) {
+        // Bulk Upsert Bookings via Admin Client
+        const admin = getAdminClient();
+        if (!admin) return { success: false, error: 'Server Config Error: Missing Service Key for Booking Sync' };
+
+        const toUpsert = payload.bookings.map((b: any) => ({
+            application_id: appId,
+            bokun_booking_id: b.id?.toString(),
+            title: b.productTitle,
+            customer_name: b.customerName,
+            date: b.date, 
+            pax: b.pax ? parseInt(b.pax) : 1,
+            price: b.price ? parseFloat(b.price) : 0,
+            currency: b.currency || 'USD',
+            status: b.status, 
+            payment_status: 'PAID',
+            updated_at: new Date().toISOString()
+        }));
+
+        const { error } = await admin.from('bookings').upsert(toUpsert, { onConflict: 'bokun_booking_id' });
+        
+        if (error) {
+            console.error('[N8N Proxy] Booking Sync Error:', error);
+            return { success: false, error: error.message };
+        }
+        console.log(`[N8N Proxy] Synced ${toUpsert.length} bookings for ${appId}`);
+        return { success: true };
+
     } else if (type === 'activities' && payload.activities) {
         const toUpsert: any[] = [];
         const toInsert: any[] = [];
