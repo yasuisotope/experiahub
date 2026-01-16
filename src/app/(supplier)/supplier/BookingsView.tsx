@@ -4,8 +4,9 @@ import {
   Box, Typography, Stack, Grid, Paper, Select, MenuItem, FormControl, InputLabel, 
   Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton, Button,
   Card, CardContent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  LinearProgress, Avatar
+  LinearProgress, Avatar, TextField
 } from '@mui/material';
+
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import GroupIcon from '@mui/icons-material/Group';
@@ -54,6 +55,7 @@ export default function BookingsView() {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
   const [selectedEvent, setSelectedEvent] = useState<Booking | null>(null);
+  const [isAddBookingOpen, setIsAddBookingOpen] = useState(false);
 
   // Computed KPIs based on filtered bookings
   const filteredBookings = bookings.filter(b => {
@@ -260,7 +262,7 @@ export default function BookingsView() {
                  <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: 'white', border: '1px solid #E2E8F0' }}>
                      <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Quick Actions</Typography>
                      <Stack spacing={2}>
-                         <Button variant="outlined" startIcon={<EventIcon />} sx={{ justifyContent: 'flex-start', fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#334155', textTransform: 'none', '&:hover': { borderColor: '#010057', bgcolor: '#F1F5F9' } }}>
+                         <Button variant="outlined" startIcon={<EventIcon />} onClick={() => setIsAddBookingOpen(true)} sx={{ justifyContent: 'flex-start', fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#334155', textTransform: 'none', '&:hover': { borderColor: '#010057', bgcolor: '#F1F5F9' } }}>
                              Manually Add Booking
                          </Button>
                          <Button variant="outlined" startIcon={<CalendarMonthIcon />} sx={{ justifyContent: 'flex-start', fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#334155', textTransform: 'none', '&:hover': { borderColor: '#010057', bgcolor: '#F1F5F9' } }}>
@@ -352,6 +354,46 @@ export default function BookingsView() {
                      }
                  }}>Cancel Booking</Button>
              )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Booking Modal */}
+      <Dialog open={isAddBookingOpen} onClose={() => setIsAddBookingOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontFamily: 'Agrandir, serif', color: '#010057' }}>Add Manual Booking</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+            <Stack spacing={3} sx={{ mt: 1 }}>
+                <FormControl fullWidth size="small">
+                    <InputLabel>Experience</InputLabel>
+                    <Select label="Experience" defaultValue="">
+                        <MenuItem value="Tea Ceremony">Kyoto Tea Ceremony</MenuItem>
+                        <MenuItem value="Samurai">Samurai Experience</MenuItem>
+                        <MenuItem value="Bamboo">Bamboo Forest Walk</MenuItem>
+                    </Select>
+                </FormControl>
+                <TextField label="Customer Name" fullWidth size="small" />
+                <TextField label="Date" type="date" fullWidth size="small" InputLabelProps={{ shrink: true }} />
+                <Stack direction="row" spacing={2}>
+                    <TextField label="Pax" type="number" fullWidth size="small" />
+                    <TextField label="Price (JPY)" type="number" fullWidth size="small" />
+                </Stack>
+            </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid #eee' }}>
+            <Button onClick={() => setIsAddBookingOpen(false)} sx={{ color: '#64748B' }}>Cancel</Button>
+            <Button variant="contained" onClick={() => {
+                // Mock Add
+                const newB: Booking = {
+                    id: `BK-${1000 + bookings.length + 1}`,
+                    customerName: 'New Customer',
+                    experienceTitle: 'Manual Booking',
+                    date: new Date().toISOString(),
+                    pax: 2, price: 10000, currency: 'JPY', status: 'Confirmed', avatar: 'NC'
+                };
+                setBookings([...bookings, newB]);
+                setIsAddBookingOpen(false);
+            }} sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif' }}>
+                Create Booking
+            </Button>
         </DialogActions>
       </Dialog>
     </Box>
