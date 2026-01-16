@@ -2557,7 +2557,9 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'bookings' && (
           <Fade in timeout={250}>
-             <BookingsView />
+             <Box>
+                <BookingsView />
+             </Box>
           </Fade>
         )}
 
