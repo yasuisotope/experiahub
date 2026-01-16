@@ -197,21 +197,37 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     if (!appId) return { success: false, error: 'Missing applicationId' };
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const isServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Explicitly check for Service Key to ensure Admin access
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const isServiceKey = !!serviceKey;
+    const supabaseKey = serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
         console.warn('[N8N Proxy] Missing Supabase credentials for direct save');
-        return { success: false, error: 'Configuration Error' };
+        return { success: false, error: 'Configuration Error: Missing Credentials' };
     }
     
-    // Inject Auth Header if using Anon Key (RLS fix)
-    const options: any = {};
+    // Warn if we are relying on Anon Key (Fragile for Backend)
+    if (!isServiceKey) {
+        console.warn('[N8N Proxy] WARNING: Running with ANON KEY. RLS failures likely if token is invalid.');
+    }
+
+    // Inject Auth Header only if ABSOLUTELY necessary (Anon Key)
+    const options: any = {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+            detectSessionInUrl: false
+        }
+    };
+    
     if (!isServiceKey && authHeader) {
         options.global = { headers: { Authorization: authHeader } };
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey, options);
+
+    console.log(`[N8N Proxy] Client Init: ServiceKey=${isServiceKey}, AuthHeader=${!!authHeader}`);
 
     // FIX: Retrieve User ID for RLS compliance
     let userId: string | null = null;
