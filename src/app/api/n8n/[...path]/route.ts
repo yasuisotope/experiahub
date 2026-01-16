@@ -237,13 +237,15 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
         payload.activities.forEach((a: any) => {
-            const row = {
-                id: isUUID(a.id) ? a.id : undefined, // Let DB generate ID if temp
+            const row: any = {
                 application_id: appId,
                 title: a.title,
                 raw_data: { ...a, _temp_id: a.id, Build: '2026.01.15.2425_FIX_V28' }, // Store temp ID to map back
                 updated_at: new Date().toISOString()
             };
+            if (isUUID(a.id)) {
+                row.id = a.id;
+            }
             
             if (isUUID(a.id)) {
                 toUpsert.push(row);
