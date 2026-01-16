@@ -2328,7 +2328,7 @@ const PRIMARY_BUTTON_SX = {
 
               {/* Graphic Steps */}
               <Box sx={{ mb: 4, p: 2, bgcolor: isTransparent ? 'rgba(255,255,255,0.4)' : '#F8FAFC', borderRadius: 2 }}>
-                <Stepper activeStep={-1} alternativeLabel connector={<Box sx={{ flex: '1 1 auto', borderTop: '1px solid #E2E8F0', mt: 1.5 }} />}>
+                <Stepper activeStep={-1} alternativeLabel connector={null}>
                   {['Add Experience', 'Add Details', 'Add Photos', 'Set Pricing', 'Publish'].map((label, index) => (
                       <Step key={label}>
                         <StepLabel 
