@@ -2545,10 +2545,10 @@ const PRIMARY_BUTTON_SX = {
           <Fade in timeout={250}>
           <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
               <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Product Details</Typography>
               <FormControl size="small" sx={{ minWidth: 200, maxWidth: 400 }}>
-                <InputLabel id="switch-exp-label" sx={{ fontSize: '0.75rem', transform: 'translate(14px, -9px) scale(0.75)', bgcolor: 'white', px: 0.5 }}>Switch Experience</InputLabel>
+                <InputLabel id="switch-exp-label" sx={{ fontSize: '0.75rem', transform: 'translate(14px, -9px) scale(0.75)', bgcolor: '#F1F5F9', px: 0.5 }}>Switch Experience</InputLabel>
                 <Select
                   labelId="switch-exp-label"
                   value={selectedExperienceId || ''}
@@ -2561,7 +2561,7 @@ const PRIMARY_BUTTON_SX = {
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }
                   }}
-                  sx={{ borderRadius: 1, fontFamily: 'Nunito, sans-serif' }}
+                  sx={{ borderRadius: 1, fontFamily: 'Nunito, sans-serif', bgcolor: '#F1F5F9', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E2E8F0' } }}
                 >
                   {experiences.map(e => (
                     <MenuItem key={e.id} value={e.id} sx={{ fontFamily: 'Nunito, sans-serif' }}>

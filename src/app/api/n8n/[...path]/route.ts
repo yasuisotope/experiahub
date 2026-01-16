@@ -319,35 +319,33 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             }
             // Map back using _temp_id in raw_data
             (data || []).forEach((inserted: any) => {
-                const temp = inserted.raw_data?._temp_id;
+                const raw = typeof inserted.raw_data === 'string' ? JSON.parse(inserted.raw_data) : inserted.raw_data;
+                const temp = raw?._temp_id;
                 if (temp) idMappings[temp] = inserted.id;
             });
         }
 
         console.log(`[N8N Proxy] Saved Activities (${toUpsert.length} updated, ${toInsert.length} inserted)`);
-        return { success: true, idMappings } as any; // Cast to bypass strict return type signature if needed, or update signature
+        return { success: true, idMappings } as any; 
     }
     
     if (Object.keys(updates).length > 0) {
-        // Try UPSERT with checking onConflict application_id first
-        // If application_id is UNIQUE, this is the best way.
-        const { data, error } = await supabase
-            .from('suppliers')
-            .upsert({ application_id: appId, ...updates }, { onConflict: 'application_id' })
-            .select();
+        // Revert to Update + Insert Main logic to avoid 'No suitable key' upsert errors
+        const { data, error } = await supabase.from('suppliers').update(updates).eq('application_id', appId).select();
         
         if (error) {
             console.error('[N8N Proxy] Direct Save Error:', error);
-            // Fallback: If upsert failed due to key constraint (e.g. application_id not unique constraint?), try Update
-            if (error.message.includes('No suitable key') || error.message.includes('constraint')) {
-                 console.log('[N8N Proxy] Upsert failed, trying Update fallback...');
-                 const { error: updateError } = await supabase.from('suppliers').update(updates).eq('application_id', appId);
-                 if (updateError) return { success: false, error: updateError.message, details: updateError.details, hint: updateError.hint };
-                 return { success: true };
-            }
-            return { success: false, error: error.message, details: error.details, hint: error.hint };
+            return { success: false, error: error.message };
         }
         
+        if (!data || data.length === 0) {
+             console.log(`[N8N Proxy] Supplier row not found for ${appId}, creating...`);
+             const { error: insertError } = await supabase.from('suppliers').insert({ application_id: appId, ...updates });
+             if (insertError) {
+                 return { success: false, error: insertError.message };
+             }
+        }
+
         console.log(`[N8N Proxy] Direct Save Success for ${type} (${appId})`);
     }
     return { success: true };
