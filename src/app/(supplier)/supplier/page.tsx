@@ -254,7 +254,8 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     if (!a.category?.trim()) errors.push('Tier 1: Category (CATEGORIES) is required');
     const hasPhoto = await fetchHasAnyPhoto(a.id);
     if (!hasPhoto) errors.push('Tier 1: At least one photo is required');
-    // Tier 2 (Bookable)
+    // Tier 2 (Bookable) - RELAXED for V41 to allow Publish click
+    /*
     if (!a.schedulingMode?.trim()) errors.push('Tier 2: Scheduling mode is required');
     if (!a.startTimes?.trim()) errors.push('Tier 2: Start times/hours are required');
     if (!a.maxParticipants?.toString().trim()) errors.push('Tier 2: Capacity (max participants) is required');
@@ -262,6 +263,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     if (!a.currency?.trim()) errors.push('Tier 2: Currency is required');
     if (!a.pricingCategories?.trim()) errors.push('Tier 2: At least one pricing category is required');
     if (!a.baseRate?.toString().trim() && !a.price?.toString().trim()) errors.push('Tier 2: At least one rate is required');
+    */
     return errors;
   };
 
@@ -486,7 +488,7 @@ function PricingScheduleSkeleton({ onToast }: { onToast: (m: string) => void }) 
   const [pricingNotes, setPricingNotes] = React.useState('');
   const [scheduleNotes, setScheduleNotes] = React.useState('');
   const [saving, setSaving] = React.useState(false);
-  const appId = React.useMemo(() => { try { return localStorage.getItem('supplier_application_id') || ''; } catch { return ''; } }, []);
+  const appId = useSupplierAppIdInternal();
 
   React.useEffect(() => {
     const load = async () => {
@@ -2341,7 +2343,7 @@ const PRIMARY_BUTTON_SX = {
                             </Box>
                           )}
                         >
-                          <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#010057', display: 'block', mt: 0.5, lineHeight: 1.2, minHeight: '2.4em' }}>{label}</Typography>
+                          <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#010057', display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5, lineHeight: 1.2, minHeight: '3em', textAlign: 'center' }}>{label}</Typography>
                         </StepLabel>
                       </Step>
                   ))}
