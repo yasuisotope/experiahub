@@ -1293,6 +1293,14 @@ const PRIMARY_BUTTON_SX = {
 
   const onSaveDetails = async () => {
     if (!selectedExperienceId) { setToast('Select an Experience'); return; }
+    // Double check target exists
+    const target = experiences.find(e => e.id === selectedExperienceId);
+    if (!target) { 
+        console.error('Save Details Error: ID mismatch', selectedExperienceId, experiences.map(e=>e.id));
+        setToast('Sync Error: Experience not found. Please refresh page.'); 
+        return; 
+    }
+
     try {
       const next = experiences.map(e => e.id === selectedExperienceId ? { ...e, ...details } as Experience : e);
       setExperiences(next);
@@ -1717,7 +1725,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
-              Build: 2026.01.15.2255_FIX_V21
+              Build: 2026.01.15.2300_FIX_V22
             </Typography>
           </Box>
         </Paper>
@@ -1749,17 +1757,21 @@ const PRIMARY_BUTTON_SX = {
         <Paper sx={{ 
           p: 3, 
           borderRadius: 2, 
-          height: { xs: 'auto', md: 'calc(100vh - 48px)' },
+          // User requested "spacing of 200px or 300px". roughly 15-20vh top spacing.
+          mt: '15vh',
+          height: 'fit-content',
+          maxHeight: '70vh',
           display: 'flex',
           flexDirection: 'column', 
           position: 'sticky', 
-          top: 24, 
+          top: '15vh', 
           width: { md: 250 }, 
           transition: 'all .3s ease',
           bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
           backdropFilter: isTransparent ? 'blur(12px)' : 'none',
           color: '#0F172A',
-          border: '1px solid rgba(255,255,255,0.4)'
+          border: '1px solid rgba(255,255,255,0.4)',
+          overflowY: 'auto'
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
             <img
