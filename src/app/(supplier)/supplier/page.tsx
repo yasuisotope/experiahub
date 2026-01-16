@@ -1804,8 +1804,8 @@ const PRIMARY_BUTTON_SX = {
             <ListItemButton selected={section==='experiences'} onClick={() => { setSection('experiences'); setTab(0); setSubsection('overview'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='experiences'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
               <ListItemText primary="Experiences" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='experiences'?700:500 }} />
             </ListItemButton>
-            <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('help'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='information'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
-              <ListItemText primary="Information" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='information'?700:500 }} />
+            <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='information'?{ bgcolor: isTransparent ? 'rgba(74,124,140,0.15)' : '#EAF4F6' }:{}) }}>
+              <ListItemText primary="Information & Resources" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='information'?700:500 }} />
             </ListItemButton>
           </List>
 
@@ -1959,19 +1959,7 @@ const PRIMARY_BUTTON_SX = {
           </Box>
         )}
 
-        {section === 'information' && (
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs 
-              value={subsection} 
-              onChange={(_, v) => setSubsection(v)}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
-            >
-              <Tab label="Resources" value="resources" />
-            </Tabs>
-          </Box>
-        )}
+
 
         {section === 'welcome' && (
           <Fade in timeout={250}>
@@ -2335,7 +2323,7 @@ const PRIMARY_BUTTON_SX = {
                           StepIconComponent={() => (
                             <Box sx={{ 
                               width: 24, height: 24, borderRadius: '50%', 
-                              bgcolor: '#010057', color: '#fff', 
+                              bgcolor: '#C5A059', color: '#fff', 
                               display: 'flex', alignItems: 'center', justifyContent: 'center', 
                               fontWeight: 700, fontSize: '0.75rem' 
                             }}>
@@ -2764,9 +2752,8 @@ const PRIMARY_BUTTON_SX = {
                 </Stack>
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, transition: 'all 0.5s ease', '&:hover': { bgcolor: '#ffbf00' } }}
+                  sx={{ bgcolor: '#C5A059', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, color: '#fff', transition: 'all 0.5s ease', '&:hover': { bgcolor: '#B08D45' } }}
                   onClick={syncSelected}
-                  disabled={(validationMap[selectedExperienceId] ?? Infinity) !== 0}
                 >
                   Publish Experience
                 </Button>
