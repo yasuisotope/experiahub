@@ -201,10 +201,10 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     } finally { setSaving(false); }
   };
 
-  const submitForm = () => {
+  const submitForm = async () => {
     if (!title.trim()) { onToast('Title required'); return; }
     const next: Activity = {
-      ...editing, // Preserve existing fields (like authenticEchoes) NOT managed by this form!
+      ...editing, // Preserve existing fields
       id: editing?.id || `row_${Date.now()}`,
       title,
       summary,
@@ -226,13 +226,25 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
       baseRate,
       bokunProductId: editing?.bokunProductId || ''
     };
+    
+    // Optimistic update
     const updatedRows = editing ? rows.map((r) => (r.id === editing.id ? next : r)) : [next, ...rows];
     setRows(updatedRows);
-    onSave(updatedRows); // Persist immediately
-    setOpen(false); resetForm();
-    // If adding new, jump to details immediately
-    if (!editing && onEditDetails) {
-       onEditDetails(next);
+    
+    try {
+      await onSave(updatedRows); // Determine if save succeeds
+      
+      setOpen(false); 
+      resetForm();
+      
+      // If adding new, jump to details immediately
+      if (!editing && onEditDetails) {
+         onEditDetails(next);
+      }
+      onToast('Saved successfully');
+    } catch (e: any) {
+      console.error('Submit Form Error:', e);
+      onToast(`Save failed: ${e.message || 'Unknown error'}`);
     }
   };
 
@@ -1361,7 +1373,10 @@ const PRIMARY_BUTTON_SX = {
         const next = experiences.map(e => e.id === selectedExperienceId ? merged as Experience : e);
         setExperiences(next);
         await saveAllExperiences(next);
-      } catch {}
+      } catch (e: any) { 
+        console.error('Autosave Error:', e);
+        setToast('Autosave failed: ' + (e.message || 'Unknown'));
+      }
       finally { setAutoSaving(false); }
     }, 1500);
     return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
