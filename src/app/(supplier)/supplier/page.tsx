@@ -98,12 +98,71 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
   const [leadTime, setLeadTime] = React.useState('');
   const [bookingLink, setBookingLink] = React.useState('');
   const [languages, setLanguages] = React.useState('');
-  const [schedulingMode, setSchedulingMode] = React.useState('');
+  const [schedulingMode, setSchedulingMode] = React.useState('fixed_start_times');
   const [startTimes, setStartTimes] = React.useState('');
   const [cutoffHours, setCutoffHours] = React.useState('');
   const [pricingCategories, setPricingCategories] = React.useState('');
   const [baseRate, setBaseRate] = React.useState('');
-  const [filterText, setFilterText] = React.useState('');
+
+  // Bulk Selection State
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [targetDeleteId, setTargetDeleteId] = React.useState<string | null>(null);
+
+  const toggleSelection = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === rows.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(rows.map(r => r.id)));
+  };
+
+  const confirmDelete = (id?: string) => {
+    if (id) setTargetDeleteId(id);
+    else setTargetDeleteId(null); // Bulk
+    setDeleteDialogOpen(true);
+  };
+  
+  const performDelete = async () => {
+    const ids = targetDeleteId ? [targetDeleteId] : Array.from(selectedIds);
+    if (!ids.length) return;
+    
+    // Optimistic remove
+    const removed: Activity[] = [];
+    setRows((rs) => {
+      const remaining = rs.filter(r => !ids.includes(r.id));
+      ids.forEach(id => { const r = rs.find(x => x.id === id); if (r) removed.push(r); });
+      return remaining;
+    });
+
+    if (removed.length > 0) {
+        // Just keep the last one for Undo for now
+        setUndo({ id: removed[0].id, row: removed[0] }); 
+    }
+    
+    // Sync to backend? Ideally yes, but 'saveAll' usually handles explicit saves.
+    // If we want immediate backend delete, we need a 'delete' endpoint or save empty list?
+    // Current saveAll saves the CURRENT rows. So we should trigger a save.
+    // But let's verify if we want to auto-save deletes.
+    // Yes, usually.
+    const remaining = rows.filter(r => !ids.includes(r.id)); // Recalculate based on current closure 'rows' is stale? No, strictly use functional update or rely on 'saveAll' being called manually?
+    // To be safe, let's trigger save with the filtered list IF we trust 'saveAll' logic.
+    // Actually `saveAll` uses `rows` which is state. We just updated state.
+    // We should call `onSave` with the NEW list.
+    const nextRows = rows.filter(r => !ids.includes(r.id));
+    try {
+        await onSave(nextRows);
+        onToast('Deleted');
+    } catch(e) { console.error(e); }
+
+    setDeleteDialogOpen(false);
+    setSelectedIds(new Set());
+    setTargetDeleteId(null);
+  };  const [filterText, setFilterText] = React.useState('');
   const [sortKey, setSortKey] = React.useState<'title'|'city'|'durationMinutes'|'price'>('title');
   const [sortDir, setSortDir] = React.useState<'asc'|'desc'>('asc');
   const [inlineId, setInlineId] = React.useState<string | null>(null);
@@ -158,12 +217,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     setOpen(true);
   };
   const remove = (id: string) => {
-    setRows((rs) => {
-      const found = rs.find((r) => r.id === id);
-      if (found) setUndo({ id, row: found });
-      return rs.filter((r) => r.id !== id);
-    });
-    onToast('Deleted. Undo?');
+     confirmDelete(id);
   };
 
   // LocalStorage logic removed - handled by parent component
@@ -351,49 +405,66 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     <Box>
 
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4, alignItems: 'center', justifyContent: 'space-between' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2, alignItems: 'center', justifyContent: 'space-between' }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <TextField 
-        placeholder="Filter experiences..." 
-        size="small" 
-        value={filterText} 
-        onChange={(e) => setFilterText(e.target.value)} 
-        sx={{ bgcolor: '#fff', borderRadius: 1 }}
-      />
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        <Select 
-            size="small" 
-            value={sortKey} 
-            onChange={(e) => setSortKey(e.target.value as any)}
-            sx={{ bgcolor: '#fff', borderRadius: 1 }}
-        >
-          <MenuItem value="title">Title</MenuItem>
-          <MenuItem value="city">City</MenuItem>
-          <MenuItem value="durationMinutes">Duration</MenuItem>
-          <MenuItem value="price">Price</MenuItem>
-        </Select>
-        <Select 
-            size="small" 
-            value={sortDir} 
-            onChange={(e) => setSortDir(e.target.value as any)}
-            sx={{ bgcolor: '#fff', borderRadius: 1 }}
-        >
-          <MenuItem value="asc">Ascending</MenuItem>
-          <MenuItem value="desc">Descending</MenuItem>
-        </Select>
-      </Box>
+             placeholder="Filter experiences..." 
+             size="small" 
+             value={filterText} 
+             onChange={(e) => setFilterText(e.target.value)} 
+             sx={{ bgcolor: '#fff', borderRadius: 1 }}
+          />
+           <Box sx={{ display: 'flex', gap: 1 }}>
+            <Select 
+                size="small" 
+                value={sortKey} 
+                onChange={(e) => setSortKey(e.target.value as any)}
+                sx={{ bgcolor: '#fff', borderRadius: 1 }}
+            >
+              <MenuItem value="title">Title</MenuItem>
+              <MenuItem value="city">City</MenuItem>
+              <MenuItem value="durationMinutes">Duration</MenuItem>
+              <MenuItem value="price">Price</MenuItem>
+            </Select>
+            <Select 
+                size="small" 
+                value={sortDir} 
+                onChange={(e) => setSortDir(e.target.value as any)}
+                sx={{ bgcolor: '#fff', borderRadius: 1 }}
+            >
+              <MenuItem value="asc">Ascending</MenuItem>
+              <MenuItem value="desc">Descending</MenuItem>
+            </Select>
+          </Box>
         </Stack>
-        <Stack direction="row" spacing={1}>
+        
+        <Stack direction="row" spacing={1} alignItems="center">
+           {selectedIds.size > 0 && (
+               <Button 
+                 variant="contained" 
+                 color="error" 
+                 startIcon={<DeleteOutlineIcon />}
+                 onClick={() => confirmDelete()}
+                 sx={{ borderRadius: 1, textTransform: 'none', fontWeight: 700 }}
+               >
+                  Delete ({selectedIds.size})
+               </Button>
+           )}
           <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#C5A059' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#fff', fontWeight: 700 }}>Add</Button>
           <Button variant="outlined" onClick={saveAll} disabled={saving} sx={{ borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>{saving ? 'Saving…' : 'Save all'}</Button>
-          {undo && (
-            <Button size="small" onClick={() => { setRows((rs)=>[undo.row, ...rs]); setUndo(null); setTimeout(()=>onToast('Restored'), 0); }}>Undo</Button>
-          )}
         </Stack>
       </Stack>
+
       <Table size="small">
         <TableHead>
           <TableRow>
+            <TableCell padding="checkbox">
+              <Checkbox 
+                checked={rows.length > 0 && selectedIds.size === rows.length}
+                indeterminate={selectedIds.size > 0 && selectedIds.size < rows.length}
+                onChange={toggleAll}
+              />
+            </TableCell>
             <TableCell align="center" sx={{ fontWeight: 'bold' }}>Title</TableCell>
             <TableCell align="center" sx={{ fontWeight: 'bold' }}>City</TableCell>
             <TableCell align="center" sx={{ fontWeight: 'bold' }}>Duration (min)</TableCell>
@@ -407,7 +478,10 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
             .filter(r => [r.title,r.city,r.durationMinutes].join(' ').toLowerCase().includes(filterText.toLowerCase()))
             .sort((a,b)=>{ const va=(a as any)[sortKey]||''; const vb=(b as any)[sortKey]||''; const comp=String(va).localeCompare(String(vb),undefined,{numeric:true,sensitivity:'base'}); return sortDir==='asc'?comp:-comp; })
             .map((r) => (
-            <TableRow key={r.id} hover>
+            <TableRow key={r.id} hover selected={selectedIds.has(r.id)}>
+              <TableCell padding="checkbox">
+                 <Checkbox checked={selectedIds.has(r.id)} onChange={() => toggleSelection(r.id)} />
+              </TableCell>
               <TableCell align="center">{inlineId===r.id ? <TextField size="small" value={r.title} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,title:e.target.value}:x))} /> : r.title}</TableCell>
               <TableCell align="center">{inlineId===r.id ? <TextField size="small" value={r.city} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,city:e.target.value}:x))} /> : r.city}</TableCell>
               <TableCell align="center">{inlineId===r.id ? <TextField size="small" value={r.durationMinutes} onChange={(e)=>setRows(rs=>rs.map(x=>x.id===r.id?{...x,durationMinutes:e.target.value}:x))} /> : r.durationMinutes}</TableCell>
@@ -420,7 +494,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
                   <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 1, alignItems: 'center', justifyContent: 'center' }}>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                       <IconButton onClick={() => { setInlineId(r.id); }} size="small" sx={{ color: '#4A7C8C' }}><EditIcon fontSize="small" /></IconButton>
-                      <IconButton onClick={() => { if (window.confirm('Delete this experience?')) remove(r.id); }} size="small" color="error"><DeleteOutlineIcon fontSize="small" /></IconButton>
+                      <IconButton onClick={() => confirmDelete(r.id)} size="small" color="error"><DeleteOutlineIcon fontSize="small" /></IconButton>
                     </Box>
                     <Button size="small" variant="outlined" onClick={() => {
                       const copy = { ...r, id: `row_${Date.now()}` as string, title: r.title ? `${r.title} (Copy)` : 'Untitled (Copy)', bokunProductId: '' } as any;
@@ -493,6 +567,24 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
           <Button onClick={submitForm} variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none' }}>{editing ? 'Update' : 'Add'}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle sx={{ fontFamily: 'Agrandir, serif', color: '#010057', fontWeight: 800 }}>
+             {targetDeleteId ? 'Delete Experience?' : `Delete ${selectedIds.size} Experiences?`}
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B' }}>
+            This action cannot be undone (from the server). Are you sure you want to remove these items from your portfolio?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setDeleteDialogOpen(false)} sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>Cancel</Button>
+          <Button onClick={performDelete} variant="contained" color="error" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700 }}>
+             Confirm Delete
+          </Button>
         </DialogActions>
       </Dialog>
 
