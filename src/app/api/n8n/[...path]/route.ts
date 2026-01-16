@@ -249,7 +249,23 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 price: a.price ? parseFloat(a.price) : (a.baseRate ? parseFloat(a.baseRate) : null),
                 currency: a.currency || null,
                 bokun_product_id: a.bokunProductId || null,
-                category: a.category || null
+                category: a.category || null,
+                // New Narrative Columns
+                authentic_echoes: a.authenticEchoes || null,
+                unforgettable_feeling: a.unforgettableFeeling || null,
+                magic_moment: a.magicMoment || null,
+                hidden_gem: a.hiddenGem || null,
+                community_connection: a.communityConnection || null,
+                perfect_match: a.perfectMatch || null,
+                three_words: a.threeWords || null,
+                // Logistics
+                meeting_point: a.meetingPoint || null,
+                itinerary: a.itinerary || null,
+                safety_measures: a.safetyMeasures || null,
+                requirements: a.requirements || null,
+                included: a.included || null,
+                not_included: a.notIncluded || null,
+                insurance: a.insurance || null
             };
             if (isUUID(a.id)) {
                 row.id = a.id;
@@ -413,7 +429,23 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             price: row.price?.toString() || (row.raw_data?.price || row.raw_data?.baseRate),
             currency: row.currency || row.raw_data?.currency,
             category: row.category || row.raw_data?.category,
-            bokunProductId: row.bokun_product_id || row.raw_data?.bokunProductId
+            bokunProductId: row.bokun_product_id || row.raw_data?.bokunProductId,
+            // Narrative Restorations
+            authenticEchoes: row.authentic_echoes || row.raw_data?.authenticEchoes,
+            unforgettableFeeling: row.unforgettable_feeling || row.raw_data?.unforgettableFeeling,
+            magicMoment: row.magic_moment || row.raw_data?.magicMoment,
+            hiddenGem: row.hidden_gem || row.raw_data?.hiddenGem,
+            communityConnection: row.community_connection || row.raw_data?.communityConnection,
+            perfectMatch: row.perfect_match || row.raw_data?.perfectMatch,
+            threeWords: row.three_words || row.raw_data?.threeWords,
+            // Logistics Restorations
+            meetingPoint: row.meeting_point || row.raw_data?.meetingPoint,
+            itinerary: row.itinerary || row.raw_data?.itinerary,
+            safetyMeasures: row.safety_measures || row.raw_data?.safetyMeasures,
+            requirements: row.requirements || row.raw_data?.requirements,
+            included: row.included || row.raw_data?.included,
+            notIncluded: row.not_included || row.raw_data?.notIncluded,
+            insurance: row.insurance || row.raw_data?.insurance
         }));
 
     } catch (e) { return []; }
