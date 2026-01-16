@@ -1314,12 +1314,21 @@ const PRIMARY_BUTTON_SX = {
       try {
         const timestamp = new Date().getTime();
         // FORCE CACHE BUSTING: Add timestamp and headers to prevent stale reads
+        const token = AuthService.getToken();
+        const headers: any = { 
+            'Cache-Control': 'no-cache, no-store, must-revalidate', 
+            'Pragma': 'no-cache', 
+            'Expires': '0'
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}&_t=${timestamp}`, {
             method: 'GET',
             cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0' }
+            headers
         });
         const json = await parseJsonSafe(res);
+        console.log('[Supplier] LoadRemote Response:', json);
         if (json?.activities) {
           const remoteRows = json.activities.map((a: any) => ({
             id: a.id || `row_${Math.random().toString(36).substr(2, 9)}`,
