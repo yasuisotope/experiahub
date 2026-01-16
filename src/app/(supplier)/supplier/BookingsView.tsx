@@ -4,7 +4,7 @@ import {
   Box, Typography, Stack, Grid, Paper, Select, MenuItem, FormControl, InputLabel, 
   Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton, Button,
   Card, CardContent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  LinearProgress, Avatar, TextField, TableSortLabel, Checkbox, FormControlLabel
+  LinearProgress, Avatar, TextField, TableSortLabel, Checkbox, FormControlLabel, TableContainer, TablePagination
 } from '@mui/material';
 import { createClient } from '@supabase/supabase-js';
 
@@ -58,6 +58,9 @@ export default function BookingsView() {
   const [timeRange, setTimeRange] = useState<number>(6); // Default 6 Months
   const [showPast, setShowPast] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [searchText, setSearchText] = useState('');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -185,7 +188,19 @@ export default function BookingsView() {
   };
 
   const sortedBookings = useMemo(() => {
-    return [...kpiBookings].sort((a, b) => {
+    // 1. Text Search Filter
+    let result = kpiBookings;
+    if (searchText) {
+        const q = searchText.toLowerCase();
+        result = result.filter(b => 
+            b.customerName.toLowerCase().includes(q) || 
+            b.experienceTitle.toLowerCase().includes(q) ||
+            b.id.toLowerCase().includes(q) ||
+            String(b.pax).includes(q)
+        );
+    }
+
+    return [...result].sort((a, b) => {
         let valA = a[orderBy];
         let valB = b[orderBy];
 
@@ -205,7 +220,7 @@ export default function BookingsView() {
         if (strA > strB) return order === 'asc' ? 1 : -1;
         return 0;
     });
-  }, [kpiBookings, order, orderBy]);
+  }, [kpiBookings, order, orderBy, searchText]);
 
   const calendarEvents = bookings.map(b => ({
       id: b.id,
@@ -237,7 +252,14 @@ export default function BookingsView() {
         </Typography>
         
         <Stack direction="row" spacing={2} alignItems="center">
-            <FormControlLabel 
+            <TextField 
+                placeholder="Search bookings..." 
+                size="small" 
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                sx={{ bgcolor: 'white', borderRadius: 1 }}
+            />
+            <FormControlLabel  
                 control={<Checkbox checked={showPast} onChange={(e) => setShowPast(e.target.checked)} size="small" />} 
                 label={<Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color:'#64748B' }}>Show Past</Typography>}
             />
@@ -347,7 +369,9 @@ export default function BookingsView() {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {sortedBookings.length > 0 ? sortedBookings.map((b) => (
+                    {sortedBookings.length > 0 ? sortedBookings
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((b) => (
                     <TableRow key={b.id} hover onClick={() => setSelectedEvent(b)} sx={{ cursor: 'pointer' }}>
                         <TableCell sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, color: '#010057' }}>{b.id}</TableCell>
                         <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.experienceTitle}</TableCell>
@@ -391,9 +415,21 @@ export default function BookingsView() {
                         <TableCell colSpan={8} align="center" sx={{ py: 4, color: '#94A3B8', fontFamily: 'Nunito, sans-serif' }}>No bookings found for this period.</TableCell>
                     </TableRow>
                     )}
-                </TableBody>
+                  </TableBody>
                 </Table>
                 </Box>
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={sortedBookings.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={(e, p) => setPage(p)}
+                    onRowsPerPageChange={(e) => {
+                        setRowsPerPage(parseInt(e.target.value, 10));
+                        setPage(0);
+                    }}
+                />
                 ) : (
                     <Box sx={{ fontFamily: 'Nunito, sans-serif' }}>
                         <style dangerouslySetInnerHTML={{__html: `
