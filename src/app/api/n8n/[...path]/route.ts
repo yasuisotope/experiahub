@@ -592,11 +592,18 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
 async function handleDirectListActivities(applicationId: string, authHeader: string | null) {
     try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const supabaseKey = serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         if (!supabaseUrl || !supabaseKey) return null;
         
         const options: any = {};
-        if (authHeader) options.global = { headers: { Authorization: authHeader } };
+        // CRITICAL: Do NOT attach User Token if using Service Key, it causes "No suitable key" error even for Selects
+        if (!serviceKey && authHeader) {
+            options.global = { headers: { Authorization: authHeader } };
+        } else if (serviceKey) {
+            options.auth = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false };
+        }
+
         const supabase = createClient(supabaseUrl, supabaseKey, options);
 
         console.log(`[N8N Proxy] Direct List: Fetching for appId=${applicationId}`);
