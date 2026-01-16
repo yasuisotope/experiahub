@@ -1441,7 +1441,8 @@ const PRIMARY_BUTTON_SX = {
       try {
         const current = experiences.find(e => e.id === selectedExperienceId);
         if (!current) return;
-        let merged: any = { ...current, ...details };
+        // CRITICAL FIX: Force ID to match current (authoritative) to prevent stale details.id (row_...) from reverting UUIDs
+        let merged: any = { ...current, ...details, id: current.id };
         if (subsection === 'pricing') {
           const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
           const base = pricingRows[0]?.amount || merged.baseRate || '';
@@ -2547,10 +2548,10 @@ const PRIMARY_BUTTON_SX = {
           <Stack spacing={2}>
             <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
               <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Product Details</Typography>
-              <FormControl size="small" sx={{ minWidth: 200, maxWidth: 400 }}>
-                <InputLabel id="switch-exp-label" sx={{ fontSize: '0.75rem', transform: 'translate(14px, -9px) scale(0.75)', bgcolor: '#F1F5F9', px: 0.5 }}>Switch Experience</InputLabel>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', fontWeight: 600 }}>Switch:</Typography>
                 <Select
-                  labelId="switch-exp-label"
+                  size="small"
                   value={selectedExperienceId || ''}
                   onChange={(e)=>{
                       const id = e.target.value;
@@ -2561,15 +2562,25 @@ const PRIMARY_BUTTON_SX = {
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }
                   }}
-                  sx={{ borderRadius: 1, fontFamily: 'Nunito, sans-serif', bgcolor: '#F1F5F9', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E2E8F0' } }}
+                  displayEmpty
+                  sx={{ 
+                    minWidth: 200, 
+                    maxWidth: 300,
+                    height: 36,
+                    fontFamily: 'Nunito, sans-serif', 
+                    bgcolor: '#F1F5F9', 
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E2E8F0' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                    fontSize: '0.875rem'
+                  }}
                 >
                   {experiences.map(e => (
-                    <MenuItem key={e.id} value={e.id} sx={{ fontFamily: 'Nunito, sans-serif' }}>
-                      {e.title && e.title.length > 50 ? `${e.title.substring(0, 50)}...` : (e.title || 'Untitled Experience')}
+                    <MenuItem key={e.id} value={e.id} sx={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.875rem' }}>
+                      {e.title && e.title.length > 40 ? `${e.title.substring(0, 40)}...` : (e.title || 'Untitled Experience')}
                     </MenuItem>
                   ))}
                 </Select>
-              </FormControl>
+              </Stack>
             </Stack>
             {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit details.</Alert>)}
