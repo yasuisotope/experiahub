@@ -56,6 +56,7 @@ const RECENT_ACTIVITY = [
 
 export default function BookingsView() {
   const [timeRange, setTimeRange] = useState<number>(6); // Default 6 Months
+  const [showPast, setShowPast] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,10 +169,9 @@ export default function BookingsView() {
       const cutoff = new Date();
       cutoff.setMonth(now.getMonth() + timeRange);
       
-      const start = new Date();
-      start.setDate(now.getDate() - 30);
+      if (showPast) return d <= cutoff;
 
-      return d >= start && d <= cutoff;
+      return d >= now && d <= cutoff;
   });
 
   const totalRevenue = kpiBookings.filter(b => b.status !== 'Cancelled').reduce((acc, b) => acc + b.price, 0);
@@ -236,7 +236,11 @@ export default function BookingsView() {
           Bookings Dashboard
         </Typography>
         
-        <Stack direction="row" spacing={2}>
+        <Stack direction="row" spacing={2} alignItems="center">
+            <FormControlLabel 
+                control={<Checkbox checked={showPast} onChange={(e) => setShowPast(e.target.checked)} size="small" />} 
+                label={<Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color:'#64748B' }}>Show Past</Typography>}
+            />
             <FormControl size="small" sx={{ minWidth: 150 }}>
             <Select 
                 value={timeRange} 

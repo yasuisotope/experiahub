@@ -1150,7 +1150,9 @@ const PRIMARY_BUTTON_SX = {
     const load = async () => {
       if (!appId) return;
       try {
-        const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`);
+        const headers: any = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`, { headers });
         const json = await parseJsonSafe(res);
         if (json?.success && Array.isArray(json.activities)) {
           const mapped: Experience[] = json.activities.map((a: any, i: number) => ({
@@ -1377,8 +1379,11 @@ const PRIMARY_BUTTON_SX = {
   const saveAllExperiences = async (nextExperiences: Experience[]) => {
     if (!appId) return;
     const payload = { applicationId: appId, activities: nextExperiences };
+    const headers: any = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const res = await fetch(`${N8N_BASE}/supplier/activities/save`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+      method: 'POST', headers, body: JSON.stringify(payload)
     });
     const json = await parseJsonSafe(res);
     if (!json) {
