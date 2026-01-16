@@ -245,17 +245,31 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             const row: any = {
                 application_id: appId,
                 title: a.title,
-                raw_data: { ...a, _temp_id: a.id, Build: '2026.01.16.2505_FIX_V34' }, // Updated Build ID
+                raw_data: { 
+                    ...a, 
+                    // Explicitly ensure critical narrative fields are preserved in raw_data
+                    authenticEchoes: a.authenticEchoes || null,
+                    unforgettableFeeling: a.unforgettableFeeling || null,
+                    magicMoment: a.magicMoment || null,
+                    hiddenGem: a.hiddenGem || null,
+                    communityConnection: a.communityConnection || null,
+                    perfectMatch: a.perfectMatch || null,
+                    threeWords: a.threeWords || null,
+                    _temp_id: a.id, 
+                    Build: 'V57_DEBUG_Persistence' 
+                },
                 updated_at: new Date().toISOString(),
-                // Explicit Mapping to ensure data appears in Supabase Table Views and isn't just hidden in raw_data
+                // Explicit Mapping to ensure data appears in Supabase Table Views
                 city: a.city || null,
-                description: a.summary || a.description || null, // Map 'summary' to 'description'
+                description: a.summary || a.description || null,
                 duration_minutes: a.durationMinutes ? parseInt(a.durationMinutes) : null,
                 price: a.price ? parseFloat(a.price) : (a.baseRate ? parseFloat(a.baseRate) : null),
                 currency: a.currency || null,
                 bokun_product_id: a.bokunProductId || null,
                 category: a.category || null
             };
+            
+            console.log(`[N8N Proxy] Processing Activity ${a.id}:`, { title: a.title, echoes: a.authenticEchoes });
             if (isUUID(a.id)) {
                 row.id = a.id;
             }
@@ -407,8 +421,10 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
         const { data, error } = await supabase.from('experiences').select('*').eq('application_id', applicationId);
         if (error) { console.error('List Activities Error:', error); return []; }
         
-        return (data || []).map((row: any) => ({
-            ...row.raw_data, // Expand stored JSON first
+        return (data || []).map((row: any) => {
+            const raw = (typeof row.raw_data === 'string') ? JSON.parse(row.raw_data) : (row.raw_data || {});
+            return {
+            ...raw, // Expand stored JSON first
             // OVERRIDE with explicit columns if they exist (This handles the migration to structured columns)
             id: row.id,
             title: row.title,
@@ -434,8 +450,9 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             requirements: row.requirements || row.raw_data?.requirements,
             included: row.included || row.raw_data?.included,
             notIncluded: row.not_included || row.raw_data?.notIncluded,
-            insurance: row.insurance || row.raw_data?.insurance
-        }));
+            insurance: row.insurance || raw?.insurance || row.raw_data?.insurance
+        };
+      });
 
     } catch (e) { return []; }
 }
