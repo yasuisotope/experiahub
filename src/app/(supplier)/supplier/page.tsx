@@ -1151,7 +1151,8 @@ const PRIMARY_BUTTON_SX = {
       if (!appId) return;
       try {
         const headers: any = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const authToken = AuthService.getToken();
+        if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
         const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`, { headers });
         const json = await parseJsonSafe(res);
         if (json?.success && Array.isArray(json.activities)) {
@@ -1380,7 +1381,8 @@ const PRIMARY_BUTTON_SX = {
     if (!appId) return;
     const payload = { applicationId: appId, activities: nextExperiences };
     const headers: any = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const authToken = AuthService.getToken();
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
     const res = await fetch(`${N8N_BASE}/supplier/activities/save`, {
       method: 'POST', headers, body: JSON.stringify(payload)
