@@ -1729,7 +1729,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
-              Build: 2026.01.15.2445_FIX_V29
+              Build: 2026.01.16.2505_FIX_V30
             </Typography>
           </Box>
         </Paper>

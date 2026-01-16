@@ -35,6 +35,14 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
       body = blob; 
     }
 
+    // FORCE DIRECT SAVE for Activities to ensure ID Mappings are returned and reliability
+    if (targetUrl.includes('supplier/activities/save')) {
+        const res = await handleDirectSave('activities', body, targetUrl, authHeader);
+        if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+        // CRITICAL: Must return idMappings to frontend so it can swap temp IDs for real UUIDs
+        return NextResponse.json({ success: true, idMappings: (res as any).idMappings, stub: true, direct: true });
+    }
+
     // Capture response to check status
     const response = await fetch(targetUrl, {
       method: request.method,
