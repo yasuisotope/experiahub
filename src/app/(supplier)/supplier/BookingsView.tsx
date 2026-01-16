@@ -567,15 +567,22 @@ export default function BookingsView() {
                  <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: 'white', border: '1px solid #E2E8F0' }}>
                     <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Recent Activity</Typography>
                     <Stack spacing={2}>
-                        {RECENT_ACTIVITY.map((act, i) => (
-                            <Box key={i} sx={{ display:'flex', gap: 2 }}>
+                        {kpiBookings
+                            .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                            .slice(0, 5)
+                            .map((booking, i) => (
+                            <Box key={booking.id} sx={{ display:'flex', gap: 2 }}>
                                 <Box sx={{ 
-                                    width: 8, height: 8, borderRadius: '50%', mt: 0.8,
-                                    bgcolor: act.type === 'booking' ? '#10B981' : act.type === 'cancel' ? '#EF4444' : '#3B82F6' 
+                                    width: 8, height: 8, borderRadius: '50%', mt: 0.8, flexShrink: 0,
+                                    bgcolor: booking.status === 'Confirmed' ? '#10B981' : booking.status === 'Cancelled' ? '#EF4444' : '#EAB308' 
                                 }} />
                                 <Box>
-                                    <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, color: '#334155' }}>{act.text}</Typography>
-                                    <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#94A3B8' }}>{act.time}</Typography>
+                                    <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, color: '#334155' }}>
+                                        {booking.status === 'Cancelled' ? 'Cancellation' : 'New booking'} by <span style={{ color: '#010057' }}>{booking.customerName}</span>
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#94A3B8' }} title={new Date(booking.date).toLocaleString()}>
+                                        {new Date(booking.date).toLocaleDateString()} • {booking.experienceTitle}
+                                    </Typography>
                                 </Box>
                             </Box>
                         ))}
