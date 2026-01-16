@@ -329,18 +329,25 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     }
     
     if (Object.keys(updates).length > 0) {
-        const { data, error } = await supabase.from('suppliers').update(updates).eq('application_id', appId).select();
+        // Try UPSERT with checking onConflict application_id first
+        // If application_id is UNIQUE, this is the best way.
+        const { data, error } = await supabase
+            .from('suppliers')
+            .upsert({ application_id: appId, ...updates }, { onConflict: 'application_id' })
+            .select();
         
         if (error) {
             console.error('[N8N Proxy] Direct Save Error:', error);
-            return { success: false, error: error.message };
+            // Fallback: If upsert failed due to key constraint (e.g. application_id not unique constraint?), try Update
+            if (error.message.includes('No suitable key') || error.message.includes('constraint')) {
+                 console.log('[N8N Proxy] Upsert failed, trying Update fallback...');
+                 const { error: updateError } = await supabase.from('suppliers').update(updates).eq('application_id', appId);
+                 if (updateError) return { success: false, error: updateError.message, details: updateError.details, hint: updateError.hint };
+                 return { success: true };
+            }
+            return { success: false, error: error.message, details: error.details, hint: error.hint };
         }
         
-        if (!data || data.length === 0) {
-             console.warn(`[N8N Proxy] Direct Save: No row found for appId ${appId}`);
-             return { success: false, error: `Supplier Record not found for ID: ${appId}` };
-        }
-
         console.log(`[N8N Proxy] Direct Save Success for ${type} (${appId})`);
     }
     return { success: true };
