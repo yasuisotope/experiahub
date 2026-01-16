@@ -1725,7 +1725,7 @@ const PRIMARY_BUTTON_SX = {
               </Typography>
             </Stack>
             <Typography variant="caption" sx={{ display: 'block', color: isTransparent ? '#334155' : '#CBD5E1' }}>
-              Build: 2026.01.15.2345_FIX_V25
+              Build: 2026.01.15.2400_FIX_V26
             </Typography>
           </Box>
         </Paper>
@@ -1759,7 +1759,7 @@ const PRIMARY_BUTTON_SX = {
         <Paper sx={{ 
           p: 3, 
           borderRadius: 2, 
-          height: 'calc(100% - 32px)', // Fill grid height minus padding correction
+          height: '100%', // Fill grid height completely
           display: 'flex',
           flexDirection: 'column', 
           width: '100%', 
@@ -1840,7 +1840,7 @@ const PRIMARY_BUTTON_SX = {
         <Paper sx={{
           p: 3,
           borderRadius: 2,
-          height: 'calc(100% - 32px)', // Match sidebar height
+          height: '100%', // Match sidebar height
           overflowY: 'auto', // Enable scroll within the card
           bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
           color: '#3b4850',
