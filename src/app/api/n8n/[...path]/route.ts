@@ -202,6 +202,15 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     const isServiceKey = !!serviceKey;
     const supabaseKey = serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+    // Helper for Admin Fallback
+    const getAdminClient = () => {
+         const sk = process.env.SUPABASE_SERVICE_ROLE_KEY;
+         if (!sk) return null;
+         return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, sk, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+         });
+    };
+
     if (!supabaseUrl || !supabaseKey) {
         console.warn('[N8N Proxy] Missing Supabase credentials for direct save');
         return { success: false, error: 'Configuration Error: Missing Credentials' };
@@ -348,14 +357,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         
         // 1. Upsert existing
         // 1. Update Existing (Sequential to avoid 'No suitable key' bulk error)
-        // Helper for Admin Fallback
-        const getAdminClient = () => {
-             const sk = process.env.SUPABASE_SERVICE_ROLE_KEY;
-             if (!sk) return null;
-             return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, sk, {
-                auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-             });
-        };
+
 
         for (const row of toUpsert) {
              let { data, error } = await supabase
@@ -439,18 +441,42 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     
     if (Object.keys(updates).length > 0) {
         // Revert to Update + Insert Main logic to avoid 'No suitable key' upsert errors
-        const { data, error } = await supabase.from('suppliers').update(updates).eq('application_id', appId).select();
+        let { data, error } = await supabase.from('suppliers').update(updates).eq('application_id', appId).select();
+        
+        // RETRY WITH ADMIN
+        if (error && (error.message?.includes('No suitable key') || error.message?.includes('signature'))) {
+             console.warn(`[N8N Proxy] Retrying Supplier Update with Admin Client...`);
+             const admin = getAdminClient();
+             if (admin) {
+                 const retry = await admin.from('suppliers').update(updates).eq('application_id', appId).select();
+                 data = retry.data;
+                 error = retry.error;
+             }
+        }
         
         if (error) {
             console.error('[N8N Proxy] Direct Save Error:', error);
-            return { success: false, error: error.message };
+            const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+            return { success: false, error: `${error.message} (AdminKey: ${sk})` };
         }
         
         if (!data || data.length === 0) {
              console.log(`[N8N Proxy] Supplier row not found for ${appId}, creating...`);
-             const { error: insertError } = await supabase.from('suppliers').insert({ application_id: appId, ...updates });
+             let { error: insertError } = await supabase.from('suppliers').insert({ application_id: appId, ...updates });
+             
+             // RETRY WITH ADMIN
+             if (insertError && (insertError.message?.includes('No suitable key') || insertError.message?.includes('signature'))) {
+                 console.warn(`[N8N Proxy] Retrying Supplier Insert with Admin Client...`);
+                 const admin = getAdminClient();
+                 if (admin) {
+                     const retryI = await admin.from('suppliers').insert({ application_id: appId, ...updates });
+                     insertError = retryI.error;
+                 }
+             }
+
              if (insertError) {
-                 return { success: false, error: insertError.message };
+                 const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+                 return { success: false, error: `${insertError.message} (AdminKey: ${sk})` };
              }
         }
 
