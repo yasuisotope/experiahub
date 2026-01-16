@@ -96,6 +96,62 @@ export default function BookingsView() {
   const [selectedEvent, setSelectedEvent] = useState<Booking | null>(null);
   const [isAddBookingOpen, setIsAddBookingOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [formState, setFormState] = useState({
+      experienceTitle: '',
+      customerName: '',
+      date: '',
+      pax: 1,
+      price: 0,
+      status: 'Confirmed'
+  });
+
+  useEffect(() => {
+    if (isAddBookingOpen) {
+        if (editingBooking) {
+             let d = '';
+             try { d = new Date(editingBooking.date).toISOString().split('T')[0]; } catch(e){}
+             setFormState({
+                 experienceTitle: editingBooking.experienceTitle,
+                 customerName: editingBooking.customerName,
+                 date: d,
+                 pax: editingBooking.pax,
+                 price: editingBooking.price,
+                 status: editingBooking.status
+             });
+        } else {
+             const d = new Date().toISOString().split('T')[0];
+             setFormState({
+                 experienceTitle: 'Authentic Echoes',
+                 customerName: '',
+                 date: d,
+                 pax: 2,
+                 price: 150,
+                 status: 'Confirmed'
+             });
+        }
+    }
+  }, [isAddBookingOpen, editingBooking]);
+
+  const handleSaveBooking = async () => {
+    const payload = {
+        application_id: 'SUP-543C66BA',
+        experience_title: formState.experienceTitle,
+        customer_name: formState.customerName,
+        date: new Date(formState.date).toISOString(),
+        pax: Number(formState.pax),
+        price: Number(formState.price),
+        status: formState.status
+    };
+
+    if (editingBooking) {
+        const { error } = await supabase.from('bookings').update(payload).eq('id', editingBooking.id);
+        if (error) alert('Error updating: ' + error.message);
+    } else {
+        const { error } = await supabase.from('bookings').insert(payload);
+        if (error) alert('Error creating: ' + error.message);
+    }
+    window.location.reload();
+  };
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [orderBy, setOrderBy] = useState<keyof Booking>('date');
 
@@ -478,43 +534,47 @@ export default function BookingsView() {
             <Stack spacing={3} sx={{ mt: 1 }}>
                 <FormControl fullWidth size="small">
                     <InputLabel>Experience</InputLabel>
-                    <Select label="Experience" defaultValue={editingBooking?.experienceTitle || "Kyoto Tea Ceremony"}>
-                        <MenuItem value="Kyoto Tea Ceremony">Kyoto Tea Ceremony</MenuItem>
-                        <MenuItem value="Samurai Experience">Samurai Experience</MenuItem>
-                        <MenuItem value="Bamboo Forest Walk">Bamboo Forest Walk</MenuItem>
+                    <Select 
+                        label="Experience" 
+                        value={formState.experienceTitle}
+                        onChange={(e) => setFormState({...formState, experienceTitle: e.target.value})}
+                    >
+                        <MenuItem value="Authentic Echoes">Authentic Echoes</MenuItem>
+                        <MenuItem value="Hidden Gems of Kyoto">Hidden Gems of Kyoto</MenuItem>
+                        <MenuItem value="Zen Gardens Tour">Zen Gardens Tour</MenuItem> 
+                         {/* Fallback for existing data */}
+                         {!['Authentic Echoes','Hidden Gems of Kyoto','Zen Gardens Tour'].includes(formState.experienceTitle) && formState.experienceTitle &&
+                            <MenuItem value={formState.experienceTitle}>{formState.experienceTitle}</MenuItem>
+                         }
                     </Select>
                 </FormControl>
-                <TextField label="Customer Name" fullWidth size="small" defaultValue={editingBooking?.customerName || ''} />
-                <TextField label="Date" type="date" fullWidth size="small" InputLabelProps={{ shrink: true }} defaultValue={editingBooking?.date ? editingBooking.date.split('T')[0] : ''} />
+                <TextField 
+                    label="Customer Name" fullWidth size="small" 
+                    value={formState.customerName}
+                    onChange={(e) => setFormState({...formState, customerName: e.target.value})}
+                />
+                <TextField 
+                    label="Date" type="date" fullWidth size="small" InputLabelProps={{ shrink: true }} 
+                    value={formState.date}
+                    onChange={(e) => setFormState({...formState, date: e.target.value})}
+                />
                 <Stack direction="row" spacing={2}>
-                    <TextField label="Pax" type="number" fullWidth size="small" defaultValue={editingBooking?.pax || ''} />
-                    <TextField label="Price (JPY)" type="number" fullWidth size="small" defaultValue={editingBooking?.price || ''} />
+                    <TextField 
+                        label="Pax" type="number" fullWidth size="small" 
+                        value={formState.pax}
+                        onChange={(e) => setFormState({...formState, pax: Number(e.target.value)})}
+                    />
+                    <TextField 
+                        label="Price (USD)" type="number" fullWidth size="small" 
+                        value={formState.price}
+                        onChange={(e) => setFormState({...formState, price: Number(e.target.value)})}
+                    />
                 </Stack>
             </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2, borderTop: '1px solid #eee' }}>
             <Button onClick={() => setIsAddBookingOpen(false)} sx={{ color: '#64748B' }}>Cancel</Button>
-            <Button variant="contained" onClick={() => {
-                if (editingBooking) {
-                     // Update existing
-                     setBookings(prev => prev.map(b => b.id === editingBooking.id ? { 
-                         ...b, 
-                         customerName: 'Updated Customer', // In real app, bind to state
-                         pax: 2 // Mock update
-                     } : b));
-                } else {
-                    // Create new
-                    const newB: Booking = {
-                        id: `BK-${1000 + bookings.length + 1}`,
-                        customerName: 'New Customer',
-                        experienceTitle: 'Manual Booking',
-                        date: new Date().toISOString(),
-                        pax: 2, price: 10000, currency: 'JPY', status: 'Confirmed', avatar: 'NC'
-                    };
-                    setBookings([...bookings, newB]);
-                }
-                setIsAddBookingOpen(false);
-            }} sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif' }}>
+            <Button variant="contained" onClick={handleSaveBooking} sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif' }}>
                 {editingBooking ? 'Save Changes' : 'Create Booking'}
             </Button>
         </DialogActions>
