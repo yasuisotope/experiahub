@@ -444,8 +444,11 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
         if (authHeader) options.global = { headers: { Authorization: authHeader } };
         const supabase = createClient(supabaseUrl, supabaseKey, options);
 
+        console.log(`[N8N Proxy] Direct List: Fetching for appId=${applicationId}`);
         const { data, error } = await supabase.from('experiences').select('*').eq('application_id', applicationId);
+        
         if (error) { console.error('List Activities Error:', error); return []; }
+        console.log(`[N8N Proxy] Direct List: Found ${data?.length} rows`);
         
         return (data || []).map((row: any) => {
             let raw: any = {};
