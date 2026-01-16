@@ -295,7 +295,9 @@ export default function BookingsView() {
                         </TableCell>
                         <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{new Date(b.date).toLocaleDateString()}</TableCell>
                         <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.pax}</TableCell>
-                        <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>{b.currency} {b.price.toLocaleString()}</TableCell>
+                        <TableCell sx={{ fontFamily: 'Nunito, sans-serif' }}>
+                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(b.price)}
+                        </TableCell>
                         <TableCell>
                         <Chip 
                             label={b.status} 
