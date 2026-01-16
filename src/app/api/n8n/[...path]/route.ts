@@ -128,11 +128,18 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  return NextResponse.json({ success: true, background: bg?.url || null, stub: true, direct: true });
              }
              if (targetUrl.includes('supplier/activities/list')) {
-                 const appId = new URL(targetUrl).searchParams.get('applicationId');
+                 // Try getting appId from targetUrl first
+                 let appId = new URL(targetUrl).searchParams.get('applicationId');
+                 // If not found, try getting from the incoming request URL (req.nextUrl)
+                 if (!appId) {
+                     appId = request.nextUrl.searchParams.get('applicationId');
+                 }
+
                  if (appId) {
                     const acts = await handleDirectListActivities(appId, authHeader);
-                    return NextResponse.json({ success: true, activities: acts, stub: true, direct: true });
+                    return NextResponse.json({ success: true, activities: acts || [], stub: true, direct: true });
                  }
+                 console.warn('[N8N Proxy] Missing appId for activities list');
                  return NextResponse.json({ success: true, activities: [], stub: true });
              }
 
