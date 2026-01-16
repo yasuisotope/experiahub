@@ -398,8 +398,7 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             // OVERRIDE with explicit columns if they exist (This handles the migration to structured columns)
             id: row.id,
             title: row.title,
-            applicationId: row.application_id,
-            city: row.city || row.raw_data?.city,
+            description: row.description,
             summary: row.description || row.raw_data?.summary || row.raw_data?.DESCRIPTION,
             durationMinutes: row.duration_minutes?.toString() || row.raw_data?.durationMinutes,
             price: row.price?.toString() || (row.raw_data?.price || row.raw_data?.baseRate),
