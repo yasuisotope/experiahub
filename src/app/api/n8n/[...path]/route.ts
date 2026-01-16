@@ -249,23 +249,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 price: a.price ? parseFloat(a.price) : (a.baseRate ? parseFloat(a.baseRate) : null),
                 currency: a.currency || null,
                 bokun_product_id: a.bokunProductId || null,
-                category: a.category || null,
-                // New Narrative Columns
-                authentic_echoes: a.authenticEchoes || null,
-                unforgettable_feeling: a.unforgettableFeeling || null,
-                magic_moment: a.magicMoment || null,
-                hidden_gem: a.hiddenGem || null,
-                community_connection: a.communityConnection || null,
-                perfect_match: a.perfectMatch || null,
-                three_words: a.threeWords || null,
-                // Logistics
-                meeting_point: a.meetingPoint || null,
-                itinerary: a.itinerary || null,
-                safety_measures: a.safetyMeasures || null,
-                requirements: a.requirements || null,
-                included: a.included || null,
-                not_included: a.notIncluded || null,
-                insurance: a.insurance || null
+                category: a.category || null
             };
             if (isUUID(a.id)) {
                 row.id = a.id;
