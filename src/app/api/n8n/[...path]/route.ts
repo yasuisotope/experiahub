@@ -242,22 +242,25 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
         payload.activities.forEach((a: any) => {
+            const rawObj = { 
+                ...a, 
+                // Explicitly ensure critical narrative fields are preserved in raw_data
+                authenticEchoes: a.authenticEchoes || null,
+                unforgettableFeeling: a.unforgettableFeeling || null,
+                magicMoment: a.magicMoment || null,
+                hiddenGem: a.hiddenGem || null,
+                communityConnection: a.communityConnection || null,
+                perfectMatch: a.perfectMatch || null,
+                threeWords: a.threeWords || null,
+                _temp_id: a.id, 
+                Build: 'V59_FORCE_STRINGIFY' 
+            };
+
             const row: any = {
                 application_id: appId,
                 title: a.title,
-                raw_data: { 
-                    ...a, 
-                    // Explicitly ensure critical narrative fields are preserved in raw_data
-                    authenticEchoes: a.authenticEchoes || null,
-                    unforgettableFeeling: a.unforgettableFeeling || null,
-                    magicMoment: a.magicMoment || null,
-                    hiddenGem: a.hiddenGem || null,
-                    communityConnection: a.communityConnection || null,
-                    perfectMatch: a.perfectMatch || null,
-                    threeWords: a.threeWords || null,
-                    _temp_id: a.id, 
-                    Build: 'V57_DEBUG_Persistence' 
-                },
+                // FORCE STRINGIFY: Safest overlap for TEXT vs JSONB columns. prevents [object Object].
+                raw_data: JSON.stringify(rawObj),
                 updated_at: new Date().toISOString(),
                 // Explicit Mapping to ensure data appears in Supabase Table Views
                 city: a.city || null,
@@ -269,12 +272,9 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 category: a.category || null
             };
             
-            console.log(`[N8N Proxy] Processing Activity ${a.id}:`, { title: a.title, echoes: a.authenticEchoes });
+            console.log(`[N8N Proxy] Processing Activity ${a.id}:`, { title: a.title, dataSize: row.raw_data.length });
             if (isUUID(a.id)) {
                 row.id = a.id;
-            }
-            
-            if (isUUID(a.id)) {
                 toUpsert.push(row);
             } else {
                 tempIdMap[a.id] = row;
