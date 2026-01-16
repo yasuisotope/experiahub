@@ -449,12 +449,16 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             let raw: any = {};
             try {
                 if (typeof row.raw_data === 'string') {
-                    // Check for "poisoned" [object Object] string which crashes JSON.parse
+                    // Check for "poisoned" [object Object]
                     if (row.raw_data.includes('[object Object]')) {
                         console.warn(`[N8N Proxy] Skipping corrupted raw_data for ${row.id}`);
                         raw = {};
                     } else {
                         raw = JSON.parse(row.raw_data);
+                        // CRITICAL FIX: Handle Double-Encoding (Stringified JSON saved in JSONB)
+                        if (typeof raw === 'string') {
+                             try { raw = JSON.parse(raw); } catch(e) { /* keep as string if second parse fails? unlikely */ }
+                        }
                     }
                 } else {
                     raw = row.raw_data || {};
