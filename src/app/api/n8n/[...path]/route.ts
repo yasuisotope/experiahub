@@ -608,11 +608,15 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
 
         const supabase = createClient(supabaseUrl, supabaseKey, options);
 
-        console.log(`[N8N Proxy] Direct List: Fetching for appId=${applicationId}`);
+        console.log(`[N8N Proxy] Direct List: Fetching for appId=${applicationId} (ServiceKey: ${!!serviceKey})`);
         const { data, error } = await supabase.from('experiences').select('*').eq('application_id', applicationId);
         
-        if (error) { console.error('List Activities Error:', error); return []; }
+        if (error) { 
+            console.error('[N8N Proxy] List Activities Error:', error); 
+            return null;
+        }
         console.log(`[N8N Proxy] Direct List: Found ${data?.length} rows`);
+        if (data && data.length > 0) console.log('[N8N Proxy] Sample Row ID:', data[0].id);
         
         return (data || []).map((row: any) => {
             let raw: any = {};
