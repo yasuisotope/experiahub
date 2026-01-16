@@ -2066,10 +2066,11 @@ const PRIMARY_BUTTON_SX = {
         {section === 'experiences' && (
           <Box sx={{ mb: 3 }}>
 
-            {selectedExperienceId && (() => {
+            {selectedExperienceId && subsection !== 'overview' && (() => {
                const c = getSectionChecks();
                return (
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                  {/* Tabs - Only show if NOT in overview */}
                   <Tabs 
                     value={subsection} 
                     onChange={(_, v) => setSubsection(v)}
