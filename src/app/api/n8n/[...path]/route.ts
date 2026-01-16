@@ -427,7 +427,24 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
         if (error) { console.error('List Activities Error:', error); return []; }
         
         return (data || []).map((row: any) => {
-            const raw = (typeof row.raw_data === 'string') ? JSON.parse(row.raw_data) : (row.raw_data || {});
+            let raw: any = {};
+            try {
+                if (typeof row.raw_data === 'string') {
+                    // Check for "poisoned" [object Object] string which crashes JSON.parse
+                    if (row.raw_data.includes('[object Object]')) {
+                        console.warn(`[N8N Proxy] Skipping corrupted raw_data for ${row.id}`);
+                        raw = {};
+                    } else {
+                        raw = JSON.parse(row.raw_data);
+                    }
+                } else {
+                    raw = row.raw_data || {};
+                }
+            } catch (err: any) {
+                console.error(`[N8N Proxy] JSON Parse Error for row ${row.id}:`, err.message);
+                raw = {}; // Fallback to empty to allow row to render with just DB columns
+            }
+
             return {
             ...raw, // Expand stored JSON first
             // OVERRIDE with explicit columns if they exist (This handles the migration to structured columns)
