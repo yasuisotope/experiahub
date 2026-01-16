@@ -1336,7 +1336,14 @@ const PRIMARY_BUTTON_SX = {
           merged.currency = curr;
         }
         // Detect changes on key fields to avoid unnecessary saves
-        const keys = ['title','summary','city','durationMinutes','category','maxParticipants','minParticipants','schedulingMode','startTimes','cutoffHours','bookingLeadTime','cancellationPolicy','timeZone','latitude','longitude','pricingCategories','baseRate','currency'];
+        const keys = [
+          'title','summary','city','durationMinutes','category','maxParticipants','minParticipants',
+          'schedulingMode','startTimes','cutoffHours','bookingLeadTime','cancellationPolicy',
+          'timeZone','latitude','longitude','pricingCategories','baseRate','currency',
+          // Add new narrative fields to change detection
+          'authenticEchoes', 'unforgettableFeeling', 'magicMoment', 'hiddenGem', 
+          'communityConnection', 'perfectMatch', 'threeWords'
+        ];
         const hasChange = keys.some((k) => String((current as any)[k]||'') !== String(merged[k]||''));
         if (!hasChange) return;
         setAutoSaving(true);
