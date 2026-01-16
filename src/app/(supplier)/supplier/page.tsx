@@ -1465,8 +1465,8 @@ const PRIMARY_BUTTON_SX = {
     if (!(a.durationMinutes?.toString().trim())) issues.push('Tier 1: Duration (minutes) is required');
     if (!(a.city?.trim())) issues.push('Tier 1: City is required');
     if (!(a.category||'').trim()) issues.push('Tier 1: Category is required');
-    const hasPhoto = await fetchHasAnyPhotoFor(a.id);
-    if (!hasPhoto) issues.push('Tier 1: At least one photo is required');
+    // const hasPhoto = await fetchHasAnyPhotoFor(a.id);
+    // if (!hasPhoto) issues.push('Tier 1: At least one photo is required');
     // Tier 2
     if (!(a.schedulingMode||'').trim()) issues.push('Tier 2: Scheduling mode is required');
     if (!(a.startTimes||'').trim()) issues.push('Tier 2: Start times/hours are required');
