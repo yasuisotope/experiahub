@@ -50,11 +50,43 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
     }
 
     // FORCE DIRECT SAVE for Activities to ensure ID Mappings are returned and reliability
-    if (targetUrl.includes('supplier/activities/save')) {
+    if (targetUrl.includes('supplier/activities/save') || targetUrl.includes('supplier/activities/sync')) {
         const res = await handleDirectSave('activities', body, targetUrl, authHeader);
         if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
         // CRITICAL: Must return idMappings to frontend so it can swap temp IDs for real UUIDs
         return NextResponse.json({ success: true, idMappings: (res as any).idMappings, stub: true, direct: true });
+    }
+
+    // FORCE DIRECT SAVE for Company/Profile logic to Bypass N8N 500 Errors
+    if (targetUrl.includes('supplier/company/billing/save')) {
+        const res = await handleDirectSave('billing', body, targetUrl, authHeader);
+        if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+        return NextResponse.json({ success: true, stub: true, saved_direct: true });
+    }
+    if (targetUrl.includes('supplier/company/legal/save')) {
+        const res = await handleDirectSave('legal', body, targetUrl, authHeader);
+        if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+        return NextResponse.json({ success: true, stub: true, saved_direct: true });
+    }
+    if (targetUrl.includes('supplier/company/locations/save')) {
+        const res = await handleDirectSave('locations', body, targetUrl, authHeader);
+        if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+        return NextResponse.json({ success: true, stub: true, saved_direct: true });
+    }
+    if (targetUrl.includes('supplier/user/profile/save')) {
+        const res = await handleDirectSave('user_profile', body, targetUrl, authHeader);
+        if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+        return NextResponse.json({ success: true, stub: true, saved_direct: true });
+    }
+    if (targetUrl.includes('auth/user/background/set')) {
+          const res = await handleDirectSave('background', body, targetUrl, authHeader);
+          if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+          return NextResponse.json({ success: true, stub: true, saved_direct: true });
+    }
+    if (targetUrl.includes('supplier/bookings/sync')) {
+          const res = await handleDirectSave('bookings', body, targetUrl, authHeader);
+          if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+          return NextResponse.json({ success: true, stub: true, saved_direct: true });
     }
 
     // FORCE DIRECT LIST for Activities to resolve display issues
@@ -470,8 +502,29 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             }
         });
         
+        // 0. Handle Deletions (Sync Strategy)
+        const { data: existingRows } = await supabase
+            .from('experiences')
+            .select('id')
+            .eq('application_id', appId);
+        
+        const existingIds = new Set((existingRows || []).map((r: any) => r.id));
+        const incomingIds = new Set(toUpsert.map(r => r.id));
+        
+        const idsToDelete = Array.from(existingIds).filter(id => !incomingIds.has(id));
+        
+        if (idsToDelete.length > 0) {
+            console.log(`[N8N Proxy] Deleting ${idsToDelete.length} removed activities:`, idsToDelete);
+            const { error: delError } = await supabase
+                .from('experiences')
+                .delete()
+                .in('id', idsToDelete)
+                .eq('application_id', appId); 
+            
+            if (delError) console.error('[N8N Proxy] Delete Failed:', delError);
+        }
+
         // 1. Upsert existing
-        // 1. Update Existing (Sequential to avoid 'No suitable key' bulk error)
 
 
         for (const row of toUpsert) {
@@ -733,15 +786,15 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             hiddenGem: row.hidden_gem || raw?.hiddenGem,
             communityConnection: row.community_connection || raw?.communityConnection,
             perfectMatch: row.perfect_match || raw?.perfectMatch,
-            threeWords: row.three_words || row.raw_data?.threeWords,
+            threeWords: row.three_words || raw?.threeWords,
             // Logistics Restorations
-            meetingPoint: row.meeting_point || row.raw_data?.meetingPoint,
-            itinerary: row.itinerary || row.raw_data?.itinerary,
-            safetyMeasures: row.safety_measures || row.raw_data?.safetyMeasures,
-            requirements: row.requirements || row.raw_data?.requirements,
-            included: row.included || row.raw_data?.included,
-            notIncluded: row.not_included || row.raw_data?.notIncluded,
-            insurance: row.insurance || raw?.insurance || row.raw_data?.insurance
+            meetingPoint: row.meeting_point || raw?.meetingPoint,
+            itinerary: row.itinerary || raw?.itinerary,
+            safetyMeasures: row.safety_measures || raw?.safetyMeasures,
+            requirements: row.requirements || raw?.requirements,
+            included: row.included || raw?.included,
+            notIncluded: row.not_included || raw?.notIncluded,
+            insurance: row.insurance || raw?.insurance
         };
       });
 
