@@ -516,8 +516,11 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         const p = payload.profile || payload;
         updates = {
             ...updates,
-            contact_name: p.displayName || p.contact_name,
-            contact_phone: p.phone || p.contact_phone || p.phoneNumber
+            contact_name: p.displayName || p.contact_name || p.full_name,
+            contact_phone: p.phone || p.contact_phone || p.phoneNumber,
+            contact_email: p.email || p.contact_email || p.user_email || p.userEmail,
+            email: p.email || p.contact_email || p.user_email || p.userEmail, // Explicit column fallback
+            full_name: p.displayName || p.contact_name || p.full_name // Explicit column fallback
         };
     } else if (type === 'onboarding') {
         const d = payload.data || {};
@@ -525,8 +528,9 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             ...updates,
             legal_name: d.legalBusinessName,
             contact_name: d.contactName,
-            contact_phone: d.contactPhone
-            // contact_email: d.contactEmail // Skipping email to prevent schema errors if column missing
+            contact_phone: d.contactPhone,
+            contact_email: d.contactEmail || d.email,
+            email: d.contactEmail || d.email
         };
     } else if (type === 'background') {
          // Need to fetch current generic metadata first to preserve other fields
@@ -778,16 +782,20 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) return null;
 
-    // Inject Auth Header if using Anon Key (RLS fix)
-    const options: any = {};
+    // USE ADMIN CLIENT BY DEFAULT for Backend Handshakes to ensure data visibility
+    const options: any = {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    };
+    // If not admin, we must use auth header for RLS
     if (!isServiceKey && authHeader) {
         options.global = { headers: { Authorization: authHeader } };
-    } else if (isServiceKey) {
-        options.auth = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false };
+        delete options.auth;
     }
+    
     const supabase = createClient(supabaseUrl, supabaseKey, options);
 
     // Prefer rows with user_id to avoid being shadowed by old null-user rows
+    // Also fetch using Admin if available to bypass RLS "Ghosting"
     const { data: rows, error } = await supabase.from('suppliers')
         .select('*')
         .eq('application_id', appId)
@@ -842,10 +850,10 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
             exists: true,
             onboarded: true,
             applicationId: data.application_id,
-            businessName: data.legal_name || data.billing_company_name || 'Supplier',
-            fullName: data.contact_name,
-            email: data.contact_email,
-            phone: data.contact_phone,
+            businessName: data.legal_name || data.billing_company_name || data.business_name || 'Supplier',
+            fullName: data.contact_name || data.full_name,
+            email: data.contact_email || data.email,
+            phone: data.contact_phone || data.phone,
             city: data.locations_json?.[0]?.city,
             country: data.billing_country || data.locations_json?.[0]?.country
         };
@@ -864,12 +872,13 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
         const supabaseKey = serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         if (!supabaseUrl || !supabaseKey) return null;
         
-        const options: any = {};
-        // CRITICAL: Do NOT attach User Token if using Service Key, it causes "No suitable key" error even for Selects
+        const options: any = {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+        };
+        // If not admin, we must use auth header for RLS
         if (!serviceKey && authHeader) {
             options.global = { headers: { Authorization: authHeader } };
-        } else if (serviceKey) {
-            options.auth = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false };
+            delete options.auth;
         }
 
         const supabase = createClient(supabaseUrl, supabaseKey, options);
