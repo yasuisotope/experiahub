@@ -557,7 +557,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
              // Prefer Admin Client to bypass RLS for critical saves
              const client = admin || supabase;
              
-             const { error } = await client.from('experiences').upsert(toUpsert, { onConflict: 'id' });
+             const { data, error } = await client.from('experiences')
+                 .upsert(toUpsert, { onConflict: 'id' })
+                 .select('id');
+             
+             if (!error && (!data || data.length !== toUpsert.length)) {
+                 console.warn(`[N8N Proxy] Warning: Upsert Count Mismatch. Expected ${toUpsert.length}, Got ${data?.length}`);
+             }
              
              if (error) {
                  console.error('[N8N Proxy] Upsert Error:', error);
@@ -605,8 +611,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         const client = admin || supabase;
         console.log(`[N8N Proxy] Direct Save ${type} (${appId}) using Admin: ${!!admin}`);
 
-        const { error } = await client.from('suppliers')
-            .upsert({ application_id: appId, ...updates }, { onConflict: 'application_id' });
+        const { data, error } = await client.from('suppliers')
+            .upsert({ application_id: appId, ...updates }, { onConflict: 'application_id' })
+            .select('id');
+
+        if (!error && (!data || data.length === 0)) {
+            return { success: false, error: 'Database Save Failed (No Rows Returned - RLS?)' };
+        }
 
         if (error) {
             console.error('[N8N Proxy] Direct Save Error:', error);
