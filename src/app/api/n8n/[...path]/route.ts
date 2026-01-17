@@ -550,50 +550,19 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // 1. Upsert existing
 
 
-        for (const row of toUpsert) {
-             let { data, error } = await supabase
-                .from('experiences')
-                .update(row)
-                .eq('id', row.id)
-                .select();
+        // 1. Upsert existing (Robust Batch Upsert)
+        if (toUpsert.length > 0) {
+             console.log(`[N8N Proxy] Batch Upserting ${toUpsert.length} activities (using Admin: ${!!getAdminClient()})...`);
+             const admin = getAdminClient();
+             // Prefer Admin Client to bypass RLS for critical saves
+             const client = admin || supabase;
              
-             // RETRY WITH ADMIN CLIENT IF JWT ERROR
-             if (error && (error.message?.includes('No suitable key') || error.message?.includes('signature'))) {
-                 console.warn(`[N8N Proxy] Retrying Update ${row.id} with Admin Client due to JWT error...`);
-                 const admin = getAdminClient();
-                 if (admin) {
-                     const retry = await admin.from('experiences').update(row).eq('id', row.id).select();
-                     data = retry.data;
-                     error = retry.error;
-                 }
-             }
-
+             const { error } = await client.from('experiences').upsert(toUpsert, { onConflict: 'id' });
+             
              if (error) {
-                 console.error('[N8N Proxy] Update Error:', error);
+                 console.error('[N8N Proxy] Upsert Error:', error);
                  const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
                  return { success: false, error: `${error.message} (AdminKey: ${sk})` };
-             }
-
-             // If row didn't exist, UPDATE returns 0 rows (data=[]). We must INSERT it.
-             if (!data || data.length === 0) {
-                 console.log(`[N8N Proxy] Row ${row.id} not found for update, inserting instead.`);
-                 let { error: insertError } = await supabase.from('experiences').insert(row);
-                 
-                 // RETRY WITH ADMIN CLIENT
-                 if (insertError && (insertError.message?.includes('No suitable key') || insertError.message?.includes('signature'))) {
-                     console.warn(`[N8N Proxy] Retrying Insert ${row.id} with Admin Client...`);
-                     const admin = getAdminClient();
-                     if (admin) {
-                         const retryI = await admin.from('experiences').insert(row);
-                         insertError = retryI.error;
-                     }
-                 }
-
-                 if (insertError) {
-                     console.error('[N8N Proxy] Fallback Insert Error:', insertError);
-                     const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-                     return { success: false, error: `${insertError.message} (AdminKey: ${sk})` };
-                 }
              }
         }
 
@@ -631,46 +600,19 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     }
     
     if (Object.keys(updates).length > 0) {
-        // Revert to Update + Insert Main logic to avoid 'No suitable key' upsert errors
-        let { data, error } = await supabase.from('suppliers').update(updates).eq('application_id', appId).select();
-        
-        // RETRY WITH ADMIN
-        if (error && (error.message?.includes('No suitable key') || error.message?.includes('signature'))) {
-             console.warn(`[N8N Proxy] Retrying Supplier Update with Admin Client...`);
-             const admin = getAdminClient();
-             if (admin) {
-                 const retry = await admin.from('suppliers').update(updates).eq('application_id', appId).select();
-                 data = retry.data;
-                 error = retry.error;
-             }
-        }
-        
+        // Use UPSERT with Admin Client for robust Company Data saving
+        const admin = getAdminClient();
+        const client = admin || supabase;
+        console.log(`[N8N Proxy] Direct Save ${type} (${appId}) using Admin: ${!!admin}`);
+
+        const { error } = await client.from('suppliers')
+            .upsert({ application_id: appId, ...updates }, { onConflict: 'application_id' });
+
         if (error) {
             console.error('[N8N Proxy] Direct Save Error:', error);
             const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
             return { success: false, error: `${error.message} (AdminKey: ${sk})` };
         }
-        
-        if (!data || data.length === 0) {
-             console.log(`[N8N Proxy] Supplier row not found for ${appId}, creating...`);
-             let { error: insertError } = await supabase.from('suppliers').insert({ application_id: appId, ...updates });
-             
-             // RETRY WITH ADMIN
-             if (insertError && (insertError.message?.includes('No suitable key') || insertError.message?.includes('signature'))) {
-                 console.warn(`[N8N Proxy] Retrying Supplier Insert with Admin Client...`);
-                 const admin = getAdminClient();
-                 if (admin) {
-                     const retryI = await admin.from('suppliers').insert({ application_id: appId, ...updates });
-                     insertError = retryI.error;
-                 }
-             }
-
-             if (insertError) {
-                 const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-                 return { success: false, error: `${insertError.message} (AdminKey: ${sk})` };
-             }
-        }
-
         console.log(`[N8N Proxy] Direct Save Success for ${type} (${appId})`);
     }
     return { success: true };
