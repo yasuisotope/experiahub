@@ -36,15 +36,19 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
       body = blob; 
     }
 
-    // STUB: Status Check to prevent UI flickering/Auth Reset
+    // PROACTIVE INTERCEPTION: Status Check (Primary source for Onboarding handshakes)
     if (targetUrl.includes('supplier/onboarding/status-v2') || targetUrl.includes('supplier/onboarding/status')) {
+        const res = await handleDirectGet('status' as any, targetUrl, authHeader);
+        if (res) return NextResponse.json({ success: true, ...res, direct: true });
+        
+        // Final fallback for new AppIDs that haven't saved yet
+        const appId = request.nextUrl.searchParams.get('applicationId');
         return NextResponse.json({ 
             success: true, 
-            onboarded: true, 
-            exists: true, // CRITICAL: Required for frontend to validate session
-            applicationId: request.nextUrl.searchParams.get('applicationId'),
-            businessName: 'ExperiaHub Supplier', 
-            email: 'supplier@experiahub.com',
+            exists: !!appId, 
+            onboarded: false, 
+            applicationId: appId,
+            businessName: 'New Supplier', 
             stub: true 
         });
     }
@@ -106,9 +110,23 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
          const res = await handleDirectGet('user_profile', targetUrl, authHeader);
          if (res) return NextResponse.json({ success: true, profile: res, direct: true });
     }
-    if (targetUrl.includes('auth/user/background/get')) {
+    if (targetUrl.includes('auth/user/background/get') || targetUrl.includes('supplier/user/background/get')) {
         const res = await handleDirectGet('background', targetUrl, authHeader);
         if (res) return NextResponse.json({ success: true, url: res?.url, direct: true });
+    }
+    if (targetUrl.includes('supplier/media/get')) {
+        const res = await handleDirectGet('media' as any, targetUrl, authHeader);
+        if (res) return NextResponse.json({ success: true, ...res, direct: true });
+    }
+    if (targetUrl.includes('supplier/media/save')) {
+        const res = await handleDirectSave('media', body, targetUrl, authHeader);
+        if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+        return NextResponse.json({ success: true, stub: true, saved_direct: true });
+    }
+    if (targetUrl.includes('supplier/onboarding/save')) {
+        const res = await handleDirectSave('onboarding', body, targetUrl, authHeader);
+        if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+        return NextResponse.json({ success: true, stub: true, saved_direct: true });
     }
 
     // FORCE DIRECT LIST for Activities to resolve display issues
@@ -815,6 +833,18 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
              photosDriveUrls: m.photosDriveUrls || [],
              videoDriveUrl: m.videoDriveUrl,
              videoUrl: m.videoUrl
+        };
+    } else if (type as string === 'status') {
+        return {
+            exists: true,
+            onboarded: true,
+            applicationId: data.application_id,
+            businessName: data.legal_name || data.billing_company_name || 'Supplier',
+            fullName: data.contact_name,
+            email: data.contact_email,
+            phone: data.contact_phone,
+            city: data.locations_json?.[0]?.city,
+            country: data.billing_country || data.locations_json?.[0]?.country
         };
     }
     return null;
