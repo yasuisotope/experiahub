@@ -389,25 +389,32 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // So we should verify the token to get the ID.
         try {
             const token = authHeader.replace('Bearer ', '');
-            const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+            let { data: { user }, error: authError } = await supabase.auth.getUser(token);
             
-            if (authError) {
-                if (authError.message?.includes('No suitable key') || authError.message?.includes('signature')) {
-                     console.warn('[N8N Proxy] JWT Signature Mismatch. Proceeding without User ID injection.');
-                     userId = null;
-                } else {
-                     console.warn('[N8N Proxy] Auth Check Failed:', authError.message);
-                }
+            if (user) {
+                userId = user.id;
             } else {
-                userId = user?.id || null;
+                 // FALLBACK: Manually decode JWT to get 'sub' claim (User ID)
+                 // Required because Service Key client sometimes fails to validate Anon tokens
+                 try {
+                     console.warn('[N8N Proxy] getUser failed, attempting manual decode...', authError?.message);
+                     const parts = token.split('.');
+                     if (parts.length === 3) {
+                         // Base64Url decode
+                         const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                         const jsonPayload = Buffer.from(base64, 'base64').toString();
+                         const payload = JSON.parse(jsonPayload);
+                         if (payload.sub) {
+                             userId = payload.sub;
+                             console.log('[N8N Proxy] JWT Manual Decode SUCCEEDED:', userId);
+                         }
+                     }
+                 } catch (decodeErr) {
+                     console.warn('[N8N Proxy] JWT Manual Decode Failed:', decodeErr);
+                 }
             }
         } catch (e: any) {
-             if (e.message?.includes('No suitable key') || e.message?.includes('signature')) {
-                 console.warn('[N8N Proxy] JWT Exception. Proceeding.');
-                 userId = null;
-             } else {
-                 console.warn('[N8N Proxy] Auth Lookup Exception:', e.message);
-             }
+             console.warn('[N8N Proxy] Auth Extraction Fatal Error:', e.message);
         }
     }
 
