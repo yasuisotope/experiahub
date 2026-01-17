@@ -2257,7 +2257,7 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={4}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Billing</Typography>
-                {saveSuccess?.section === 'Billing' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
+                {/* Alert removed per user request */}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your invoice details and tax information.</Typography>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
                   <TextField label="Company name" value={companyBilling.companyName} onChange={(e)=>setCompanyBilling(s=>({ ...s, companyName: e.target.value }))} fullWidth />
@@ -2387,12 +2387,15 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
                 <Stack spacing={4}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Profile</Typography>
-                {saveSuccess?.section === 'Profile' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
+                {/* Alert removed per user request */}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Update your personal contact information.</Typography>
                 <TextField label="Display Name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
-                <Stack direction="row" justifyContent="flex-end">
-                <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
+                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
+                  <Fade in={saveSuccess?.section === 'Profile'}>
+                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
+                  </Fade>
+                  <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     if (!userDisplayName.trim()) { setToast('Please enter a display name'); return; }
