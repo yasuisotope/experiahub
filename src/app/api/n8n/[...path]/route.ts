@@ -422,6 +422,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                      console.warn('[N8N Proxy] JWT Verification Failed. Attempting Unsafe Manual Decode...');
                      try {
                          const parts = token.split('.');
+                         console.log(`[N8N Proxy] Token Parts: ${parts.length}`);
                          if (parts.length === 3) {
                              const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
                              const jsonPayload = Buffer.from(base64, 'base64').toString();
@@ -429,7 +430,11 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                              if (payload.sub) {
                                  userId = payload.sub;
                                  console.log('[N8N Proxy] Unsafe Manual Decode SUCCEEDED. UserID:', userId);
+                             } else {
+                                 console.warn('[N8N Proxy] Token payload missing "sub" claim:', Object.keys(payload));
                              }
+                         } else {
+                             console.warn('[N8N Proxy] Invalid Token structure (not 3 parts)');
                          }
                      } catch (decodeErr) {
                          console.error('[N8N Proxy] Manual Decode Failed:', decodeErr);
@@ -439,6 +444,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         } catch (e: any) {
              console.warn('[N8N Proxy] Auth Extraction Fatal Error:', e.message);
         }
+    }
+
+    // BLOCK SAVE IF USER UNIDENTIFIED AND AUTH HEADER PRESENT
+    // If no auth header, maybe it's a public save? No, our paths require auth.
+    if (authHeader && !userId) {
+         console.error('[N8N Proxy] SAVE ABORTED: Unable to identify User ID from token.');
+         return { success: false, error: 'Authentication Failed: Unable to verify User Identity.' };
     }
 
     console.log(`[N8N Proxy] Save '${type}' - ServiceKey: ${isServiceKey}, AuthHeader: ${!!authHeader}, UserID: ${userId}`);
