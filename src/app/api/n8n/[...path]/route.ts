@@ -177,6 +177,11 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
                  return NextResponse.json({ success: true, stub: true, saved_direct: true });
              }
+             if (targetUrl.includes('supplier/onboarding/save')) {
+                 const res = await handleDirectSave('onboarding', body, targetUrl, authHeader);
+                 if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+                 return NextResponse.json({ success: true, stub: true, saved_direct: true });
+             }
              if (targetUrl.includes('auth/user/background/set')) {
                   const res = await handleDirectSave('background', body, targetUrl, authHeader);
                   if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
@@ -320,7 +325,7 @@ export async function PUT(req: NextRequest, ctx: any) { return proxyRequest(req,
 export async function PATCH(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 export async function DELETE(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 
-async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile'|'background'|'activities'|'bookings', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
+async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile'|'background'|'activities'|'bookings'|'onboarding', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
   try {
     if (!body || !(body instanceof Blob)) return { success: false, error: 'Invalid Body' };
     
@@ -481,6 +486,14 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         updates = {
             contact_name: p.displayName || p.contact_name,
             contact_phone: p.phone || p.contact_phone || p.phoneNumber
+        };
+    } else if (type === 'onboarding') {
+        const d = payload.data || {};
+        updates = {
+            legal_name: d.legalBusinessName,
+            contact_name: d.contactName,
+            contact_phone: d.contactPhone,
+            // contact_email: d.contactEmail // Skipping email to prevent schema errors if column missing
         };
     } else if (type === 'background') {
          // Need to fetch current generic metadata first to preserve other fields
