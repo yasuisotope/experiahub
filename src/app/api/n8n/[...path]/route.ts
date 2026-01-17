@@ -187,6 +187,11 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                   if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
                   return NextResponse.json({ success: true, stub: true, saved_direct: true });
              }
+             if (targetUrl.includes('supplier/media/save')) {
+                  const res = await handleDirectSave('media', body, targetUrl, authHeader);
+                  if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
+                  return NextResponse.json({ success: true, stub: true, saved_direct: true });
+             }
              if (targetUrl.includes('supplier/activities/save') || targetUrl.includes('supplier/activities/sync')) {
                  const res = await handleDirectSave('activities', body, targetUrl, authHeader);
                  if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
@@ -248,9 +253,10 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
                  return NextResponse.json({ success: true, activities: [], stub: true, debug_hit: true, error: 'No App ID' });
              }
 
-             // INTERCEPT Media Get 404 -> Return empty lists to prevent UI errors
+             // INTERCEPT Media Get
              if (targetUrl.includes('supplier/media/get')) {
-                 return NextResponse.json({ success: true, photosDriveUrls: [], videosDriveUrls: [], stub: true, direct: true });
+                 const media = await handleDirectGet('media', targetUrl, authHeader);
+                 return NextResponse.json({ success: true, ...(media || { photosDriveUrls: [] }), stub: true, direct: true });
              }
         }
 
@@ -325,7 +331,7 @@ export async function PUT(req: NextRequest, ctx: any) { return proxyRequest(req,
 export async function PATCH(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 export async function DELETE(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 
-async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile'|'background'|'activities'|'bookings'|'onboarding', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
+async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profile'|'background'|'activities'|'bookings'|'onboarding'|'media', body: any, url: string, authHeader: string | null): Promise<{success: boolean, error?: string}> {
   try {
     if (!body || !(body instanceof Blob)) return { success: false, error: 'Invalid Body' };
     
@@ -502,6 +508,17 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
          const freshUrl = payload.url || payload.background?.url;
          const nextMeta = { ...(current?.metadata || {}), background_url: freshUrl };
          updates = { metadata: nextMeta };
+    } else if (type === 'media') {
+         const { data: current } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
+         const meta = current?.metadata || {};
+         updates = { 
+             metadata: { 
+                 ...meta,
+                 photosDriveUrls: payload.photosDriveUrls,
+                 videoDriveUrl: payload.videoDriveUrl,
+                 videoUrl: payload.videoUrl
+             }
+         };
     } else if (type === 'bookings' && payload.bookings) {
         // Bulk Upsert Bookings via Admin Client
         const admin = getAdminClient();
@@ -710,7 +727,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
   }
 }
 
-async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile'|'background', url: string, authHeader: string | null) {
+async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile'|'background'|'media', url: string, authHeader: string | null) {
   try {
     const u = new URL(url);
     const appId = u.searchParams.get('applicationId');
@@ -768,7 +785,15 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
         return {
             url: data.metadata?.background_url || null
         };
+    } else if (type === 'media') {
+        const m = data.metadata || {};
+        return {
+             photosDriveUrls: m.photosDriveUrls || [],
+             videoDriveUrl: m.videoDriveUrl,
+             videoUrl: m.videoUrl
+        };
     }
+    return null;
   } catch (e) {
       console.error('[N8N Proxy] Direct Get Exception:', e);
       return null;
