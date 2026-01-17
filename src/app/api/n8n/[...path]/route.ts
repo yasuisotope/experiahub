@@ -559,10 +559,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
              
              const { data, error } = await client.from('experiences')
                  .upsert(toUpsert, { onConflict: 'id' })
-                 .select('id');
+                 .select('id, raw_data, title');
              
              if (!error && (!data || data.length !== toUpsert.length)) {
                  console.warn(`[N8N Proxy] Warning: Upsert Count Mismatch. Expected ${toUpsert.length}, Got ${data?.length}`);
+             } else if (data && data.length > 0) {
+                 const firstRaw = typeof data[0].raw_data === 'string' ? JSON.parse(data[0].raw_data) : data[0].raw_data;
+                 console.log(`[N8N Proxy] VERIFY SAVE (Activity): ID=${data[0].id} Title="${data[0].title}" Echoes="${firstRaw?.authenticEchoes?.substring(0,20)}..."`);
              }
              
              if (error) {
@@ -613,10 +616,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
         const { data, error } = await client.from('suppliers')
             .upsert({ application_id: appId, ...updates }, { onConflict: 'application_id' })
-            .select('id');
+            .select('*');
 
         if (!error && (!data || data.length === 0)) {
             return { success: false, error: 'Database Save Failed (No Rows Returned - RLS?)' };
+        }
+        if (data && data.length > 0) {
+             console.log(`[N8N Proxy] VERIFY SAVE (Supplier): Name="${data[0].billing_company_name}" Legal="${data[0].legal_name}"`);
         }
 
         if (error) {
