@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab, Stepper, Step, StepLabel, Checkbox } from '@mui/material';
+import { Box, Paper, Typography, Alert, Button, Stack, TextField, List, ListItemButton, ListItemText, Divider, Table, TableHead, TableRow, TableCell, TableBody, TableContainer, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, MenuItem, Select, FormControl, InputLabel, Chip, Fade, Skeleton, Container, Grid, Tooltip, CircularProgress, ToggleButtonGroup, ToggleButton, Fab, Popover, Tabs, Tab, Stepper, Step, StepLabel, Checkbox } from '@mui/material';
 import { FormControlLabel, Switch } from '@mui/material';
 // BackgroundImage removed
 
@@ -20,7 +20,10 @@ import SupportDialog from '@/components/support/SupportDialog';
 import GridLikeMedia from '@/components/supplier/GridLikeMedia';
 import BookingsView from './BookingsView';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import SettingsIcon from '@mui/icons-material/Settings';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
+import SummarizeIcon from '@mui/icons-material/Summarize';
 import { getUserBackground, setUserBackground, searchUnsplash, trackDownload, loadCachedBackground, saveCachedBackground, getCuratedBackgrounds, prefetchBackgroundImage, type PortalBackground } from '@/services/backgroundService';
 import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
 
@@ -80,6 +83,9 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     included?: string;
     notIncluded?: string;
     insurance?: string;
+    photosDriveUrls?: string[];
+    videoDriveUrl?: string;
+    videoUrl?: string;
   };
   /* State lifted to parent */
   const rows = experiences;
@@ -731,12 +737,40 @@ export default function SupplierPortalPage() {
   const [section, setSection] = React.useState<'welcome'|'company'|'user'|'experiences'|'information'>('company');
   const [toast, setToast] = React.useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = React.useState<{ section: string; timestamp: string } | null>(null);
+  
   const handleSaveSuccess = (sectionName: string) => {
     setSaveSuccess({ section: sectionName, timestamp: new Date().toLocaleTimeString() });
-    // setToast(`${sectionName} saved`); // REMOVED per user request to reduce noise
     // Clear success message after 3 seconds
-    setTimeout(() => setSaveSuccess(null), 3000);
+    setTimeout(() => setSaveSuccess(null), 3500);
   };
+
+  const PremiumAlert = ({ children, icon, color = '#010057', sx }: { children: React.ReactNode, icon?: React.ReactNode, color?: string, sx?: any }) => (
+    <Box sx={{ 
+      p: 2.5, mb: 3, borderRadius: 3,
+      background: 'rgba(255, 255, 255, 0.7)',
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(1, 0, 87, 0.08)',
+      borderLeft: `5px solid ${color}`,
+      boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+      display: 'flex', gap: 2, alignItems: 'flex-start',
+      ...sx
+    }}>
+      {icon && <Box sx={{ mt: 0.25, color }}>{icon}</Box>}
+      <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#334155', lineHeight: 1.6, fontWeight: 500 }}>
+        {children}
+      </Typography>
+    </Box>
+  );
+
+  const SavedBadge = ({ active }: { active: boolean }) => (
+    <Fade in={active}>
+      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: '#059669', opacity: active ? 1 : 0 }}>
+        <CheckCircleOutlineIcon sx={{ fontSize: '1rem' }} />
+        <Typography variant="caption" sx={{ fontWeight: 700, fontFamily: 'Nunito, sans-serif' }}>Saved</Typography>
+      </Stack>
+    </Fade>
+  );
+
   const [subsection, setSubsection] = React.useState<'profile'|'billing'|'legal'|'locations'|'user_profile'|'user_security'|'user_tokens'|'overview'|'details'|'media'|'pricing'|'availability'|'policies'|'distribution'|'validation'|'sync'|'payouts_overview'|'payouts_connect'|'resources'|'reports'|'help'|'status'>('profile');
   const [activitiesSimple, setActivitiesSimple] = React.useState<{ id: string; title: string }[]>([]);
   const [selectedExperienceId, setSelectedExperienceId] = React.useState<string>('');
@@ -781,11 +815,18 @@ export default function SupplierPortalPage() {
     included?: string;
     notIncluded?: string;
     insurance?: string;
+    photosDriveUrls?: string[];
+    videoDriveUrl?: string;
+    videoUrl?: string;
   };
   const [experiences, setExperiences] = React.useState<Experience[]>([]);
+  const handleMediaUpdate = (id: string, media: { photosDriveUrls: string[]; videoDriveUrl: string; videoUrl: string }) => {
+    setExperiences(prev => prev.map(exp => exp.id === id ? { ...exp, ...media } : exp));
+  };
   const [details, setDetails] = React.useState<Partial<Experience>>({});
   const [validating, setValidating] = React.useState(false);
   const [validationIssues, setValidationIssues] = React.useState<string[] | null>(null);
+  const [isVerified, setIsVerified] = React.useState(false);
   const [validationMap, setValidationMap] = React.useState<Record<string, number>>({});
   const defaultTimeZone = 'Asia/Tokyo';
 const defaultCurrency = 'USD';
@@ -820,6 +861,7 @@ const PRIMARY_BUTTON_SX = {
   // Transparency State - Moved to top level to avoid conditional hook error
   const [isTransparent, setIsTransparent] = React.useState(true);
   const [username, setUsername] = React.useState('');
+  const [syncing, setSyncing] = React.useState(false);
   
   // Force 'signup' tab if we have an appId (Onboarding Flow)
   React.useEffect(() => {
@@ -1258,6 +1300,11 @@ const PRIMARY_BUTTON_SX = {
     setActivitiesSimple(experiences.map(e => ({ id: e.id, title: e.title || '(Untitled)' })));
   }, [experiences]);
 
+  React.useEffect(() => {
+    setValidationIssues(null);
+    setIsVerified(false);
+  }, [selectedExperienceId]);
+
   // Load activities from Remote (API) and merge with Local
   React.useEffect(() => {
     const loadRemote = async () => {
@@ -1321,7 +1368,10 @@ const PRIMARY_BUTTON_SX = {
             notIncluded: a.notIncluded,
             insurance: a.insurance,
             itinerary: a.itinerary,
-            meetingPoint: a.meetingPoint
+            meetingPoint: a.meetingPoint,
+            photosDriveUrls: a.photosDriveUrls || [],
+            videoDriveUrl: a.videoDriveUrl || '',
+            videoUrl: a.videoUrl || ''
           }));
           
           setExperiences((prev: Experience[]) => {
@@ -1574,43 +1624,31 @@ const PRIMARY_BUTTON_SX = {
   };
 
   const validateSelected = async (): Promise<string[]> => {
-    const a = experiences.find(e => e.id === selectedExperienceId);
-    const issues: string[] = [];
-    if (!a) { issues.push('No Experience selected'); return issues; }
-    // Tier 1
-    if (!(a.title?.trim())) issues.push('Tier 1: Title is required');
-    if (!(a.summary?.trim())) issues.push('Tier 1: Description is required');
-    if (!(a.durationMinutes?.toString().trim())) issues.push('Tier 1: Duration (minutes) is required');
-    if (!(a.city?.trim())) issues.push('Tier 1: City is required');
-    if (!(a.category||'').trim()) issues.push('Tier 1: Category is required');
-    // const hasPhoto = await fetchHasAnyPhotoFor(a.id);
-    // if (!hasPhoto) issues.push('Tier 1: At least one photo is required');
-    // Tier 2
-    if (!(a.schedulingMode||'').trim()) issues.push('Tier 2: Scheduling mode is required');
-    if (!(a.startTimes||'').trim()) issues.push('Tier 2: Start times/hours are required');
-    if (!(a.maxParticipants||'').toString().trim()) issues.push('Tier 2: Capacity (max participants) is required');
-    if (!((a.cutoffHours||'') || (a.bookingLeadTime||'')).toString().trim()) issues.push('Tier 2: Cutoff/lead time is required');
-    if (!(a.currency||'').trim()) issues.push('Tier 2: Currency is required');
-    if (!(a.pricingCategories||'').trim()) issues.push('Tier 2: At least one pricing category is required');
-    if (!((a.baseRate||'') || (a.price||'')).toString().trim()) issues.push('Tier 2: At least one rate is required');
-    return issues;
+    const e = experiences.find(ex => ex.id === selectedExperienceId);
+    const errs: string[] = [];
+    if (!e) return ['Internal error: No experience selected'];
+    if (!e.title?.trim()) errs.push('T1: Missing public title');
+    if (!e.summary?.trim()) errs.push('T1: No experience summary provided');
+    if (!e.durationMinutes) errs.push('T1: Estimated duration is required');
+    if (!e.city?.trim()) errs.push('T1: Destination city missing');
+    if (!e.category?.trim()) errs.push('T1: Experience category needed');
+    if (!e.photosDriveUrls || e.photosDriveUrls.length === 0) errs.push('T1: Minimum 1 photo required for distribution');
+    if (!e.price) errs.push('T2: Base pricing should be defined');
+    if (!e.itinerary?.trim()) errs.push('T2: Detailed itinerary recommended');
+    return errs;
   };
 
   const runValidation = async () => {
+    if (!selectedExperienceId) return;
     setValidating(true);
     try {
       const issues = await validateSelected();
       setValidationIssues(issues);
-      setToast(issues.length ? 'Validation failed' : 'All checks passed');
-      setShowFieldErrors(true);
-      if (selectedExperienceId) {
-        setValidationMap((m) => {
-          const next = { ...m, [selectedExperienceId]: issues.length };
-          try { if (appId) localStorage.setItem(`supplier_validation_${appId}`, JSON.stringify(next)); } catch {}
-          return next;
-        });
-      }
-    } finally { setValidating(false); }
+      setIsVerified(issues.length === 0);
+      setToast(issues.length ? 'Validation issues found' : 'Ready for deployment!');
+    } finally {
+      setValidating(false);
+    }
   };
 
   const syncSelected = async () => {
@@ -1951,7 +1989,7 @@ const PRIMARY_BUTTON_SX = {
                label={<Typography variant="caption" sx={{ fontFamily:'Nunito, sans-serif' }}>Translucent UI</Typography>}
                sx={{ mb: 1, ml: 0.5 }}
             />
-            <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v146</Typography>
+             <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v154</Typography>
             <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
@@ -2070,7 +2108,6 @@ const PRIMARY_BUTTON_SX = {
                     <Tab label="Policies" value="policies" />
                     {/* <Tab label="Distribution" value="distribution" /> */}
                     <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Validate {c.validation.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : (c.validation.count ? <Typography variant="caption" sx={{color:'warning.main', fontWeight:800}}>{c.validation.count}</Typography> : null)}</Box>} value="validation" />
-                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Sync {c.sync.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="sync" />
                   </Tabs>
                 </Box>
                );
@@ -2228,9 +2265,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Billing currency" value={companyBilling.currency} onChange={(e)=>setCompanyBilling(s=>({ ...s, currency: e.target.value }))} onBlur={(e)=>setCompanyBilling(s=>({ ...s, currency: String(e.target.value||'').toUpperCase() }))} fullWidth />
                 </Stack>
                 <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
-                  <Fade in={saveSuccess?.section === 'Billing'}>
-                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
-                  </Fade>
+                  <SavedBadge active={saveSuccess?.section === 'Billing'} />
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
@@ -2277,9 +2312,7 @@ const PRIMARY_BUTTON_SX = {
                 </Stack>
                 <TextField label="Representative" value={companyLegal.representative} onChange={(e)=>setCompanyLegal(s=>({ ...s, representative: e.target.value }))} fullWidth />
                 <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
-                  <Fade in={saveSuccess?.section === 'Legal'}>
-                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
-                  </Fade>
+                  <SavedBadge active={saveSuccess?.section === 'Legal'} />
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
@@ -2325,9 +2358,7 @@ const PRIMARY_BUTTON_SX = {
                   </Box>
                 ))}
                 <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
-                  <Fade in={saveSuccess?.section === 'Locations'}>
-                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
-                  </Fade>
+                  <SavedBadge active={saveSuccess?.section === 'Locations'} />
                   <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                     try {
@@ -2363,9 +2394,7 @@ const PRIMARY_BUTTON_SX = {
                 <TextField label="Display Name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <TextField label="Phone" value={userPhone} onChange={(e)=>setUserPhone(e.target.value)} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
-                  <Fade in={saveSuccess?.section === 'Profile'}>
-                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
-                  </Fade>
+                  <SavedBadge active={saveSuccess?.section === 'Profile'} />
                   <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
@@ -2523,9 +2552,10 @@ const PRIMARY_BUTTON_SX = {
         {section === 'experiences' && subsection === 'media' && (
           <Fade in timeout={250}>
           <Box sx={{ p: 4 }}>
-              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Photos & Video</Typography>
-              <Alert severity="info" sx={{ mb: 2 }}>Add Google Drive links for photos/videos, or paste YouTube/Vimeo URLs.</Alert>
-              <GridLikeMedia onToast={(m)=>setToast(m)} defaultActivityId={selectedExperienceId} />
+          <Stack spacing={4}>
+            <Typography variant="h5" sx={{ mb: 1, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Photos & Video</Typography>
+            <GridLikeMedia onToast={(m)=>setToast(m)} defaultActivityId={selectedExperienceId} onUpdate={handleMediaUpdate} />
+          </Stack>
           </Box>
           </Fade>
         )}
@@ -2533,39 +2563,44 @@ const PRIMARY_BUTTON_SX = {
         {section === 'experiences' && subsection === 'pricing' && (
           <Fade in timeout={250}>
           <Box sx={{ p: 4 }}>
-            <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Pricing & Rates</Typography>
-            <Alert severity="info" sx={{ mb: 2 }}>Add pricing categories and rates. The first row will be used as the base rate for channels that support a single rate.</Alert>
-            <Table size="small" sx={{ mb: 1 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Pricing Category</TableCell>
-                  <TableCell>Amount</TableCell>
-                  <TableCell>Currency</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {pricingRows.map((r, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell><TextField size="small" value={r.category} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, category:e.target.value}:x))} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} /></TableCell>
-                    <TableCell><TextField size="small" type="number" inputProps={{ min: 0, step: '0.01', style: { fontFamily: 'Nunito, sans-serif' } }} value={r.amount} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, amount:e.target.value}:x))} /></TableCell>
-                    <TableCell><TextField size="small" value={r.currency} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, currency:e.target.value}:x))} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} /></TableCell>
-                    <TableCell align="right"><Button size="small" color="error" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none' }} onClick={()=>setPricingRows(rows=>rows.filter((_,i)=>i!==idx))}>Remove</Button></TableCell>
+          <Stack spacing={4}>
+            <Typography variant="h5" sx={{ mb: 1, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Pricing & Rates</Typography>
+            
+            <Box sx={{ p: 0 }}>
+            <TableContainer sx={{ p: 0, borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.05)', bgcolor: isTransparent ? 'rgba(255,255,255,0.7)' : '#fff', backdropFilter: isTransparent ? 'blur(20px)' : 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.05)' }}>
+              <Table sx={{ minWidth: 650 }}>
+                <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+                  <TableRow>
+                    <TableCell sx={{ color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>Pricing Category</TableCell>
+                    <TableCell sx={{ color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>Amount</TableCell>
+                    <TableCell sx={{ color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>Currency</TableCell>
+                    <TableCell align="right" sx={{ color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>Actions</TableCell>
                   </TableRow>
-                ))}
-                {pricingRows.length === 0 && (
-                  <TableRow><TableCell colSpan={4} sx={{ color:'#777' }}>No pricing rows yet.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-            {pricingRows.length === 0 && (
-              <Alert severity="info" sx={{ mb: 2 }}>Add at least one pricing row (category, amount, currency).</Alert>
-            )}
-            <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
-              <Fade in={saveSuccess?.section === 'Experience'}>
-                    <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
-              </Fade>
-              <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
+                </TableHead>
+                <TableBody>
+                  {pricingRows.map((r, idx) => (
+                    <TableRow key={idx} sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: '#F1F5F9' } }}>
+                      <TableCell><TextField placeholder="e.g. Adult" fullWidth size="small" variant="standard" InputProps={{ disableUnderline: true, style: { fontFamily: 'Nunito, sans-serif', fontSize: '0.9rem', color: '#1E293B' } }} value={r.category} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, category:e.target.value}:x))} /></TableCell>
+                      <TableCell><TextField type="number" fullWidth size="small" variant="standard" inputProps={{ min: 0, step: '0.01' }} InputProps={{ disableUnderline: true, style: { fontFamily: 'Nunito, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#1E293B' } }} value={r.amount} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, amount:e.target.value}:x))} /></TableCell>
+                      <TableCell><TextField fullWidth size="small" variant="standard" InputProps={{ disableUnderline: true, style: { fontFamily: 'Nunito, sans-serif', fontSize: '0.9rem', color: '#64748B' } }} value={r.currency} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, currency:e.target.value}:x))} /></TableCell>
+                      <TableCell align="right">
+                        <IconButton size="small" color="error" onClick={()=>setPricingRows(rows=>rows.filter((_,i)=>i!==idx))}>
+                          <DeleteOutlineIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {pricingRows.length === 0 && (
+                    <TableRow><TableCell colSpan={4} sx={{ textAlign: 'center', py: 6, color: '#94A3B8' }}>No pricing rows yet. Add your first rate below.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            </Box>
+
+            <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 3 }} alignItems="center">
+              <SavedBadge active={saveSuccess?.section === 'Experience'} />
+              <Button size="small" variant="outlined" sx={{ border: '1px solid #E2E8F0', borderRadius: 2, color: '#64748B', textTransform: 'none', px: 3, '&:hover': { bgcolor: '#F8FAFC', borderColor: '#CBD5E1' } }} startIcon={<AddIcon />} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
               <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                 const currencies = new Set(pricingRows.map(r=>r.currency).filter(Boolean));
                 if (currencies.size > 1) { setToast('Use a single currency across pricing rows'); return; }
@@ -2575,6 +2610,7 @@ const PRIMARY_BUTTON_SX = {
                 await onSaveDetails({ pricingCategories: catsCsv, baseRate: base, currency: curr });
               }}>Save Pricing</Button>
             </Stack>
+          </Stack>
           </Box>
           </Fade>
         )}
@@ -2716,9 +2752,7 @@ const PRIMARY_BUTTON_SX = {
                 </Grid>
 
                 <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }} alignItems="center" spacing={2}>
-                  <Fade in={saveSuccess?.section === 'Experience'}>
-                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
-                  </Fade>
+                  <SavedBadge active={saveSuccess?.section === 'Experience'} />
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Details</Button>
                 </Stack>
               </>
@@ -2756,9 +2790,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
                 <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2} sx={{ mt: 2 }}>
-                  <Fade in={saveSuccess?.section === 'Experience'}>
-                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
-                  </Fade>
+                  <SavedBadge active={saveSuccess?.section === 'Experience'} />
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Availability</Button>
                 </Stack>
               </>
@@ -2782,9 +2814,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
                 <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2} sx={{ mt: 2 }}>
-                  <Fade in={saveSuccess?.section === 'Experience'}>
-                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
-                  </Fade>
+                  <SavedBadge active={saveSuccess?.section === 'Experience'} />
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Policies</Button>
                 </Stack>
               </>
@@ -2835,7 +2865,7 @@ const PRIMARY_BUTTON_SX = {
                       })()}
                     </Box>
                     <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                      <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} onClick={() => {
+                      <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)' }} onClick={() => {
                         try {
                           const pre = document.querySelector('[data-preview-payload]') as HTMLElement | null;
                           const text = pre ? pre.innerText : '';
@@ -2856,54 +2886,141 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'validation' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
-          <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Data Validation</Typography>
-            {!selectedExperienceId && (<Alert severity="warning">Select an Experience to validate.</Alert>)}
-            {selectedExperienceId && (
-              <>
-                <Stack direction={{ xs:'column', sm:'row' }} spacing={1} alignItems="center">
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<CheckIcon />} disabled={validating} onClick={runValidation}>{validating ? 'Validating…' : 'Run Validation'}</Button>
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<CheckIcon />} disabled={validating || experiences.length===0} onClick={async ()=>{
-                    const results: Record<string, number> = {} as any;
-                    for (const e of experiences) {
-                      const issues = await (async ()=>{
-                        const errs: string[] = [];
-                        if (!e.title?.trim()) errs.push('T1: Title');
-                        if (!e.summary?.trim()) errs.push('T1: Description');
-                        if (!e.durationMinutes?.trim()) errs.push('T1: Duration');
-                        if (!e.city?.trim()) errs.push('T1: City');
-                        if (!e.category?.trim()) errs.push('T1: Category');
-                        try { const ok = await fetchHasAnyPhotoFor(e.id); if (!ok) errs.push('T1: Photo'); } catch {}
-                        if (!e.schedulingMode?.trim()) errs.push('T2: Mode');
-                        if (!e.startTimes?.trim()) errs.push('T2: StartTimes');
-                        if (!e.maxParticipants?.toString().trim()) errs.push('T2: Capacity');
-                        if (!((e.cutoffHours||'') || (e.bookingLeadTime||'')).toString().trim()) errs.push('T2: Cutoff');
-                        if (!e.currency?.trim()) errs.push('T2: Currency');
-                        if (!e.pricingCategories?.trim()) errs.push('T2: PricingCat');
-                        if (!((e.baseRate||'') || (e.price||'')).toString().trim()) errs.push('T2: Rate');
-                        return errs;
-                      })();
-                      results[e.id] = issues.length;
-                    }
-                    setValidationMap(results);
-                    try { if (appId) localStorage.setItem(`supplier_validation_${appId}`, JSON.stringify(results)); } catch {}
-                    setToast('Validation complete for all');
-                  }}>Validate all</Button>
-                </Stack>
-                {validationIssues === null && !validating && (<Alert severity="info">Run validation to check for missing required fields before publishing.</Alert>)}
-                {validationIssues !== null && validationIssues.length === 0 && !validating && (<Alert severity="success">All validation checks passed. Ready to Publish.</Alert>)}
-                {validationIssues !== null && validationIssues.length > 0 && (
-                  <Alert severity="error">
-                    <Typography variant="caption" sx={{ display:'block', mb: .5 }}>The following must be fixed before this experience can be Published:</Typography>
-                    <ul style={{ margin: 0, paddingInlineStart: 18 }}>
-                      {validationIssues.map((e, i) => (<li key={i}><Typography variant="caption">{e}</Typography></li>))}
-                    </ul>
-                  </Alert>
-                )}
-              </>
-            )}
-          </Stack>
+          <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Box sx={{ width: '100%', maxWidth: 900 }}>
+              <Box sx={{ mb: 6, textAlign: 'center' }}>
+                <Typography variant="h4" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Automated Audit</Typography>
+                <Typography variant="body1" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>Verify your content integrity before pushing to global distribution channels.</Typography>
+              </Box>
+
+              {!selectedExperienceId && (
+                <Paper variant="outlined" sx={{ p: 6, borderRadius: 4, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.3)', borderStyle: 'dashed' }}>
+                  <Typography variant="h6" sx={{ color: '#010057', mb: 1, fontWeight: 700 }}>No Experience Selected</Typography>
+                  <Typography variant="body2" sx={{ color: '#64748B' }}>Please select an experience from the sidebar to perform validation.</Typography>
+                </Paper>
+              )}
+
+              {selectedExperienceId && (
+            <Box sx={{ p: 0, maxWidth: 1000, mx: 'auto' }}>
+                <Grid container spacing={4} sx={{ mt: 2 }}>
+                  <Grid item xs={12} md={7}>
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1e293b', mb: 1, textTransform: 'uppercase', letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <SummarizeIcon fontSize="small" sx={{ color: '#C5A059' }} /> Analysis Report
+                      </Typography>
+                      <Divider sx={{ mb: 3 }} />
+                      
+                      <Stack spacing={2}>
+                        {validationIssues === null && !validating && (
+                          <Box sx={{ p: 8, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.4)', borderRadius: 4, border: '1px dashed #cbd5e1' }}>
+                            <VerifiedUserIcon sx={{ fontSize: 64, color: '#cbd5e1', mb: 2 }} />
+                            <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 700 }}>Ready for Scan</Typography>
+                            <Typography variant="body2" sx={{ color: '#94a3b8' }}>Click the button below to start the verification process.</Typography>
+                          </Box>
+                        )}
+
+                        {validating && (
+                          <Box sx={{ p: 8, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.4)', borderRadius: 4 }}>
+                            <CircularProgress size={48} sx={{ mb: 2, color: '#C5A059' }} />
+                            <Typography variant="h6" sx={{ color: '#010057', fontWeight: 700 }}>Auditing Content...</Typography>
+                            <Typography variant="body2" sx={{ color: '#64748b' }}>Checking against provider requirements.</Typography>
+                          </Box>
+                        )}
+
+                        {validationIssues && validationIssues.length > 0 && !validating && (
+                          <Stack spacing={1.5}>
+                            <Alert severity="warning" sx={{ borderRadius: 3, mb: 2, fontWeight: 600 }}>We found {validationIssues.length} issues that need your attention.</Alert>
+                            {validationIssues.map((iss, i) => (
+                              <Box key={i} sx={{ p: 2.5, bgcolor: '#fff', borderLeft: `4px solid ${iss.includes('T1') ? '#ef4444' : '#f59e0b'}`, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#334155' }}>{iss.split(': ')[1]}</Typography>
+                                <Chip label={iss.split(': ')[0]} size="small" sx={{ fontWeight: 800, bgcolor: iss.includes('T1') ? '#fee2e2' : '#fef3c7', color: iss.includes('T1') ? '#b91c1c' : '#b45309', fontSize: '0.65rem' }} />
+                              </Box>
+                            ))}
+                          </Stack>
+                        )}
+
+                        {validationIssues && validationIssues.length === 0 && !validating && (
+                          <Fade in>
+                          <Box sx={{ p: 6, textAlign: 'center', bgcolor: 'rgba(16, 185, 129, 0.08)', borderRadius: 4, border: '2px solid #10b981' }}>
+                            <CheckCircleOutlineIcon sx={{ fontSize: 72, color: '#10b981', mb: 2 }} />
+                            <Typography variant="h5" sx={{ fontWeight: 900, color: '#065f46', mb: 1 }}>Verification Passed</Typography>
+                            <Typography variant="body1" sx={{ color: '#065f46' }}>Your experience is optimized and ready for deployment.</Typography>
+                          </Box>
+                          </Fade>
+                        )}
+                      </Stack>
+                    </Box>
+
+                    {!isVerified && (
+                      <Button fullWidth variant="contained" size="large" sx={{ ...PRIMARY_BUTTON_SX, py: 2, borderRadius: 2, fontSize: '1rem', width: '100%' }} onClick={runValidation} disabled={validating}>
+                        {validating ? 'Verifying...' : 'Perform Content Audit'}
+                      </Button>
+                    )}
+                  </Grid>
+
+                  <Grid item xs={12} md={5}>
+                    <Box sx={{ p: 4, borderRadius: 4, bgcolor: '#010057', color: '#fff', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', boxShadow: '0 12px 32px rgba(1, 0, 87, 0.15)' }}>
+                      <Box sx={{ mb: 4 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, opacity: 0.6, letterSpacing: 1.5, mb: 2, textTransform: 'uppercase' }}>Distribution Status</Typography>
+                        <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 3 }} />
+                        <Typography variant="body2" sx={{ mb: 4, opacity: 0.9 }}>Publishing links your booking calendar and content to the global ExperiaHub network.</Typography>
+                        
+                        <Stack spacing={2.5}>
+                          {[
+                            { label: 'Marketplace Sync', val: 'Active on 50+ Channels' },
+                            { label: 'Booking Engine', val: 'Instant Confirmation' },
+                            { label: 'Asset Bridge', val: 'High-Res CDN Hosting' }
+                          ].map((it, i) => (
+                            <Box key={i}>
+                              <Typography variant="caption" sx={{ display: 'block', opacity: 0.5, fontWeight: 700 }}>{it.label}</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>{it.val}</Typography>
+                            </Box>
+                          ))}
+                        </Stack>
+                      </Box>
+
+                      <Box sx={{ mt: 'auto' }}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          disabled={!isVerified || syncing}
+                          onClick={async () => {
+                            if (syncing) return;
+                            setSyncing(true);
+                            try {
+                              const res = await fetch(`${N8N_BASE}/supplier/sync/push`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ applicationId: appId, experienceId: selectedExperienceId })
+                              });
+                              const j = await res.json();
+                              if (!j?.success) throw new Error(j?.error || 'Direct sync push failed');
+                              setToast('Experience is now live on the network!');
+                            } catch (e: any) { setToast(e.message); }
+                            finally { setSyncing(false); }
+                          }}
+                          sx={{
+                            bgcolor: isVerified ? '#fff' : 'rgba(255,255,255,0.1)',
+                            color: isVerified ? '#010057' : 'rgba(255,255,255,0.3)',
+                            py: 2, borderRadius: 2, fontWeight: 900, fontSize: '1.1rem',
+                            '&:hover': { bgcolor: '#f1f5f9' },
+                            '&.Mui-disabled': { bgcolor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.1)' }
+                          }}
+                        >
+                          {syncing ? 'Pushing...' : 'Deploy Experience'}
+                        </Button>
+                        {!isVerified && (
+                          <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mt: 2, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+                            Complete audit to enable deployment
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+              )}
+            </Box>
           </Box>
           </Fade>
         )}
@@ -2912,13 +3029,13 @@ const PRIMARY_BUTTON_SX = {
           <Fade in timeout={250}>
           <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Channel Sync</Typography>
+            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Distribution & Publishing</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to sync.</Alert>)}
             {selectedExperienceId && (
               <>
-                <Alert severity="info">
-                  <strong>What is Publishing?</strong> This action commits your data to the global registry and prepares it for distribution to channels like Bókun, Expedia, and TripAdvisor. Think of it as "Going Live".
-                </Alert>
+                <PremiumAlert icon={<PlayArrowIcon />} color="#C5A059">
+                  <strong>Publishing:</strong> This action commits your data to the global registry and prepares it for distribution to channels like Bókun, Expedia, and TripAdvisor. Verify all details before going live.
+                </PremiumAlert>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <FormControl size="small">
                     <InputLabel id="airtable-toggle">Airtable</InputLabel>
@@ -2958,18 +3075,39 @@ const PRIMARY_BUTTON_SX = {
                     } catch (e:any) { setToast(e?.message||'Preview failed'); }
                   }}>Availability preview</Button>
                 </Stack>
-                <Button
-                  variant="contained"
-                  sx={{ bgcolor: '#C5A059', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700, color: '#fff', transition: 'all 0.5s ease', '&:hover': { bgcolor: '#B08D45' } }}
-                  onClick={syncSelected}
-                >
-                  Publish Experience
-                </Button>
-                {(validationMap[selectedExperienceId] ?? Infinity) !== 0 && (
-                  <Typography variant="caption" sx={{ color: '#a15b00' }}>
-                    Run Validation and fix issues before syncing.
-                  </Typography>
-                )}
+                {(() => {
+                  const valCount = validationMap[selectedExperienceId] ?? 1;
+                  const canPublish = valCount === 0;
+                  return (
+                    <>
+                      <Button
+                        variant="contained"
+                        disabled={!canPublish}
+                        sx={{ 
+                          bgcolor: '#C5A059', 
+                          fontFamily: 'Nunito, sans-serif', 
+                          textTransform: 'none', 
+                          borderRadius: 2, 
+                          fontWeight: 700, 
+                          color: '#fff', 
+                          py: 1.5,
+                          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
+                          boxShadow: '0 4px 14px rgba(197, 160, 89, 0.39)',
+                          '&:hover': { bgcolor: '#B08D45', boxShadow: '0 6px 20px rgba(197, 160, 89, 0.23)' },
+                          '&.Mui-disabled': { bgcolor: '#E2E8F0', color: '#94A3B8' }
+                        }}
+                        onClick={syncSelected}
+                      >
+                        Publish Experience
+                      </Button>
+                      {!canPublish && (
+                        <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <ClearIcon sx={{ fontSize: '1rem' }} /> Verification Required: Run Validation and fix issues before publishing.
+                        </Typography>
+                      )}
+                    </>
+                  );
+                })()}
               </>
             )}
           </Stack>

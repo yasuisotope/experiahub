@@ -27,13 +27,22 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
     const headers = new Headers();
     const authHeader = request.headers.get('authorization');
     if (authHeader) headers.set('Authorization', authHeader);
+    
     const contentType = request.headers.get('content-type');
-    if (contentType) headers.set('Content-Type', contentType);
+    const isMultipart = contentType?.includes('multipart/form-data');
+    
+    // If NOT multipart, we can set the content-type normally.
+    // If it IS multipart, we MUST NOT set it manually because fetch() needs to 
+    // generate the boundary itself based on the body.
+    if (contentType && !isMultipart) {
+        headers.set('Content-Type', contentType);
+    }
 
-    let body = undefined;
+    let body: any = undefined;
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      const blob = await request.blob();
-      body = blob; 
+      // For multipart, we pass the stream directly if possible, or the blob.
+      // Next.js request.blob() is generally safer for proxying to fetch.
+      body = await request.blob();
     }
 
     // PROACTIVE INTERCEPTION: Status Check (Primary source for Onboarding handshakes)
@@ -543,9 +552,49 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
          const nextMeta = { ...(current?.metadata || {}), background_url: freshUrl };
          updates = { ...updates, metadata: nextMeta };
     } else if (type === 'media') {
+         const admin = getAdminClient();
+         const activeId = payload.activityId;
+         
+         if (activeId && admin) {
+             console.log(`[N8N Proxy] Media Save for Activity: ${activeId}`);
+             // Save to SPECIFIC EXPERIENCE
+             const { data: exp, error: expErr } = await admin.from('experiences').select('metadata, raw_data').eq('id', activeId).single();
+             if (!expErr && exp) {
+                 const currentMeta = exp.metadata || {};
+                 const nextMeta = {
+                     ...currentMeta,
+                     photosDriveUrls: payload.photosDriveUrls,
+                     videoDriveUrl: payload.videoDriveUrl,
+                     videoUrl: payload.videoUrl
+                 };
+                 const nextRaw = {
+                     ...(exp.raw_data || {}),
+                     photosDriveUrls: payload.photosDriveUrls,
+                     videoDriveUrl: payload.videoDriveUrl,
+                     videoUrl: payload.videoUrl
+                 };
+                 const { error: updErr, data: updData } = await admin.from('experiences')
+                    .update({ metadata: nextMeta, raw_data: nextRaw })
+                    .eq('id', activeId)
+                    .select('id');
+                
+                 if (updErr) {
+                     console.error('[N8N Proxy] Activity Media Update Error:', updErr);
+                     return { success: false, error: `Database Update Failed: ${updErr.message}` };
+                 } else {
+                     console.log('[N8N Proxy] Activity Media Update SUCCESS:', updData?.[0]?.id);
+                 }
+             } else if (expErr) {
+                 console.error('[N8N Proxy] Activity Fetch Error (for Media Save):', expErr);
+             }
+         } else {
+             console.log('[N8N Proxy] Media Save for Supplier (Fallback)');
+         }
+
+         // ALWAYS Save to SUPPLIER as global fallback
          const { data: current, error: fetchErr } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
          if (fetchErr && !fetchErr.message.includes('metadata')) {
-             console.error('[N8N Proxy] Metadata Fetch Error:', fetchErr);
+             console.error('[N8N Proxy] Supplier Metadata Fetch Error:', fetchErr);
          }
          const meta = current?.metadata || {};
          updates = { 
@@ -647,7 +696,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 languages: Array.isArray(a.languages) ? a.languages.join(', ') : a.languages || null,
                 start_times: a.startTimes || null,
                 cutoff_hours: a.cutoffHours || a.bookingLeadTime || null,
-                pricing_rows: a.pricingRows || null
+                pricing_rows: a.pricingRows || null,
+                // Media Restorations (Sync to metadata column)
+                metadata: {
+                  photosDriveUrls: a.photosDriveUrls || [],
+                  videoDriveUrl: a.videoDriveUrl || '',
+                  videoUrl: a.videoUrl || ''
+                }
             };
             
             console.log(`[N8N Proxy] Processing Activity ${a.id}:`, { title: a.title, dataSize: row.raw_data.length });
@@ -869,11 +924,21 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
             url: data.metadata?.background_url || null
         };
     } else if (type === 'media') {
-        const m = data.metadata || {};
+        const activityId = u.searchParams.get('activityId');
+        let m = data.metadata || {};
+        
+        // If an activityId is provided, attempt to fetch its specific metadata from the experiences table
+        if (activityId) {
+            const { data: expRow } = await supabase.from('experiences').select('metadata').eq('id', activityId).maybeSingle();
+            if (expRow?.metadata) {
+                m = expRow.metadata;
+            }
+        }
+        
         return {
              photosDriveUrls: m.photosDriveUrls || [],
-             videoDriveUrl: m.videoDriveUrl,
-             videoUrl: m.videoUrl
+             videoDriveUrl: m.videoDriveUrl || '',
+             videoUrl: m.videoUrl || ''
         };
     } else if (type as string === 'status') {
         return {
@@ -982,7 +1047,11 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             languages: row.languages || raw?.languages,
             startTimes: row.start_times || raw?.startTimes,
             cutoffHours: row.cutoff_hours || raw?.cutoffHours,
-            pricingRows: row.pricing_rows || raw?.pricingRows
+            pricingRows: row.pricing_rows || raw?.pricingRows,
+            // Media Restorations (Experience specific metadata)
+            photosDriveUrls: row.metadata?.photosDriveUrls || raw?.photosDriveUrls || [],
+            videoDriveUrl: row.metadata?.videoDriveUrl || raw?.videoDriveUrl || '',
+            videoUrl: row.metadata?.videoUrl || raw?.videoUrl || ''
         };
       });
 
