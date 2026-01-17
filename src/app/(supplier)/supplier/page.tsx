@@ -2000,6 +2000,7 @@ const PRIMARY_BUTTON_SX = {
                label={<Typography variant="caption" sx={{ fontFamily:'Nunito, sans-serif' }}>Translucent UI</Typography>}
                sx={{ mb: 1, ml: 0.5 }}
             />
+            <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v135</Typography>
             <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>

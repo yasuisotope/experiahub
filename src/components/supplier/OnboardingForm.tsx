@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Grid, TextField, Button, Alert, CircularProgress, Paper, Divider, Chip, Stack, Typography } from '@mui/material';
+import { Box, Grid, TextField, Button, Alert, CircularProgress, Paper, Divider, Chip, Stack, Typography, Fade } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { AuthService } from '@/services/authService';
 
@@ -163,7 +163,7 @@ export default function OnboardingForm({ applicationId, initialData }: { applica
       </Stack>
       
       {error && <Alert severity="error" sx={{ mb: 2, fontFamily: 'Nunito, sans-serif' }}>{error}</Alert>}
-      {saved && <Alert severity="success" sx={{ mb: 2, fontFamily: 'Nunito, sans-serif' }}>Saved successfully{lastSavedAt ? ` at ${lastSavedAt}` : ''}.</Alert>}
+      {/* Alert removed per user request */}
 
       {/* Section: Company & Contact */}
       <Grid container spacing={3}>
@@ -233,9 +233,9 @@ export default function OnboardingForm({ applicationId, initialData }: { applica
 
       {/* Sticky Action Bar */}
       <Box sx={{ mt: 5, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
-        <Typography variant="caption" sx={{ color: '#666', fontFamily: 'Nunito, sans-serif' }}>
-          {dirty ? 'Unsaved changes' : (lastSavedAt ? `Saved` : '')}
-        </Typography>
+        <Fade in={saved}>
+          <Typography variant="caption" sx={{ color: 'green', fontWeight: 600, fontFamily: 'Nunito, sans-serif' }}>Saved!</Typography>
+        </Fade>
         <Button 
           onClick={handleSave} 
           disabled={saving} 
