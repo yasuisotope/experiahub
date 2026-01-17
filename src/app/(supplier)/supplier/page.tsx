@@ -785,7 +785,7 @@ export default function SupplierPortalPage() {
   const [experiences, setExperiences] = React.useState<Experience[]>([]);
   const [details, setDetails] = React.useState<Partial<Experience>>({});
   const [validating, setValidating] = React.useState(false);
-  const [validationIssues, setValidationIssues] = React.useState<string[]>([]);
+  const [validationIssues, setValidationIssues] = React.useState<string[] | null>(null);
   const [validationMap, setValidationMap] = React.useState<Record<string, number>>({});
   const defaultTimeZone = 'Asia/Tokyo';
 const defaultCurrency = 'USD';
@@ -2006,7 +2006,7 @@ const PRIMARY_BUTTON_SX = {
                label={<Typography variant="caption" sx={{ fontFamily:'Nunito, sans-serif' }}>Translucent UI</Typography>}
                sx={{ mb: 1, ml: 0.5 }}
             />
-            <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v143</Typography>
+            <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v144</Typography>
             <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
@@ -2946,10 +2946,11 @@ const PRIMARY_BUTTON_SX = {
                     setToast('Validation complete for all');
                   }}>Validate all</Button>
                 </Stack>
-                {validationIssues.length === 0 && !validating && (<Alert severity="success">All validation checks passed.</Alert>)}
-                {validationIssues.length > 0 && (
+                {validationIssues === null && !validating && (<Alert severity="info">Run validation to check for missing required fields before publishing.</Alert>)}
+                {validationIssues !== null && validationIssues.length === 0 && !validating && (<Alert severity="success">All validation checks passed. Ready to Publish.</Alert>)}
+                {validationIssues !== null && validationIssues.length > 0 && (
                   <Alert severity="error">
-                    <Typography variant="caption" sx={{ display:'block', mb: .5 }}>Fix the following to sync:</Typography>
+                    <Typography variant="caption" sx={{ display:'block', mb: .5 }}>The following must be fixed before this experience can be Published:</Typography>
                     <ul style={{ margin: 0, paddingInlineStart: 18 }}>
                       {validationIssues.map((e, i) => (<li key={i}><Typography variant="caption">{e}</Typography></li>))}
                     </ul>
@@ -2970,7 +2971,9 @@ const PRIMARY_BUTTON_SX = {
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to sync.</Alert>)}
             {selectedExperienceId && (
               <>
-                <Alert severity="info">Sync will validate first, then push to Bókun and optionally upsert to Airtable.</Alert>
+                <Alert severity="info">
+                  <strong>What is Publishing?</strong> This action commits your data to the global registry and prepares it for distribution to channels like Bókun, Expedia, and TripAdvisor. Think of it as "Going Live".
+                </Alert>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <FormControl size="small">
                     <InputLabel id="airtable-toggle">Airtable</InputLabel>

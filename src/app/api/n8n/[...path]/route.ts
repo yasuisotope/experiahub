@@ -534,13 +534,19 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         };
     } else if (type === 'background') {
          // Need to fetch current generic metadata first to preserve other fields
-         const { data: current } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
+         const { data: current, error: fetchErr } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
+         if (fetchErr && !fetchErr.message.includes('metadata')) {
+             console.error('[N8N Proxy] Metadata Fetch Error:', fetchErr);
+         }
          // Payload might be { url: "..." } or { background: { url: "..." } } depending on caller
          const freshUrl = payload.url || payload.background?.url;
          const nextMeta = { ...(current?.metadata || {}), background_url: freshUrl };
          updates = { ...updates, metadata: nextMeta };
     } else if (type === 'media') {
-         const { data: current } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
+         const { data: current, error: fetchErr } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
+         if (fetchErr && !fetchErr.message.includes('metadata')) {
+             console.error('[N8N Proxy] Metadata Fetch Error:', fetchErr);
+         }
          const meta = current?.metadata || {};
          updates = { 
              ...updates,
@@ -621,18 +627,27 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 itinerary: a.itinerary || null,
                 three_words: a.threeWords || null,
                 scheduling_mode: a.schedulingMode || null,
-                authentic_echoes: a.authentic_echoes || null,
-                unforgettable_feeling: a.unforgettable_feeling || null,
-                magic_moment: a.magic_moment || null,
-                hidden_gem: a.hidden_gem || null,
-                community_connection: a.community_connection || null,
-                perfect_match: a.perfect_match || null,
+                authentic_echoes: a.authenticEchoes || null,
+                unforgettable_feeling: a.unforgettableFeeling || null,
+                magic_moment: a.magicMoment || null,
+                hidden_gem: a.hiddenGem || null,
+                community_connection: a.communityConnection || null,
+                perfect_match: a.perfectMatch || null,
                 meeting_point: a.meetingPoint || null,
-                safety_measures: a.safety_measures || null,
+                safety_measures: a.safetyMeasures || null,
                 requirements: a.requirements || null,
                 included: a.included || null,
-                not_included: a.not_included || null,
-                insurance: a.insurance || null
+                not_included: a.notIncluded || null,
+                insurance: a.insurance || null,
+                // Pricing & Logistics Fields (V144 Schema)
+                pricing_categories: a.pricingCategories || null,
+                base_rate: a.baseRate ? parseFloat(a.baseRate) : (a.price ? parseFloat(a.price) : null),
+                cancellation_policy: a.cancellationPolicy || null,
+                booking_lead_time: a.bookingLeadTime || null,
+                languages: Array.isArray(a.languages) ? a.languages.join(', ') : a.languages || null,
+                start_times: a.startTimes || null,
+                cutoff_hours: a.cutoffHours || a.bookingLeadTime || null,
+                pricing_rows: a.pricingRows || null
             };
             
             console.log(`[N8N Proxy] Processing Activity ${a.id}:`, { title: a.title, dataSize: row.raw_data.length });
@@ -959,7 +974,16 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             requirements: row.requirements || raw?.requirements,
             included: row.included || raw?.included,
             notIncluded: row.not_included || raw?.notIncluded,
-            insurance: row.insurance || raw?.insurance
+            insurance: row.insurance || raw?.insurance,
+            // Pricing & Logistics Restorations
+            pricingCategories: row.pricing_categories || raw?.pricingCategories,
+            baseRate: row.base_rate?.toString() || raw?.baseRate,
+            cancellationPolicy: row.cancellation_policy || raw?.cancellationPolicy,
+            bookingLeadTime: row.booking_lead_time || raw?.bookingLeadTime,
+            languages: row.languages || raw?.languages,
+            startTimes: row.start_times || raw?.startTimes,
+            cutoffHours: row.cutoff_hours || raw?.cutoffHours,
+            pricingRows: row.pricing_rows || raw?.pricingRows
         };
       });
 
