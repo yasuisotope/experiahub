@@ -2577,7 +2577,10 @@ const PRIMARY_BUTTON_SX = {
             {pricingRows.length === 0 && (
               <Alert severity="info" sx={{ mb: 2 }}>Add at least one pricing row (category, amount, currency).</Alert>
             )}
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
+            <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
+              <Fade in={saveSuccess?.section === 'Experience'}>
+                    <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
+              </Fade>
               <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setPricingRows(rows=>[...rows, { category:'', amount:'', currency: details.currency || defaultCurrency || 'JPY' }])}>Add Row</Button>
               <Button variant="contained" size="small" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                 const currencies = new Set(pricingRows.map(r=>r.currency).filter(Boolean));
@@ -2640,7 +2643,7 @@ const PRIMARY_BUTTON_SX = {
                 </Select>
               </Stack>
             </Stack>
-            {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
+            {/* Alert removed per user request */}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit details.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -2770,7 +2773,12 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Availability</Button>
+                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2} sx={{ mt: 2 }}>
+                  <Fade in={saveSuccess?.section === 'Experience'}>
+                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
+                  </Fade>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Availability</Button>
+                </Stack>
               </>
             )}
           </Stack>
@@ -2783,7 +2791,7 @@ const PRIMARY_BUTTON_SX = {
           <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Policies & Requirements</Typography>
-            {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
+            {/* Alert removed per user request */}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit policies.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -2791,7 +2799,10 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Cancellation policy" value={details.cancellationPolicy || ''} onChange={(e)=>setDetails(d=>({ ...d, cancellationPolicy: e.target.value }))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
+                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2} sx={{ mt: 2 }}>
+                  <Fade in={saveSuccess?.section === 'Experience'}>
+                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
+                  </Fade>
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Policies</Button>
                 </Stack>
               </>
