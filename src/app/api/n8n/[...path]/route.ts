@@ -660,15 +660,19 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             }
         });
 
-        // AUTO-CLAIM: If admin key exists, link any orphan matching rows to the current user
+        // Consolidate admin client usage for all DB operations
         const admin = getAdminClient();
+        const client = admin || supabase;
+        const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        // AUTO-CLAIM: Link any orphan matching rows to the current user
         if (admin && userId) {
             console.log(`[N8N Proxy] Auto-Claiming orphan experiences for appId=${appId}...`);
             await admin.from('experiences').update({ user_id: userId }).eq('application_id', appId).is('user_id', null);
         }
         
-        // 0. Handle Deletions (Sync Strategy)
-        const { data: existingRows } = await supabase
+        // 0. Handle Deletions (Sync Strategy) - USE ADMIN CLIENT FOR VISIBILITY
+        const { data: existingRows } = await client
             .from('experiences')
             .select('id')
             .eq('application_id', appId);
@@ -680,7 +684,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         
         if (idsToDelete.length > 0) {
             console.log(`[N8N Proxy] Deleting ${idsToDelete.length} removed activities:`, idsToDelete);
-            const { error: delError } = await supabase
+            const { error: delError } = await client
                 .from('experiences')
                 .delete()
                 .in('id', idsToDelete)
@@ -694,10 +698,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
         // 1. Upsert existing (Robust Batch Upsert)
         if (toUpsert.length > 0) {
-             console.log(`[N8N Proxy] Batch Upserting ${toUpsert.length} activities (using Admin: ${!!getAdminClient()})...`);
-             const admin = getAdminClient();
-             // Prefer Admin Client to bypass RLS for critical saves
-             const client = admin || supabase;
+             console.log(`[N8N Proxy] Batch Upserting ${toUpsert.length} activities (using Admin: ${!!admin})...`);
              
              const { data, error } = await client.from('experiences')
                  .upsert(toUpsert, { onConflict: 'id' })
@@ -720,9 +721,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // 2. Insert new
         const idMappings: Record<string, string> = {};
         if (toInsert.length > 0) {
-            console.log(`[N8N Proxy] Batch Inserting ${toInsert.length} new activities (Admin: ${!!getAdminClient()})...`);
-            const admin = getAdminClient();
-            const client = admin || supabase;
+            console.log(`[N8N Proxy] Batch Inserting ${toInsert.length} new activities (Admin: ${!!admin})...`);
             
             // Explicitly use .insert() for new rows without IDs
             let { data, error } = await client.from('experiences').insert(toInsert).select('id, raw_data');

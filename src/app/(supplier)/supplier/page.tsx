@@ -1152,62 +1152,7 @@ const PRIMARY_BUTTON_SX = {
 
   // View definitions moved inline to main render
 
-  React.useEffect(() => {
-    const load = async () => {
-      if (!appId) return;
-      try {
-        const headers: any = {};
-        const authToken = AuthService.getToken();
-        if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-        const res = await fetch(`${N8N_BASE}/supplier/activities/list?applicationId=${encodeURIComponent(appId)}`, { headers });
-        const json = await parseJsonSafe(res);
-        if (json?.success && Array.isArray(json.activities)) {
-          const mapped: Experience[] = json.activities.map((a: any, i: number) => ({
-            id: a.id || `row_${i}`,
-            title: a.title || '',
-            summary: a.summary || a.description || '',
-            city: a.city || '',
-            durationMinutes: a.durationMinutes || a.duration || '',
-            maxParticipants: a.maxParticipants || '',
-            minParticipants: a.minParticipants || '',
-            category: a.category || '',
-            price: a.price || '',
-            currency: a.currency || 'JPY',
-            cancellationPolicy: a.cancellationPolicy || '',
-            bookingLeadTime: a.bookingLeadTime || '',
-            bookingLink: a.bookingLink || '',
-            languages: Array.isArray(a.languages)? a.languages.join(', ') : (a.languages||''),
-            schedulingMode: a.schedulingMode || '',
-            startTimes: a.startTimes || '',
-            cutoffHours: a.cutoffHours || (a.bookingLeadTime || ''),
-            pricingCategories: a.pricingCategories || '',
-            baseRate: a.baseRate || '',
-            timeZone: a.timeZone || a.timezone || '',
-            latitude: a.latitude || '',
-            longitude: a.longitude || '',
-            bokunProductId: a.bokunProductId || ''
-          }));
-          setExperiences(mapped);
-          try {
-             // Merge with local storage if newer (or at least preserve drafts)
-             const localDetailed = JSON.parse(localStorage.getItem(`supplier_experiences_${appId}`) || '[]');
-             if (Array.isArray(localDetailed) && localDetailed.length > 0) {
-                const map = new Map(mapped.map(m=>[m.id, m]));
-                localDetailed.forEach(l => {
-                   if (!map.has(l.id)) map.set(l.id, l); // Add missing local
-                   // Ideally we would merge fields but let's prioritize API unless it's a temp ID
-                });
-                setExperiences(Array.from(map.values()));
-             }
-          } catch {}
-          const simple = mapped.map(m => ({ id: m.id, title: m.title || '(Untitled)' }));
-          setActivitiesSimple(simple);
-          if (!selectedExperienceId && simple.length > 0) setSelectedExperienceId(simple[0].id);
-        }
-      } catch {}
-    };
-    load();
-  }, [appId]);
+
 
   React.useEffect(() => {
     try {
@@ -2006,7 +1951,7 @@ const PRIMARY_BUTTON_SX = {
                label={<Typography variant="caption" sx={{ fontFamily:'Nunito, sans-serif' }}>Translucent UI</Typography>}
                sx={{ mb: 1, ml: 0.5 }}
             />
-            <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v144</Typography>
+            <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v146</Typography>
             <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
