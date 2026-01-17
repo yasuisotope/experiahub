@@ -198,6 +198,26 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
         responseHeaders.set('content-type', response.headers.get('content-type')!);
     }
 
+    // Try to inject debug info into JSON responses
+    const proxyContentType = response.headers.get('content-type');
+    if (proxyContentType && proxyContentType.includes('application/json')) {
+        try {
+            const textFn = new TextDecoder().decode(data);
+            const jsonBody = JSON.parse(textFn);
+            if (typeof jsonBody === 'object' && jsonBody !== null) {
+                // Determine if we are debugging list activities
+                if (targetUrl.includes('activities')) {
+                    jsonBody.debug_proxy_fallback = true;
+                    jsonBody.debug_resolved_path = path;
+                    jsonBody.debug_target_url = targetUrl;
+                }
+                return NextResponse.json(jsonBody, { status: response.status, headers: responseHeaders });
+            }
+        } catch (e) {
+            console.warn('[N8N Proxy] Failed to inject debug info', e);
+        }
+    }
+
     return new NextResponse(data, {
       status: response.status,
       headers: responseHeaders,
