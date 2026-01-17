@@ -802,21 +802,21 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             category: row.category || raw?.category,
             bokunProductId: row.bokun_product_id || raw?.bokunProductId,
             // Narrative Restorations
-            authenticEchoes: row.authentic_echoes || raw?.authenticEchoes,
-            unforgettableFeeling: row.unforgettable_feeling || raw?.unforgettableFeeling,
-            magicMoment: row.magic_moment || raw?.magicMoment,
-            hiddenGem: row.hidden_gem || raw?.hiddenGem,
-            communityConnection: row.community_connection || raw?.communityConnection,
-            perfectMatch: row.perfect_match || raw?.perfectMatch,
-            threeWords: row.three_words || raw?.threeWords,
+            authenticEchoes: raw?.authenticEchoes ?? row.authentic_echoes,
+            unforgettableFeeling: raw?.unforgettableFeeling ?? row.unforgettable_feeling,
+            magicMoment: raw?.magicMoment ?? row.magic_moment,
+            hiddenGem: raw?.hiddenGem ?? row.hidden_gem,
+            communityConnection: raw?.communityConnection ?? row.community_connection,
+            perfectMatch: raw?.perfectMatch ?? row.perfect_match,
+            threeWords: raw?.threeWords ?? row.three_words,
             // Logistics Restorations
-            meetingPoint: row.meeting_point || raw?.meetingPoint,
-            itinerary: row.itinerary || raw?.itinerary,
-            safetyMeasures: row.safety_measures || raw?.safetyMeasures,
-            requirements: row.requirements || raw?.requirements,
-            included: row.included || raw?.included,
-            notIncluded: row.not_included || raw?.notIncluded,
-            insurance: row.insurance || raw?.insurance
+            meetingPoint: raw?.meetingPoint ?? row.meeting_point,
+            itinerary: raw?.itinerary ?? row.itinerary,
+            safetyMeasures: raw?.safetyMeasures ?? row.safety_measures,
+            requirements: raw?.requirements ?? row.requirements,
+            included: raw?.included ?? row.included,
+            notIncluded: raw?.notIncluded ?? row.not_included,
+            insurance: raw?.insurance ?? row.insurance
         };
       });
 
