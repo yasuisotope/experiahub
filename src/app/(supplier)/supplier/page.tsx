@@ -86,7 +86,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     photosDriveUrls?: string[];
     videoDriveUrl?: string;
     videoUrl?: string;
-    status?: string;
+    status?: 'Published' | 'Unpublished';
   };
   /* State lifted to parent */
   const rows = experiences;
@@ -111,7 +111,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
   const [cutoffHours, setCutoffHours] = React.useState('');
   const [pricingCategories, setPricingCategories] = React.useState('');
   const [baseRate, setBaseRate] = React.useState('');
-  const [status, setStatus] = React.useState('Draft');
+  const [status, setStatus] = React.useState<'Published' | 'Unpublished'>('Unpublished');
 
   // Bulk Selection State
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
@@ -200,7 +200,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     setCutoffHours('');
     setPricingCategories('');
     setBaseRate('');
-    setStatus('Draft');
+    setStatus('Unpublished');
     setEditing(null);
   };
   const openAdd = () => { resetForm(); setOpen(true); };
@@ -224,7 +224,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
     setCutoffHours(a.cutoffHours || (a.bookingLeadTime || ''));
     setPricingCategories(a.pricingCategories || '');
     setBaseRate(a.baseRate || '');
-    setStatus(a.status || 'Draft');
+    setStatus(a.status === 'Published' ? 'Published' : 'Unpublished');
     setOpen(true);
   };
   const remove = (id: string) => {
@@ -402,7 +402,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
       }
       if (!json?.success) throw new Error(json?.error || 'Sync failed');
       const bokunId = json.bokunProductId || '';
-      setRows((rs) => rs.map((r) => r.id === a.id ? { ...r, bokunProductId: bokunId } : r));
+      setRows((rs) => rs.map((r) => r.id === a.id ? { ...r, bokunProductId: bokunId, status: 'Published' } : r));
       onToast(`Published! ID: ${bokunId || 'Pending'}`);
     } catch (e: any) {
       onToast(e?.message || 'Publish failed');
@@ -505,14 +505,14 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
               <TableCell align="center">{r.bokunProductId ? <Typography variant="caption" sx={{ color: '#2e7d32' }}>{r.bokunProductId}</Typography> : <Typography variant="caption" sx={{ color: '#999' }}>—</Typography>}</TableCell>
               <TableCell align="center">
                 <Chip 
-                  label={r.status || 'Draft'} 
+                  label={syncId === r.id ? 'Publishing...' : (r.status === 'Published' ? 'Published' : 'Unpublished')} 
                   size="small" 
                   sx={{ 
                     fontWeight: 700, 
                     fontSize: '0.65rem',
-                    bgcolor: r.status === 'Published' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0,0,0,0.05)',
-                    color: r.status === 'Published' ? '#059669' : '#64748b',
-                    border: r.status === 'Published' ? '1px solid #10b981' : '1px solid #cbd5e1'
+                    bgcolor: syncId === r.id ? 'rgba(1, 0, 87, 0.05)' : (r.status === 'Published' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(100, 116, 139, 0.1)'),
+                    color: syncId === r.id ? '#010057' : (r.status === 'Published' ? '#059669' : '#475569'),
+                    border: syncId === r.id ? '1px solid #010057' : (r.status === 'Published' ? '1px solid #10b981' : '1px solid #94a3b8')
                   }} 
                 />
               </TableCell>
@@ -2906,146 +2906,209 @@ const PRIMARY_BUTTON_SX = {
         {section === 'experiences' && subsection === 'validation' && (
           <Fade in timeout={250}>
           <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Box sx={{ width: '100%', maxWidth: 700 }}>
-              <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Automated Audit</Typography>
-                <Typography variant="body1" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>Verify your content integrity before pushing to global distribution channels.</Typography>
+            <Box sx={{ width: '100%', maxWidth: 650 }}>
+              <Box sx={{ mb: 6, textAlign: 'center' }}>
+                <Typography variant="h4" sx={{ 
+                  fontFamily: 'Agrandir, serif', 
+                  fontWeight: 900, 
+                  color: '#010057', 
+                  mb: 1.5,
+                  letterSpacing: -1
+                }}>
+                  Experience Health Check
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif', maxWidth: 450, mx: 'auto', fontWeight: 600 }}>
+                  We'll audit your content against 12+ distribution standards to ensure maximum visibility on the ExperiaHub Network.
+                </Typography>
               </Box>
 
               {!selectedExperienceId && (
-                <Paper variant="outlined" sx={{ p: 6, borderRadius: 4, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.3)', borderStyle: 'dashed' }}>
-                  <Typography variant="h6" sx={{ color: '#010057', mb: 1, fontWeight: 700 }}>No Experience Selected</Typography>
-                  <Typography variant="body2" sx={{ color: '#64748B' }}>Please select an experience from the sidebar to perform validation.</Typography>
-                </Paper>
+                <Box sx={{ p: 10, borderRadius: 8, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.4)', border: '1px solid rgba(1, 0, 87, 0.08)', boxShadow: '0 20px 60px rgba(0,0,0,0.03)' }}>
+                  <VerifiedUserIcon sx={{ fontSize: 80, color: 'rgba(1, 0, 87, 0.03)', mb: 3 }} />
+                  <Typography variant="h6" sx={{ color: '#010057', mb: 1, fontWeight: 800 }}>Select an Experience</Typography>
+                  <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 600 }}>Choose a product from the list to begin the optimization process.</Typography>
+                </Box>
               )}
 
               {selectedExperienceId && (
                 <Stack spacing={4}>
-                  {/* Status Card */}
-                  <Paper sx={{ p: 4, borderRadius: 4, bgcolor: '#fff', boxShadow: '0 12px 40px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.05)', position: 'relative', overflow: 'hidden' }}>
-                    <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 4, bgcolor: isVerified ? '#10b981' : '#C5A059' }} />
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <SummarizeIcon fontSize="small" sx={{ color: '#C5A059' }} /> Audit Report
-                      </Typography>
-                      {(() => {
-                        const exp = experiences.find(e => e.id === selectedExperienceId);
-                        const isPub = exp?.status === 'Published';
-                        return (
-                          <Chip 
-                            label={isPub ? 'LIVE ON NETWORK' : 'DRAFT'} 
-                            color={isPub ? 'success' : 'default'}
-                            size="small"
-                            sx={{ fontWeight: 900, borderRadius: 1.5, fontSize: '0.65rem' }}
-                          />
-                        );
-                      })()}
-                    </Stack>
-
-                    <Stack spacing={2} sx={{ mb: 4 }}>
-                      {validationIssues === null && !validating && (
-                        <Box sx={{ p: 4, textAlign: 'center', bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 3, border: '1px dashed #cbd5e1' }}>
-                          <VerifiedUserIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1.5 }} />
-                          <Typography variant="subtitle1" sx={{ color: '#64748b', fontWeight: 700 }}>Scan Pending</Typography>
-                          <Typography variant="body2" sx={{ color: '#94a3b8' }}>Run the audit to verify content completeness.</Typography>
-                        </Box>
-                      )}
-
-                      {validating && (
-                        <Box sx={{ p: 4, textAlign: 'center' }}>
-                          <CircularProgress size={32} sx={{ mb: 2, color: '#C5A059' }} />
-                          <Typography variant="subtitle1" sx={{ color: '#010057', fontWeight: 700 }}>Analyzing Content...</Typography>
-                        </Box>
-                      )}
-
-                      {validationIssues && validationIssues.length > 0 && !validating && (
-                        <Stack spacing={1.5}>
-                          <Alert severity="warning" sx={{ borderRadius: 2, mb: 1, fontWeight: 600 }}>Action Required: {validationIssues.length} issues found.</Alert>
-                          {validationIssues.map((iss, i) => (
-                            <Box key={i} sx={{ p: 2, bgcolor: '#f8fafc', borderLeft: `4px solid ${iss.includes('T1') ? '#ef4444' : '#C5A059'}`, borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <Typography variant="body2" sx={{ fontWeight: 700, color: '#334155' }}>{iss.split(': ')[1]}</Typography>
-                              <Chip label={iss.split(': ')[0]} size="small" sx={{ fontWeight: 800, bgcolor: iss.includes('T1') ? '#fee2e2' : '#fef3c7', color: iss.includes('T1') ? '#b91c1c' : '#b45309', fontSize: '0.6rem' }} />
-                            </Box>
-                          ))}
-                        </Stack>
-                      )}
-
-                      {validationIssues && validationIssues.length === 0 && !validating && (
-                        <Fade in>
-                          <Box sx={{ p: 4, textAlign: 'center', bgcolor: 'rgba(16, 185, 129, 0.05)', borderRadius: 3, border: '1px solid #10b981' }}>
-                            <CheckCircleOutlineIcon sx={{ fontSize: 48, color: '#10b981', mb: 1.5 }} />
-                            <Typography variant="h6" sx={{ fontWeight: 900, color: '#065f46', mb: 0.5 }}>Verification Passed</Typography>
-                            <Typography variant="body2" sx={{ color: '#065f46', opacity: 0.8 }}>This experience meets all distribution standards.</Typography>
-                          </Box>
-                        </Fade>
-                      )}
-                    </Stack>
-
-                    <Stack spacing={2}>
-                      <Button 
-                        fullWidth 
-                        variant={isVerified ? "outlined" : "contained"} 
-                        sx={{ 
-                          height: 52,
-                          borderRadius: 2,
-                          textTransform: 'none',
-                          fontWeight: 800,
-                          fontSize: '0.95rem',
-                          ...(isVerified ? { borderColor: '#e2e8f0', color: '#64748b' } : PRIMARY_BUTTON_SX)
-                        }} 
-                        onClick={runValidation} 
-                        disabled={validating}
-                      >
-                        {validating ? 'Verifying...' : (isVerified ? 'Re-run Audit' : 'Perform Content Audit')}
-                      </Button>
-
-                      {isVerified && (
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          disabled={syncing}
-                          onClick={async () => {
-                            if (syncing) return;
-                            setSyncing(true);
-                            try {
-                              const res = await fetch(`${N8N_BASE}/supplier/sync/push`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ applicationId: appId, experienceId: selectedExperienceId })
-                              });
-                              const j = await res.json();
-                              if (!j?.success) throw new Error(j?.error || 'Direct sync push failed');
-                              setToast('Experience is now live on the network!');
-                              // Update local status
-                              setExperiences(prev => prev.map(e => e.id === selectedExperienceId ? { ...e, status: 'Published' } : e));
-                            } catch (e: any) { setToast(e.message); }
-                            finally { setSyncing(false); }
-                          }}
-                          sx={{
-                            bgcolor: '#C5A059',
-                            color: '#fff',
-                            height: 60,
-                            borderRadius: 2,
-                            fontWeight: 900,
-                            fontSize: '1.1rem',
-                            textTransform: 'none',
-                            boxShadow: '0 8px 20px rgba(197, 160, 89, 0.3)',
-                            '&:hover': { bgcolor: '#B08D45', boxShadow: '0 10px 25px rgba(197, 160, 89, 0.4)' },
-                            '&.Mui-disabled': { bgcolor: '#F1F5F9', color: '#94A3B8' }
-                          }}
-                        >
-                          {syncing ? 'Pushing to Network...' : 'Deploy Experience'}
-                        </Button>
-                      )}
-                    </Stack>
-                  </Paper>
-
-                  {/* Info helper */}
-                  <Box sx={{ px: 2, textAlign: 'center' }}>
-                    <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
-                      Publishing will synchronize your experience with Bókun, Expedia, and TripAdvisor.
-                    </Typography>
+                  {/* Status Header */}
+                  <Box sx={{ 
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                    p: 3, borderRadius: 6, bgcolor: '#fff', boxShadow: '0 10px 40px rgba(0,0,0,0.03)',
+                    border: '1px solid rgba(0,0,0,0.04)'
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                       <Box sx={{ 
+                         width: 56, height: 56, borderRadius: '20px', 
+                         bgcolor: isVerified ? 'rgba(16, 185, 129, 0.08)' : 'rgba(197, 160, 89, 0.08)',
+                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                         boxShadow: isVerified ? 'inset 0 0 20px rgba(16, 185, 129, 0.05)' : 'inset 0 0 20px rgba(197, 160, 89, 0.05)'
+                       }}>
+                         {isVerified ? <CheckCircleOutlineIcon sx={{ color: '#10b981', fontSize: 28 }} /> : <SummarizeIcon sx={{ color: '#C5A059', fontSize: 28 }} />}
+                       </Box>
+                       <Box>
+                         <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.1, fontSize: '1.1rem' }}>
+                            {experiences.find(e => e.id === selectedExperienceId)?.title || 'Global Distribution'}
+                         </Typography>
+                         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: experiences.find(e => e.id === selectedExperienceId)?.status === 'Published' ? '#10b981' : '#94a3b8' }} />
+                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: '0.65rem' }}>
+                                {experiences.find(e => e.id === selectedExperienceId)?.status === 'Published' ? 'Active on Network' : 'Unpublished Draft'}
+                            </Typography>
+                         </Stack>
+                       </Box>
+                    </Box>
                   </Box>
+
+                  {/* Audit Results Container */}
+                  <Box sx={{ position: 'relative' }}>
+                    <Typography variant="caption" sx={{ ml: 2, mb: 1.5, display: 'block', fontWeight: 900, color: '#94a3b8', letterSpacing: 1 }}>
+                        AUDIT FINDINGS
+                    </Typography>
+                    
+                    <Box sx={{ 
+                        borderRadius: 6, bgcolor: 'rgba(255,255,255,0.6)', p: 1,
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255,255,255,0.8)',
+                        boxShadow: '0 30px 60px rgba(0,0,0,0.05)'
+                    }}>
+                        {validating && (
+                        <Box sx={{ p: 10, textAlign: 'center' }}>
+                            <CircularProgress size={40} thickness={4} sx={{ mb: 3, color: '#010057' }} />
+                            <Typography variant="subtitle1" sx={{ color: '#010057', fontWeight: 800 }}>Deep Scan Initiated</Typography>
+                            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>Analyzing Narrative & Logistic Integrity...</Typography>
+                        </Box>
+                        )}
+
+                        {!validating && validationIssues === null && (
+                        <Box sx={{ p: 8, textAlign: 'center' }}>
+                            <Typography variant="body2" sx={{ color: '#94a3b8', fontWeight: 700, fontStyle: 'italic' }}>
+                                Analysis results will appear here after scanning.
+                            </Typography>
+                        </Box>
+                        )}
+
+                        {!validating && validationIssues && (
+                        <Stack spacing={1}>
+                            {validationIssues.length === 0 ? (
+                            <Box sx={{ p: 8, textAlign: 'center' }}>
+                                <Fade in>
+                                    <Box>
+                                        <Box sx={{ 
+                                            width: 80, height: 80, borderRadius: '40px', bgcolor: '#ecfdf5', 
+                                            mx: 'auto', mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            border: '2px solid #10b981'
+                                        }}>
+                                            <CheckCircleOutlineIcon sx={{ fontSize: 40, color: '#10b981' }} />
+                                        </Box>
+                                        <Typography variant="h5" sx={{ fontWeight: 900, color: '#065f46', mb: 1 }}>100% Score</Typography>
+                                        <Typography variant="body2" sx={{ color: '#059669', opacity: 0.8, fontWeight: 600, maxWidth: 300, mx: 'auto' }}>
+                                            Your content is flawless and ready for premium distribution.
+                                        </Typography>
+                                    </Box>
+                                </Fade>
+                            </Box>
+                            ) : (
+                            validationIssues.map((iss, i) => {
+                                const isT1 = iss.includes('T1');
+                                return (
+                                <Fade in key={i} style={{ transitionDelay: `${i * 50}ms` }}>
+                                <Box sx={{ 
+                                    display: 'flex', alignItems: 'center', gap: 3, p: 3, 
+                                    borderRadius: 5, transition: 'all 0.2s',
+                                    bgcolor: '#fff',
+                                    mb: 1,
+                                    border: '1px solid rgba(0,0,0,0.02)',
+                                    '&:hover': { transform: 'translateX(4px)', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }
+                                }}>
+                                    <Box sx={{ 
+                                    width: 12, height: 12, borderRadius: '50%', 
+                                    bgcolor: isT1 ? '#f43f5e' : '#f59e0b',
+                                    flexShrink: 0
+                                    }} />
+                                    <ListItemText 
+                                    primary={iss.split(': ')[1]} 
+                                    secondary={isT1 ? 'BLOCKING ERROR' : 'OPTIMIZATION TIP'}
+                                    primaryTypographyProps={{ sx: { fontWeight: 800, color: '#1e293b', fontSize: '0.95rem' } }}
+                                    secondaryTypographyProps={{ sx: { fontWeight: 900, fontSize: '0.65rem', color: isT1 ? '#f43f5e' : '#f59e0b', letterSpacing: 1 } }}
+                                    />
+                                    <Box sx={{ px: 2, py: 0.5, borderRadius: 2, bgcolor: isT1 ? '#fff1f2' : '#fffbeb', border: `1px solid ${isT1 ? '#fecdd3' : '#fef3c7'}` }}>
+                                        <Typography variant="caption" sx={{ fontWeight: 900, fontSize: '0.6rem', color: isT1 ? '#e11d48' : '#d97706' }}>
+                                            {isT1 ? 'REQUIRED' : 'SUGGESTED'}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                                </Fade>
+                                );
+                            })
+                            )}
+                        </Stack>
+                        )}
+                    </Box>
+                  </Box>
+
+                  {/* Actions Area */}
+                  <Stack spacing={2} sx={{ pt: 2 }}>
+                    <Button 
+                      fullWidth 
+                      variant="contained" 
+                      onClick={runValidation} 
+                      disabled={validating}
+                      sx={{ 
+                        height: 60, borderRadius: 4, textTransform: 'none', fontWeight: 900,
+                        fontSize: '1rem',
+                        bgcolor: isVerified ? '#f1f5f9' : '#010057',
+                        color: isVerified ? '#64748b' : '#fff',
+                        boxShadow: isVerified ? 'none' : '0 10px 30px rgba(1, 0, 87, 0.2)',
+                        '&:hover': { 
+                            bgcolor: isVerified ? '#e2e8f0' : '#020080',
+                            transform: 'translateY(-2px)'
+                        }
+                      }}
+                    >
+                      {validating ? 'Running Comprehensive Audit...' : (isVerified ? 'Force Re-scan Content' : 'Analyze Experience Integrity')}
+                    </Button>
+
+                    {isVerified && (
+                      <Fade in>
+                        <Box sx={{ p: 4, borderRadius: 6, bgcolor: 'rgba(1, 0, 87, 0.03)', border: '1px solid rgba(1, 0, 87, 0.05)', textAlign: 'center' }}>
+                           <Typography variant="h6" sx={{ fontWeight: 900, color: '#010057', mb: 1 }}>Ready for Orbit</Typography>
+                           <Typography variant="body2" sx={{ color: '#64748b', mb: 3, fontWeight: 600 }}>Your experience has passed all Quality Assurance checks.</Typography>
+                           
+                           <Button
+                            fullWidth
+                            variant="contained"
+                            disabled={syncing}
+                            onClick={async () => {
+                                if (syncing) return;
+                                setSyncing(true);
+                                try {
+                                const res = await fetch(`${N8N_BASE}/supplier/sync/push`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ applicationId: appId, experienceId: selectedExperienceId })
+                                });
+                                const j = await res.json();
+                                if (!j?.success) throw new Error(j?.error || 'Direct sync push failed');
+                                setToast('Success! Experience is now live.');
+                                setExperiences(prev => prev.map(e => e.id === selectedExperienceId ? { ...e, status: 'Published' } : e));
+                                } catch (e: any) { setToast(e.message); }
+                                finally { setSyncing(false); }
+                            }}
+                            sx={{
+                                bgcolor: '#C5A059', color: '#fff', height: 72, borderRadius: 4,
+                                fontWeight: 900, fontSize: '1.2rem', textTransform: 'none',
+                                boxShadow: '0 20px 40px rgba(197, 160, 89, 0.3)',
+                                '&:hover': { bgcolor: '#B08D45', boxShadow: '0 25px 50px rgba(197, 160, 89, 0.4)', transform: 'translateY(-2px)' }
+                            }}
+                            >
+                            {syncing ? 'Pushing Live...' : 'Publish to Global Network'}
+                            </Button>
+                        </Box>
+                      </Fade>
+                    )}
+                  </Stack>
                 </Stack>
               )}
             </Box>

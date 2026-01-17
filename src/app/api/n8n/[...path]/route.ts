@@ -140,6 +140,9 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
         if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
         return NextResponse.json({ success: true, stub: true, saved_direct: true });
     }
+    if (targetUrl.includes('supplier/sync/push')) {
+        console.log(`[N8N Proxy] Direct Sync Push intercepted for UI update`);
+    }
 
     // FORCE DIRECT LIST for Activities to resolve display issues
     if (path.includes('supplier/activities/list')) {
@@ -561,14 +564,30 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                      videoDriveUrl: payload.videoDriveUrl,
                      videoUrl: payload.videoUrl
                  };
-                 const nextRaw = {
-                     ...(exp.raw_data || {}),
-                     photosDriveUrls: payload.photosDriveUrls,
-                     videoDriveUrl: payload.videoDriveUrl,
-                     videoUrl: payload.videoUrl
-                 };
+                 
+                 // Safely merge raw_data
+                 let nextRaw = {};
+                 try {
+                     const rawData = typeof exp.raw_data === 'string' ? JSON.parse(exp.raw_data) : (exp.raw_data || {});
+                     nextRaw = {
+                         ...rawData,
+                         photosDriveUrls: payload.photosDriveUrls,
+                         videoDriveUrl: payload.videoDriveUrl,
+                         videoUrl: payload.videoUrl
+                     };
+                 } catch (e) {
+                     nextRaw = {
+                         photosDriveUrls: payload.photosDriveUrls,
+                         videoDriveUrl: payload.videoDriveUrl,
+                         videoUrl: payload.videoUrl
+                     };
+                 }
+
                  const { error: updErr, data: updData } = await admin.from('experiences')
-                    .update({ metadata: nextMeta, raw_data: nextRaw })
+                    .update({ 
+                        metadata: nextMeta, 
+                        raw_data: typeof exp.raw_data === 'string' ? JSON.stringify(nextRaw) : nextRaw 
+                    })
                     .eq('id', activeId)
                     .select('id');
                 
@@ -1049,7 +1068,7 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             videoDriveUrl: row.metadata?.videoDriveUrl || raw?.videoDriveUrl || '',
             videoUrl: row.metadata?.videoUrl || raw?.videoUrl || '',
             // Status restoration
-            status: row.metadata?.status || raw?.status || (row.bokun_product_id ? 'Published' : 'Draft')
+            status: row.metadata?.status === 'Published' || row.bokun_product_id ? 'Published' : 'Unpublished'
         };
       });
 
