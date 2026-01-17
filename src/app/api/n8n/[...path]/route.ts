@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
+ 
+// Shared Helper for Admin Fallback (Bypasses RLS)
+const getAdminClient = () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const sk = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    if (!url || !sk) return null;
+    return createClient(url, sk, {
+       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    });
+};
 
 async function proxyRequest(request: NextRequest, { params }: { params: { path: string[] } }) {
   const path = params.path.join('/');
@@ -29,19 +39,12 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
     if (authHeader) headers.set('Authorization', authHeader);
     
     const contentType = request.headers.get('content-type');
-    const isMultipart = contentType?.includes('multipart/form-data');
-    
-    // If NOT multipart, we can set the content-type normally.
-    // If it IS multipart, we MUST NOT set it manually because fetch() needs to 
-    // generate the boundary itself based on the body.
-    if (contentType && !isMultipart) {
+    if (contentType) {
         headers.set('Content-Type', contentType);
     }
 
     let body: any = undefined;
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      // For multipart, we pass the stream directly if possible, or the blob.
-      // Next.js request.blob() is generally safer for proxying to fetch.
       body = await request.blob();
     }
 
@@ -381,15 +384,6 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     const isServiceKey = !!serviceKey;
     const supabaseKey = serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    // Helper for Admin Fallback
-    const getAdminClient = () => {
-         const sk = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-         if (!sk) return null;
-         return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, sk, {
-            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-         });
-    };
-
     if (!supabaseUrl || !supabaseKey) {
         console.warn('[N8N Proxy] Missing Supabase credentials for direct save');
         return { success: false, error: 'Configuration Error: Missing Credentials' };
@@ -701,7 +695,8 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 metadata: {
                   photosDriveUrls: a.photosDriveUrls || [],
                   videoDriveUrl: a.videoDriveUrl || '',
-                  videoUrl: a.videoUrl || ''
+                  videoUrl: a.videoUrl || '',
+                  status: a.status || null
                 }
             };
             
@@ -929,7 +924,8 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
         
         // If an activityId is provided, attempt to fetch its specific metadata from the experiences table
         if (activityId) {
-            const { data: expRow } = await supabase.from('experiences').select('metadata').eq('id', activityId).maybeSingle();
+            const admin = getAdminClient();
+            const { data: expRow } = await (admin || supabase).from('experiences').select('metadata').eq('id', activityId).maybeSingle();
             if (expRow?.metadata) {
                 m = expRow.metadata;
             }
@@ -1051,7 +1047,9 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             // Media Restorations (Experience specific metadata)
             photosDriveUrls: row.metadata?.photosDriveUrls || raw?.photosDriveUrls || [],
             videoDriveUrl: row.metadata?.videoDriveUrl || raw?.videoDriveUrl || '',
-            videoUrl: row.metadata?.videoUrl || raw?.videoUrl || ''
+            videoUrl: row.metadata?.videoUrl || raw?.videoUrl || '',
+            // Status restoration
+            status: row.metadata?.status || raw?.status || (row.bokun_product_id ? 'Published' : 'Draft')
         };
       });
 
