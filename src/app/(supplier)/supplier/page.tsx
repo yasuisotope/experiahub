@@ -2229,9 +2229,13 @@ const PRIMARY_BUTTON_SX = {
                       onClick={async ()=>{
                         try {
                           if (!appId) { setToast('Missing application ID'); return; }
+                          const token = AuthService.getToken();
                           const res = await fetch(`${N8N_BASE}/supplier/payouts/stripe/connect_link`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 
+                              'Content-Type': 'application/json',
+                              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                            },
                             body: JSON.stringify({ applicationId: appId, refreshUrl: window.location.href, returnUrl: window.location.href })
                           });
                           const j = await res.json();
@@ -2279,8 +2283,13 @@ const PRIMARY_BUTTON_SX = {
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
+                    const token = AuthService.getToken();
                     const res = await fetch(`${N8N_BASE}/supplier/company/billing/save`, {
-                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      method: 'POST', 
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                      },
                       body: JSON.stringify({ applicationId: appId, billing: companyBilling })
                     });
                     const json = await res.json();
@@ -2323,8 +2332,13 @@ const PRIMARY_BUTTON_SX = {
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
+                    const token = AuthService.getToken();
                     const res = await fetch(`${N8N_BASE}/supplier/company/legal/save`, {
-                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      method: 'POST', 
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                      },
                       body: JSON.stringify({ applicationId: appId, legal: companyLegal })
                     });
                     const json = await res.json();
@@ -2367,8 +2381,13 @@ const PRIMARY_BUTTON_SX = {
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
+                      const token = AuthService.getToken();
                       const res = await fetch(`${N8N_BASE}/supplier/company/locations/save`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        method: 'POST', 
+                        headers: { 
+                          'Content-Type': 'application/json',
+                          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                        },
                         body: JSON.stringify({ applicationId: appId, locations: companyLocations })
                       });
                       const json = await res.json();
@@ -2400,8 +2419,13 @@ const PRIMARY_BUTTON_SX = {
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     if (!userDisplayName.trim()) { setToast('Please enter a display name'); return; }
+                    const token = AuthService.getToken();
                     const res = await fetch(`${N8N_BASE}/supplier/user/profile/save`, {
-                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      method: 'POST', 
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                      },
                       body: JSON.stringify({ applicationId: appId, profile: { displayName: userDisplayName, phone: userPhone } })
                     });
                     const json = await res.json();
@@ -2436,8 +2460,13 @@ const PRIMARY_BUTTON_SX = {
                       if (!passwordCurrent || !passwordNew) { setToast('Enter current and new password'); return; }
                       if (passwordNew.length < 8) { setToast('New password must be at least 8 characters'); return; }
                       setSecuritySubmitting(true);
+                      const token = AuthService.getToken();
                       const res = await fetch(`${N8N_BASE}/supplier/user/security/save`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        method: 'POST', 
+                        headers: { 
+                          'Content-Type': 'application/json',
+                          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                        },
                         body: JSON.stringify({ applicationId: appId, passwordCurrent, passwordNew })
                       });
                       const json = await res.json();
