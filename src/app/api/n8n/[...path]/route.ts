@@ -578,7 +578,12 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // 2. Insert new
         const idMappings: Record<string, string> = {};
         if (toInsert.length > 0) {
-            let { data, error } = await supabase.from('experiences').insert(toInsert).select('id, raw_data');
+            console.log(`[N8N Proxy] Batch Inserting ${toInsert.length} new activities (Admin: ${!!getAdminClient()})...`);
+            const admin = getAdminClient();
+            const client = admin || supabase;
+            
+            // Explicitly use .insert() for new rows without IDs
+            let { data, error } = await client.from('experiences').insert(toInsert).select('id, raw_data');
             
             // RETRY WITH ADMIN CLIENT
             if (error && (error.message?.includes('No suitable key') || error.message?.includes('signature'))) {
