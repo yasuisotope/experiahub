@@ -350,13 +350,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     // Explicitly check for Service Key to ensure Admin access
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
     const isServiceKey = !!serviceKey;
     const supabaseKey = serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     // Helper for Admin Fallback
     const getAdminClient = () => {
-         const sk = process.env.SUPABASE_SERVICE_ROLE_KEY;
+         const sk = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
          if (!sk) return null;
          return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, sk, {
             auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
@@ -467,8 +467,11 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     console.log(`[N8N Proxy] Save '${type}' - ServiceKey: ${isServiceKey}, AuthHeader: ${!!authHeader}, UserID: ${userId}`);
 
     let updates: any = {};
+    if (userId) updates.user_id = userId;
+
     if (type === 'billing' && payload.billing) {
         updates = {
+            ...updates,
             billing_company_name: payload.billing.companyName,
             billing_address: payload.billing.address,
             billing_country: payload.billing.country,
@@ -478,6 +481,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         };
     } else if (type === 'legal' && payload.legal) {
         updates = {
+            ...updates,
             legal_name: payload.legal.legalName,
             legal_reg_number: payload.legal.regNumber,
             legal_vat_number: payload.legal.vatNumber,
@@ -486,19 +490,21 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             legal_representative: payload.legal.representative
         };
     } else if (type === 'locations' && payload.locations) {
-        updates = { locations_json: payload.locations };
+        updates = { ...updates, locations_json: payload.locations };
     } else if (type === 'user_profile') {
         const p = payload.profile || payload;
         updates = {
+            ...updates,
             contact_name: p.displayName || p.contact_name,
             contact_phone: p.phone || p.contact_phone || p.phoneNumber
         };
     } else if (type === 'onboarding') {
         const d = payload.data || {};
         updates = {
+            ...updates,
             legal_name: d.legalBusinessName,
             contact_name: d.contactName,
-            contact_phone: d.contactPhone,
+            contact_phone: d.contactPhone
             // contact_email: d.contactEmail // Skipping email to prevent schema errors if column missing
         };
     } else if (type === 'background') {
@@ -507,11 +513,12 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
          // Payload might be { url: "..." } or { background: { url: "..." } } depending on caller
          const freshUrl = payload.url || payload.background?.url;
          const nextMeta = { ...(current?.metadata || {}), background_url: freshUrl };
-         updates = { metadata: nextMeta };
+         updates = { ...updates, metadata: nextMeta };
     } else if (type === 'media') {
          const { data: current } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
          const meta = current?.metadata || {};
          updates = { 
+             ...updates,
              metadata: { 
                  ...meta,
                  photosDriveUrls: payload.photosDriveUrls,
@@ -596,6 +603,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 toInsert.push(row);
             }
         });
+
+        // AUTO-CLAIM: If admin key exists, link any orphan matching rows to the current user
+        const admin = getAdminClient();
+        if (admin && userId) {
+            console.log(`[N8N Proxy] Auto-Claiming orphan experiences for appId=${appId}...`);
+            await admin.from('experiences').update({ user_id: userId }).eq('application_id', appId).is('user_id', null);
+        }
         
         // 0. Handle Deletions (Sync Strategy)
         const { data: existingRows } = await supabase
@@ -691,6 +705,11 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         const client = admin || supabase;
         console.log(`[N8N Proxy] Direct Save ${type} (${appId}) using Admin: ${!!admin}`);
 
+        // RLS/Orphan Fix: If we have a user_id and we are admin, ensure any orphan matching this appId is claimed
+        if (userId && admin) {
+            await admin.from('suppliers').update({ user_id: userId }).eq('application_id', appId).is('user_id', null);
+        }
+
         // Revert to Update -> Insert for Suppliers because 'application_id' might not be unique/constrained
         // causing code 42P10 on upsert.
         let { data, error } = await client.from('suppliers')
@@ -747,7 +766,12 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
     }
     const supabase = createClient(supabaseUrl, supabaseKey, options);
 
-    const { data: rows, error } = await supabase.from('suppliers').select('*').eq('application_id', appId).limit(1);
+    // Prefer rows with user_id to avoid being shadowed by old null-user rows
+    const { data: rows, error } = await supabase.from('suppliers')
+        .select('*')
+        .eq('application_id', appId)
+        .order('user_id', { ascending: false, nullsFirst: false })
+        .limit(1);
     if (error) {
          console.error('[N8N Proxy] Direct Get Error:', error);
          return null;
