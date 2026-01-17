@@ -112,6 +112,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
   const [pricingCategories, setPricingCategories] = React.useState('');
   const [baseRate, setBaseRate] = React.useState('');
   const [status, setStatus] = React.useState<'Published' | 'Unpublished'>('Unpublished');
+  const [syncId, setSyncId] = React.useState<string | null>(null);
 
   // Bulk Selection State
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
@@ -361,6 +362,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
       return;
     }
     setRowErrors((m) => ({ ...m, [a.id]: [] }));
+    setSyncId(a.id);
     try {
       const payload = {
         applicationId: appId,
@@ -406,6 +408,8 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
       onToast(`Published! ID: ${bokunId || 'Pending'}`);
     } catch (e: any) {
       onToast(e?.message || 'Publish failed');
+    } finally {
+      setSyncId(null);
     }
   };
 
