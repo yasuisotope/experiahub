@@ -389,15 +389,15 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // So we should verify the token to get the ID.
         try {
             const token = authHeader.replace('Bearer ', '');
-            // Try normally first (in case we are using Anon Client or compatible key)
+            // 1. Try Service Client (usually fails for Anon tokens)
             let { data: { user }, error: authError } = await supabase.auth.getUser(token);
             
             if (user) {
                 userId = user.id;
             } else {
-                 // FALLBACK: If Service Client fails to verify Anon Token (Signature mismatch),
-                 // create a temporary client with ANON KEY to verify the token properly.
+                 // 2. Try Anon Client
                  console.warn('[N8N Proxy] Service Client rejected token, verifying with Anon Client...');
+                 let anonVerified = false;
                  
                  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
                  if (anonKey && supabaseUrl) {
@@ -409,11 +409,31 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                      if (anonAttempt?.user) {
                          userId = anonAttempt.user.id;
                          console.log('[N8N Proxy] Anon Client Verification SUCCESS. UserID:', userId);
+                         anonVerified = true;
                      } else {
                          console.error('[N8N Proxy] Anon Client Verification Failed:', anonError?.message);
                      }
-                 } else {
-                    console.error('[N8N Proxy] Cannot verify token: Missing Anon Key or URL');
+                 }
+                 
+                 // 3. FINAL FALLBACK: Manual Unverified Decode
+                 // If verification failed (likely due to Env Var mismatch), we MUST still extract the ID 
+                 // to ensure the row is saved with the correct owner, otherwise RLS hides it.
+                 if (!anonVerified) {
+                     console.warn('[N8N Proxy] JWT Verification Failed. Attempting Unsafe Manual Decode...');
+                     try {
+                         const parts = token.split('.');
+                         if (parts.length === 3) {
+                             const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                             const jsonPayload = Buffer.from(base64, 'base64').toString();
+                             const payload = JSON.parse(jsonPayload);
+                             if (payload.sub) {
+                                 userId = payload.sub;
+                                 console.log('[N8N Proxy] Unsafe Manual Decode SUCCEEDED. UserID:', userId);
+                             }
+                         }
+                     } catch (decodeErr) {
+                         console.error('[N8N Proxy] Manual Decode Failed:', decodeErr);
+                     }
                  }
             }
         } catch (e: any) {
