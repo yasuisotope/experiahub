@@ -389,28 +389,31 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // So we should verify the token to get the ID.
         try {
             const token = authHeader.replace('Bearer ', '');
+            // Try normally first (in case we are using Anon Client or compatible key)
             let { data: { user }, error: authError } = await supabase.auth.getUser(token);
             
             if (user) {
                 userId = user.id;
             } else {
-                 // FALLBACK: Manually decode JWT to get 'sub' claim (User ID)
-                 // Required because Service Key client sometimes fails to validate Anon tokens
-                 try {
-                     console.warn('[N8N Proxy] getUser failed, attempting manual decode...', authError?.message);
-                     const parts = token.split('.');
-                     if (parts.length === 3) {
-                         // Base64Url decode
-                         const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-                         const jsonPayload = Buffer.from(base64, 'base64').toString();
-                         const payload = JSON.parse(jsonPayload);
-                         if (payload.sub) {
-                             userId = payload.sub;
-                             console.log('[N8N Proxy] JWT Manual Decode SUCCEEDED:', userId);
-                         }
+                 // FALLBACK: If Service Client fails to verify Anon Token (Signature mismatch),
+                 // create a temporary client with ANON KEY to verify the token properly.
+                 console.warn('[N8N Proxy] Service Client rejected token, verifying with Anon Client...');
+                 
+                 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+                 if (anonKey && supabaseUrl) {
+                     const tempAnon = createClient(supabaseUrl, anonKey, {
+                        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+                     });
+                     const { data: anonAttempt, error: anonError } = await tempAnon.auth.getUser(token);
+                     
+                     if (anonAttempt?.user) {
+                         userId = anonAttempt.user.id;
+                         console.log('[N8N Proxy] Anon Client Verification SUCCESS. UserID:', userId);
+                     } else {
+                         console.error('[N8N Proxy] Anon Client Verification Failed:', anonError?.message);
                      }
-                 } catch (decodeErr) {
-                     console.warn('[N8N Proxy] JWT Manual Decode Failed:', decodeErr);
+                 } else {
+                    console.error('[N8N Proxy] Cannot verify token: Missing Anon Key or URL');
                  }
             }
         } catch (e: any) {
