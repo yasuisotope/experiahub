@@ -50,7 +50,7 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
     }
 
     // FORCE DIRECT SAVE for Activities to ensure ID Mappings are returned and reliability
-    if (targetUrl.includes('supplier/activities/save') || targetUrl.includes('supplier/activities/sync')) {
+    if (targetUrl.includes('supplier/activities/save')) {
         const res = await handleDirectSave('activities', body, targetUrl, authHeader);
         if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
         // CRITICAL: Must return idMappings to frontend so it can swap temp IDs for real UUIDs
@@ -87,6 +87,28 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
           const res = await handleDirectSave('bookings', body, targetUrl, authHeader);
           if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
           return NextResponse.json({ success: true, stub: true, saved_direct: true });
+    }
+
+    // FORCE DIRECT GET for Company Data
+    if (targetUrl.includes('supplier/company/billing/get')) {
+         const res = await handleDirectGet('billing', targetUrl, authHeader);
+         if (res) return NextResponse.json({ success: true, billing: res, direct: true });
+    }
+    if (targetUrl.includes('supplier/company/legal/get')) {
+         const res = await handleDirectGet('legal', targetUrl, authHeader);
+         if (res) return NextResponse.json({ success: true, legal: res, direct: true });
+    }
+    if (targetUrl.includes('supplier/company/locations/get')) {
+         const res = await handleDirectGet('locations', targetUrl, authHeader);
+         if (res) return NextResponse.json({ success: true, locations: res?.locations || [], direct: true });
+    }
+    if (targetUrl.includes('supplier/user/profile/get')) {
+         const res = await handleDirectGet('user_profile', targetUrl, authHeader);
+         if (res) return NextResponse.json({ success: true, profile: res, direct: true });
+    }
+    if (targetUrl.includes('auth/user/background/get')) {
+        const res = await handleDirectGet('background', targetUrl, authHeader);
+        if (res) return NextResponse.json({ success: true, url: res?.url, direct: true });
     }
 
     // FORCE DIRECT LIST for Activities to resolve display issues
