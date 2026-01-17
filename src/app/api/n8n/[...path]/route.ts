@@ -626,15 +626,26 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         const client = admin || supabase;
         console.log(`[N8N Proxy] Direct Save ${type} (${appId}) using Admin: ${!!admin}`);
 
-        const { data, error } = await client.from('suppliers')
-            .upsert({ application_id: appId, ...updates }, { onConflict: 'application_id' })
-            .select('*');
+        // Revert to Update -> Insert for Suppliers because 'application_id' might not be unique/constrained
+        // causing code 42P10 on upsert.
+        let { data, error } = await client.from('suppliers')
+            .update(updates)
+            .eq('application_id', appId)
+            .select('id');
 
         if (!error && (!data || data.length === 0)) {
-            return { success: false, error: 'Database Save Failed (No Rows Returned - RLS?)' };
+            // Row doesn't exist, Insert.
+            console.log(`[N8N Proxy] Supplier not found for ${appId}, inserting...`);
+            const { data: insData, error: insError } = await client.from('suppliers')
+                .insert({ application_id: appId, ...updates })
+                .select('id');
+            
+            data = insData;
+            error = insError;
         }
+
         if (data && data.length > 0) {
-             console.log(`[N8N Proxy] VERIFY SAVE (Supplier): Name="${data[0].billing_company_name}" Legal="${data[0].legal_name}"`);
+             console.log(`[N8N Proxy] VERIFY SAVE (Supplier): Updated ID=${data[0].id}`);
         }
 
         if (error) {
