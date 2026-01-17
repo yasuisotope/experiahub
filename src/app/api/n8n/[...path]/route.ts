@@ -57,6 +57,37 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
         return NextResponse.json({ success: true, idMappings: (res as any).idMappings, stub: true, direct: true });
     }
 
+    // FORCE DIRECT LIST for Activities to resolve display issues
+    if (path.includes('supplier/activities/list')) {
+         console.log('[N8N Proxy] FORCE INTERCEPTION for List Activities');
+         // Try getting appId from targetUrl first
+         let appId = new URL(targetUrl).searchParams.get('applicationId');
+         // If not found, try getting from the incoming request URL (req.nextUrl)
+         if (!appId) {
+             appId = request.nextUrl.searchParams.get('applicationId');
+         }
+         console.log(`[N8N Proxy] AppID identified: ${appId}`);
+
+         if (appId) {
+            const acts = await handleDirectListActivities(appId, authHeader);
+            console.log(`[N8N Proxy] Retrieved acts type: ${typeof acts}, isArray: ${Array.isArray(acts)}`);
+            const response = NextResponse.json({ 
+                success: true, 
+                activities: acts || [], 
+                stub: true, 
+                direct: true,
+                debug_hit: true,
+                count: acts?.length 
+            });
+            response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            response.headers.set('Pragma', 'no-cache');
+            response.headers.set('Expires', '0');
+            return response;
+         }
+         console.warn('[N8N Proxy] Missing appId for activities list');
+         return NextResponse.json({ success: true, activities: [], stub: true, debug_hit: true, error: 'No App ID' });
+    }
+
     // Capture response to check status
     const response = await fetch(targetUrl, {
       method: request.method,
