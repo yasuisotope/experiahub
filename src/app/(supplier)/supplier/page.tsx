@@ -1438,27 +1438,25 @@ const PRIMARY_BUTTON_SX = {
     }
   };
 
-  const onSaveDetails = async () => {
+  const onSaveDetails = async (overrides?: Partial<Experience>) => {
     if (!selectedExperienceId) { setToast('Select an Experience'); return; }
-    // Double check target exists
     const target = experiences.find(e => e.id === selectedExperienceId);
-    if (!target) { 
-        console.error('Save Details Error: ID mismatch', selectedExperienceId, experiences.map(e=>e.id));
-        setToast('Sync Error: Experience not found. Please refresh page.'); 
-        return; 
-    }
+    if (!target) { setToast('Sync Error: Experience not found. Please refresh page.'); return; }
 
     try {
-      const next = experiences.map(e => e.id === selectedExperienceId ? { ...e, ...details } as Experience : e);
+      // Merge: Target + Current Details + Explicit Overrides. Force valid ID.
+      const merged = { ...target, ...details, ...overrides, id: selectedExperienceId, applicationId: appId };
+
+      // Update local details state if overrides exist
+      if (overrides) {
+          setDetails(prev => ({ ...prev, ...overrides }));
+      }
+
+      const next = experiences.map(e => e.id === selectedExperienceId ? merged as Experience : e);
       setExperiences(next);
       await saveAllExperiences(next);
-      // Assuming setOpen(false) is related to a modal or similar UI element
-      // setOpen(false); // This line was in the provided snippet but not in the original context. Keeping it commented as it might be context-dependent.
       
-      // Force navigation to Experience Overview
-      setSection('experiences');
-      setTab(0);
-      setSubsection('overview');
+      // Removed forced navigation to allow continued editing
       handleSaveSuccess('Experience');
     } catch (e: any) { setToast(e?.message || 'Save failed'); }
   };
@@ -2569,8 +2567,7 @@ const PRIMARY_BUTTON_SX = {
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
                 const base = pricingRows[0]?.amount || details.baseRate || '';
                 const curr = pricingRows[0]?.currency || details.currency || defaultCurrency || '';
-                setDetails(d=>({ ...d, pricingCategories: catsCsv, baseRate: base, currency: curr } as any));
-                await onSaveDetails();
+                await onSaveDetails({ pricingCategories: catsCsv, baseRate: base, currency: curr });
               }}>Save Pricing</Button>
             </Stack>
           </Box>
@@ -2716,7 +2713,7 @@ const PRIMARY_BUTTON_SX = {
                 </Grid>
 
                 <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }}>
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Details</Button>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Details</Button>
                 </Stack>
               </>
             )}
@@ -2752,7 +2749,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Latitude" placeholder="e.g., 35.0116" value={(details as any).latitude || ''} onChange={(e)=>setDetails(d=>({ ...d, latitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                   <TextField label="Longitude" placeholder="e.g., 135.7681" value={(details as any).longitude || ''} onChange={(e)=>setDetails(d=>({ ...d, longitude: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Availability</Button>
+                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Availability</Button>
               </>
             )}
           </Stack>
@@ -2774,7 +2771,7 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Minimum age (optional)" value={(details as any).minAge || ''} onChange={(e)=>setDetails(d=>({ ...d, minAge: e.target.value } as any))} fullWidth InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 </Stack>
                 <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
-                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={onSaveDetails}>Save Policies</Button>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Policies</Button>
                 </Stack>
               </>
             )}
