@@ -1099,9 +1099,9 @@ const PRIMARY_BUTTON_SX = {
         // C. Fetch specialized Company Data (Billing, Legal, Locations)
         // Only overwrite if these endpoints return actual data and we aren't already filled
         const [billRes, legRes, locRes] = await Promise.all([
-          fetch(`${N8N_BASE}/supplier/company/billing/get?applicationId=${encodeURIComponent(appId)}`, { headers }),
-          fetch(`${N8N_BASE}/supplier/company/legal/get?applicationId=${encodeURIComponent(appId)}`, { headers }),
-          fetch(`${N8N_BASE}/supplier/company/locations/get?applicationId=${encodeURIComponent(appId)}`, { headers })
+          fetch(`${N8N_BASE}/supplier/company/billing/get?applicationId=${encodeURIComponent(appId)}`, { headers, cache: 'no-store' }),
+          fetch(`${N8N_BASE}/supplier/company/legal/get?applicationId=${encodeURIComponent(appId)}`, { headers, cache: 'no-store' }),
+          fetch(`${N8N_BASE}/supplier/company/locations/get?applicationId=${encodeURIComponent(appId)}`, { headers, cache: 'no-store' })
         ]);
 
         if (billRes.ok) {

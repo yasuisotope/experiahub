@@ -699,8 +699,13 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
     }
     const supabase = createClient(supabaseUrl, supabaseKey, options);
 
-    const { data, error } = await supabase.from('suppliers').select('*').eq('application_id', appId).single();
-    if (error || !data) return null;
+    const { data: rows, error } = await supabase.from('suppliers').select('*').eq('application_id', appId).limit(1);
+    if (error) {
+         console.error('[N8N Proxy] Direct Get Error:', error);
+         return null;
+    }
+    if (!rows || rows.length === 0) return null;
+    const data = rows[0];
 
     if (type === 'billing') {
         return {
