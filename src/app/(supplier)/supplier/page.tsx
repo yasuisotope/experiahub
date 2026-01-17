@@ -1406,9 +1406,15 @@ const PRIMARY_BUTTON_SX = {
     if (!json) {
        // Tolerate empty body if status is 200
        if (res.ok) return; 
+       console.error('[Supplier] Save Error: Empty Response', res.status);
+       setToast(`Save failed: Server Error ${res.status}`);
        throw new Error('Save failed (Empty response)');
     }
-    if (!json?.success) throw new Error(json?.error || 'Save failed');
+    if (!json?.success) {
+        console.error('[Supplier] Save Logic Error:', json);
+        setToast(`Save rejected: ${json?.error || 'Unknown Error'}`);
+        throw new Error(json?.error || 'Save failed');
+    }
 
     if (json.idMappings) {
        setExperiences(prev => prev.map(r => {
