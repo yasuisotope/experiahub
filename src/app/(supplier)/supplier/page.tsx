@@ -728,8 +728,10 @@ export default function SupplierPortalPage() {
   const [toast, setToast] = React.useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = React.useState<{ section: string; timestamp: string } | null>(null);
   const handleSaveSuccess = (sectionName: string) => {
-    setSaveSuccess({ section: sectionName, timestamp: new Date().toLocaleString() });
-    setToast(`${sectionName} saved`);
+    setSaveSuccess({ section: sectionName, timestamp: new Date().toLocaleTimeString() });
+    // setToast(`${sectionName} saved`); // REMOVED per user request to reduce noise
+    // Clear success message after 3 seconds
+    setTimeout(() => setSaveSuccess(null), 3000);
   };
   const [subsection, setSubsection] = React.useState<'profile'|'billing'|'legal'|'locations'|'user_profile'|'user_security'|'user_tokens'|'overview'|'details'|'media'|'pricing'|'availability'|'policies'|'distribution'|'validation'|'sync'|'payouts_overview'|'payouts_connect'|'resources'|'reports'|'help'|'status'>('profile');
   const [activitiesSimple, setActivitiesSimple] = React.useState<{ id: string; title: string }[]>([]);
@@ -2269,8 +2271,11 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Invoice email" value={companyBilling.invoiceEmail} onChange={(e)=>setCompanyBilling(s=>({ ...s, invoiceEmail: e.target.value }))} fullWidth />
                   <TextField label="Billing currency" value={companyBilling.currency} onChange={(e)=>setCompanyBilling(s=>({ ...s, currency: e.target.value }))} onBlur={(e)=>setCompanyBilling(s=>({ ...s, currency: String(e.target.value||'').toUpperCase() }))} fullWidth />
                 </Stack>
-                <Stack direction="row" justifyContent="flex-end">
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
+                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
+                  <Fade in={saveSuccess?.section === 'Billing'}>
+                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
+                  </Fade>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/billing/save`, {
@@ -2295,7 +2300,8 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={4}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Legal Entity</Typography>
-                {saveSuccess?.section === 'Legal' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
+                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Legal Entity</Typography>
+                {/* Alert removed per user request */}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Update your legal entity registration and terms.</Typography>
                 <TextField label="Legal entity name" value={companyLegal.legalName} onChange={(e)=>setCompanyLegal(s=>({ ...s, legalName: e.target.value }))} fullWidth />
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
@@ -2309,8 +2315,11 @@ const PRIMARY_BUTTON_SX = {
                   <TextField label="Privacy URL" value={companyLegal.privacyUrl} onChange={(e)=>setCompanyLegal(s=>({ ...s, privacyUrl: e.target.value }))} fullWidth />
                 </Stack>
                 <TextField label="Representative" value={companyLegal.representative} onChange={(e)=>setCompanyLegal(s=>({ ...s, representative: e.target.value }))} fullWidth />
-                <Stack direction="row" justifyContent="flex-end">
-                <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
+                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
+                  <Fade in={saveSuccess?.section === 'Legal'}>
+                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
+                  </Fade>
+                  <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                   try {
                     if (!appId) { setToast('Missing application ID'); return; }
                     const res = await fetch(`${N8N_BASE}/supplier/company/legal/save`, {
@@ -2334,7 +2343,7 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={4}>
                 <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Locations</Typography>
-                {saveSuccess?.section === 'Locations' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
+                {/* Alert removed per user request */}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your physical office locations.</Typography>
                 {companyLocations.map((loc, idx) => (
                   <Box key={idx} sx={{ p: 0, borderRadius: 0 }}>
@@ -2349,7 +2358,10 @@ const PRIMARY_BUTTON_SX = {
                     </Stack>
                   </Box>
                 ))}
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
+                  <Fade in={saveSuccess?.section === 'Locations'}>
+                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
+                  </Fade>
                   <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                     try {
@@ -2718,7 +2730,10 @@ const PRIMARY_BUTTON_SX = {
                   </Grid>
                 </Grid>
 
-                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }}>
+                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }} alignItems="center" spacing={2}>
+                  <Fade in={saveSuccess?.section === 'Experience'}>
+                     <Typography variant="caption" sx={{ color: 'green', fontWeight: 600 }}>Saved!</Typography>
+                  </Fade>
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={()=>onSaveDetails()}>Save Details</Button>
                 </Stack>
               </>
@@ -2733,7 +2748,7 @@ const PRIMARY_BUTTON_SX = {
           <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
             <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Availability & Schedule</Typography>
-            {saveSuccess?.section === 'Experience' && <Alert severity="success" sx={{ fontFamily: 'Nunito, sans-serif' }}>Saved successfully at {saveSuccess.timestamp}.</Alert>}
+            {/* Alert removed per user request */}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit availability.</Alert>)}
             {selectedExperienceId && (
               <>
