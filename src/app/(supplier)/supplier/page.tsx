@@ -1374,7 +1374,9 @@ const PRIMARY_BUTTON_SX = {
             requirements: a.requirements,
             included: a.included,
             notIncluded: a.notIncluded,
-            insurance: a.insurance
+            insurance: a.insurance,
+            itinerary: a.itinerary,
+            meetingPoint: a.meetingPoint
           }));
           
           setExperiences((prev: Experience[]) => {
@@ -2004,7 +2006,7 @@ const PRIMARY_BUTTON_SX = {
                label={<Typography variant="caption" sx={{ fontFamily:'Nunito, sans-serif' }}>Translucent UI</Typography>}
                sx={{ mb: 1, ml: 0.5 }}
             />
-            <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v142</Typography>
+            <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v143</Typography>
             <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
@@ -2708,9 +2710,7 @@ const PRIMARY_BUTTON_SX = {
                             {(selected as string[]).map((value) => (<Chip key={value} label={value} />))}
                           </Box>
                         )}>
-                          {SUGGESTED_CATEGORIES.map((name)=> (
-                            <MenuItem key={name} value={name}>{name}</MenuItem>
-                          ))}
+                          {SUGGESTED_CATEGORIES.map((name)=> (<MenuItem key={name} value={name}>{name}</MenuItem>))}
                         </Select>
                       </FormControl>
                       <TextField label="Max participants" type="number" inputProps={{ min: 1, step: 1, style: { fontFamily: 'Nunito, sans-serif' } }} value={details.maxParticipants || ''} onChange={(e)=>setDetails(d=>({ ...d, maxParticipants: e.target.value }))} fullWidth error={showFieldErrors && !String(details.maxParticipants||'').trim()} helperText={showFieldErrors && !String(details.maxParticipants||'').trim() ? 'Capacity is required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} />
@@ -2867,6 +2867,7 @@ const PRIMARY_BUTTON_SX = {
                     <Box data-preview-payload sx={{ fontFamily:'Menlo, Consolas, monospace', fontSize: 12, bgcolor:'#f7f7f7', p:1.5, borderRadius:1.5, overflow:'auto' }}>
                       {(() => {
                         const a = sel as any || {};
+                        const rawObj = a; // The original activity object
                         const rates = [] as any[];
                         if ((a as any).ratesJson) {
                           try { const parsed = JSON.parse((a as any).ratesJson); if (Array.isArray(parsed)) rates.push(...parsed.map((r:any)=>({ name:r.category||'Base', amount:r.amount, currency:r.currency }))); } catch {}

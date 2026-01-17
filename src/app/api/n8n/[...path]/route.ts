@@ -609,14 +609,30 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 // FORCE STRINGIFY: Safest overlap for TEXT vs JSONB columns. prevents [object Object].
                 raw_data: JSON.stringify(rawObj),
                 updated_at: new Date().toISOString(),
-                // Explicit Mapping to ensure data appears in Supabase Table Views
+                // Explicit Mapping to structured columns (V143 Schema)
                 city: a.city || null,
                 description: a.summary || a.description || null,
                 duration_minutes: a.durationMinutes ? parseInt(a.durationMinutes) : null,
                 price: a.price ? parseFloat(a.price) : (a.baseRate ? parseFloat(a.baseRate) : null),
                 currency: a.currency || null,
                 bokun_product_id: a.bokunProductId || null,
-                category: a.category || null
+                category: a.category || null,
+                // Narrative & Logistical Fields
+                itinerary: a.itinerary || null,
+                three_words: a.threeWords || null,
+                scheduling_mode: a.schedulingMode || null,
+                authentic_echoes: a.authentic_echoes || null,
+                unforgettable_feeling: a.unforgettable_feeling || null,
+                magic_moment: a.magic_moment || null,
+                hidden_gem: a.hidden_gem || null,
+                community_connection: a.community_connection || null,
+                perfect_match: a.perfect_match || null,
+                meeting_point: a.meetingPoint || null,
+                safety_measures: a.safety_measures || null,
+                requirements: a.requirements || null,
+                included: a.included || null,
+                not_included: a.not_included || null,
+                insurance: a.insurance || null
             };
             
             console.log(`[N8N Proxy] Processing Activity ${a.id}:`, { title: a.title, dataSize: row.raw_data.length });
@@ -917,33 +933,33 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             }
 
             return {
-            ...raw, // Expand stored JSON first
-            // OVERRIDE with explicit columns if they exist (This handles the migration to structured columns)
+            ...raw, // Start with JSON blob as base
+            // OVERRIDE with explicit columns (The Source of Truth in V143+)
             id: row.id,
             title: row.title,
             description: row.description,
-            summary: row.description || raw?.summary || raw?.DESCRIPTION,
+            summary: row.description || raw?.summary,
             durationMinutes: row.duration_minutes?.toString() || raw?.durationMinutes,
             price: row.price?.toString() || (raw?.price || raw?.baseRate),
             currency: row.currency || raw?.currency,
             category: row.category || raw?.category,
             bokunProductId: row.bokun_product_id || raw?.bokunProductId,
-            // Narrative Restorations
-            authenticEchoes: raw?.authenticEchoes ?? row.authentic_echoes,
-            unforgettableFeeling: raw?.unforgettableFeeling ?? row.unforgettable_feeling,
-            magicMoment: raw?.magicMoment ?? row.magic_moment,
-            hiddenGem: raw?.hiddenGem ?? row.hidden_gem,
-            communityConnection: raw?.communityConnection ?? row.community_connection,
-            perfectMatch: raw?.perfectMatch ?? row.perfect_match,
-            threeWords: raw?.threeWords ?? row.three_words,
-            // Logistics Restorations
-            meetingPoint: raw?.meetingPoint ?? row.meeting_point,
-            itinerary: raw?.itinerary ?? row.itinerary,
-            safetyMeasures: raw?.safetyMeasures ?? row.safety_measures,
-            requirements: raw?.requirements ?? row.requirements,
-            included: raw?.included ?? row.included,
-            notIncluded: raw?.notIncluded ?? row.not_included,
-            insurance: raw?.insurance ?? row.insurance
+            // Narrative Restorations (Prioritize DB columns)
+            itinerary: row.itinerary || raw?.itinerary,
+            threeWords: row.three_words || raw?.threeWords,
+            schedulingMode: row.scheduling_mode || raw?.schedulingMode,
+            authenticEchoes: row.authentic_echoes || raw?.authenticEchoes,
+            unforgettableFeeling: row.unforgettable_feeling || raw?.unforgettableFeeling,
+            magicMoment: row.magic_moment || raw?.magicMoment,
+            hiddenGem: row.hidden_gem || raw?.hiddenGem,
+            communityConnection: row.community_connection || raw?.communityConnection,
+            perfectMatch: row.perfect_match || raw?.perfectMatch,
+            meetingPoint: row.meeting_point || raw?.meetingPoint,
+            safetyMeasures: row.safety_measures || raw?.safetyMeasures,
+            requirements: row.requirements || raw?.requirements,
+            included: row.included || raw?.included,
+            notIncluded: row.not_included || raw?.notIncluded,
+            insurance: row.insurance || raw?.insurance
         };
       });
 
