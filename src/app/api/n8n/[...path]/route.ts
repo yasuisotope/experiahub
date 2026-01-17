@@ -435,9 +435,10 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     } else if (type === 'locations' && payload.locations) {
         updates = { locations_json: payload.locations };
     } else if (type === 'user_profile') {
+        const p = payload.profile || payload;
         updates = {
-            contact_name: payload.displayName,
-            contact_phone: payload.phone
+            contact_name: p.displayName || p.contact_name,
+            contact_phone: p.phone || p.contact_phone || p.phoneNumber
         };
     } else if (type === 'background') {
          // Need to fetch current generic metadata first to preserve other fields
