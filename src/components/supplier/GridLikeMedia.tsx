@@ -195,13 +195,26 @@ export default function GridLikeMedia({
           }
 
           setPhotos(prevPhotos => {
+            const hasRemoteFinal = remoteList.length > 0 && !remoteList.some(u => u.includes('anyoneWithLink'));
+            
+            // If the backend has final images, we should discard all local placeholders
+            // because they have been superseded.
+            if (hasRemoteFinal) {
+              return remoteList;
+            }
+
             const localOnly = prevPhotos.filter(u => u.includes('anyoneWithLink'));
             
-            // If the backend returns empty but we have local placeholders, keep the placeholders.
-            // This prevents the gallery from "flickering" to empty during the sync process.
+            // If the backend returned empty but we have local placeholders, keep the placeholders.
+            // This prevents the gallery from "flickering" to empty during the initial sync.
             let nextPhotos = remoteList;
             if (remoteList.length === 0 && localOnly.length > 0) {
               nextPhotos = localOnly;
+            } else {
+              // Merge: Trust the remote list but keep local placeholders that haven't appeared yet.
+              // To avoid duplication, we only add local ones that are uniquely identifiable 
+              // (though in this system placeholders are often generic).
+              nextPhotos = Array.from(new Set([...remoteList, ...localOnly]));
             }
 
             if (nextPhotos.join(',') !== prevPhotos.join(',')) {
