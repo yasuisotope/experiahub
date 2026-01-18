@@ -553,56 +553,90 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
          const freshUrl = payload.url || payload.background?.url;
          const nextMeta = { ...(current?.metadata || {}), background_url: freshUrl };
          updates = { ...updates, metadata: nextMeta };
-     } else if (type === 'media') {
+      } else if (type === 'media') {
           const admin = getAdminClient();
           const activeId = payload.activityId;
           
-          if (activeId && admin) {
-              console.log(`[N8N Proxy] Media Save for Activity: ${activeId}`);
-              // Save to SPECIFIC EXPERIENCE
-              const { data: exp, error: expErr } = await admin.from('experiences').select('metadata, raw_data').eq('id', activeId).single();
-              if (!expErr && exp) {
-                  const currentMeta = exp.metadata || {};
-                  const nextMeta = {
-                      ...currentMeta,
-                      photosDriveUrls: payload.photosDriveUrls || currentMeta.photosDriveUrls || [],
-                      videoDriveUrl: payload.videoDriveUrl || currentMeta.videoDriveUrl || '',
-                      videoUrl: payload.videoUrl || currentMeta.videoUrl || ''
-                  };
-                  
-                  // Safely merge raw_data
-                  let nextRaw = {};
-                  try {
-                      const rawData = typeof exp.raw_data === 'string' ? JSON.parse(exp.raw_data) : (exp.raw_data || {});
-                      nextRaw = {
-                          ...rawData,
-                          photosDriveUrls: nextMeta.photosDriveUrls,
-                          videoDriveUrl: nextMeta.videoDriveUrl,
-                          videoUrl: nextMeta.videoUrl
-                      };
-                  } catch (e) {
-                      nextRaw = {
-                          photosDriveUrls: nextMeta.photosDriveUrls,
-                          videoDriveUrl: nextMeta.videoDriveUrl,
-                          videoUrl: nextMeta.videoUrl
-                      };
-                  }
+          if (!activeId || !admin) {
+              console.error('[N8N Proxy] Media Save failed: Missing activityId or admin client');
+              return { success: false, error: 'Missing activityId or Admin Client' };
+          }
 
-                  // Log exactly what we are about to save
-                  console.log(`[N8N Proxy] Update Experience ${activeId} with Media:`, nextMeta);
-
-                  const { error: updateErr } = await admin.from('experiences')
-                     .update({ 
-                         photos_drive_urls: nextMeta.photosDriveUrls,
-                         video_drive_url: nextMeta.videoDriveUrl,
-                         video_url: nextMeta.videoUrl,
-                         raw_data: JSON.stringify(nextRaw)
-                     })
-                     .eq('id', activeId);
-                  return { success: true };
+          console.log(`[N8N Proxy] Media Save Attempt: ${activeId}`);
+          
+          // 1. Find the record (Try ID first, then fallback to searching within raw_data for _temp_id)
+          let { data: exp, error: expErr } = await admin.from('experiences').select('id, metadata, raw_data, photos_drive_urls').eq('id', activeId).maybeSingle();
+          
+          // Fallback: If not found and activeId looks like a temp ID, search raw_data
+          if (!exp && !expErr) {
+              console.log(`[N8N Proxy] Media Save: ${activeId} not found by UUID. Searching raw_data for _temp_id...`);
+              const { data: fallbackRows } = await admin.from('experiences').select('id, metadata, raw_data, photos_drive_urls').contains('raw_data', { _temp_id: activeId });
+              if (fallbackRows && fallbackRows.length > 0) {
+                  exp = fallbackRows[0] as any;
+                  console.log(`[N8N Proxy] Media Save: Found match via _temp_id. Real ID: ${exp?.id}`);
               }
-         };
-    } else if (type === 'bookings' && payload.bookings) {
+          }
+
+          if (expErr) {
+              console.error(`[N8N Proxy] Media Fetch Error for ${activeId}:`, expErr);
+              return { success: false, error: expErr.message };
+          }
+          
+          if (!exp) {
+              console.error(`[N8N Proxy] Media Save FAILED: Record ${activeId} not found in Supabase.`);
+              return { success: false, error: 'Experience not found' };
+          }
+
+          const currentId = exp.id;
+          const currentMeta = exp.metadata || {};
+          const nextMeta = {
+              ...currentMeta,
+              photosDriveUrls: payload.photosDriveUrls || currentMeta.photosDriveUrls || [],
+              videoDriveUrl: payload.videoDriveUrl || currentMeta.videoDriveUrl || '',
+              videoUrl: payload.videoUrl || currentMeta.videoUrl || ''
+          };
+          
+          // Safely merge raw_data
+          let nextRaw = {};
+          try {
+              const rawData = typeof exp.raw_data === 'string' ? JSON.parse(exp.raw_data) : (exp.raw_data || {});
+              nextRaw = {
+                  ...rawData,
+                  photosDriveUrls: nextMeta.photosDriveUrls,
+                  videoDriveUrl: nextMeta.videoDriveUrl,
+                  videoUrl: nextMeta.videoUrl
+              };
+          } catch (e) {
+              nextRaw = {
+                  photosDriveUrls: nextMeta.photosDriveUrls,
+                  videoDriveUrl: nextMeta.videoDriveUrl,
+                  videoUrl: nextMeta.videoUrl
+              };
+          }
+
+          console.log(`[N8N Proxy] Update Experience ${currentId} with Media:`, {
+              photosCount: nextMeta.photosDriveUrls?.length,
+              video: !!nextMeta.videoDriveUrl
+          });
+
+          const { error: updateErr } = await admin.from('experiences')
+             .update({ 
+                 photos_drive_urls: nextMeta.photosDriveUrls,
+                 video_drive_url: nextMeta.videoDriveUrl,
+                 video_url: nextMeta.videoUrl,
+                 raw_data: JSON.stringify(nextRaw)
+             })
+             .eq('id', currentId);
+
+          if (updateErr) {
+              console.error(`[N8N Proxy] Supabase Update Error for ${currentId}:`, updateErr);
+              return { success: false, error: updateErr.message };
+          }
+
+          console.log(`[N8N Proxy] Media Save SUCCESS for ${currentId}`);
+          return { success: true };
+      } 
+    else if (type === 'bookings' && payload.bookings) {
         // Bulk Upsert Bookings via Admin Client
         const admin = getAdminClient();
         if (!admin) return { success: false, error: 'Server Config Error: Missing Service Key for Booking Sync' };
