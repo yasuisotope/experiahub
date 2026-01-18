@@ -557,8 +557,26 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
           }
 
           const currentId = exp.id;
+          
+          const isPlaceholder = (list: any[]) => Array.isArray(list) && list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
+          const isFinal = (list: any[]) => Array.isArray(list) && list.length > 0 && !isPlaceholder(list);
+
+          const incomingPhotos = Array.isArray(payload.photosDriveUrls) ? payload.photosDriveUrls : [];
+          const existingPhotos = Array.isArray(exp.photos_drive_urls) ? exp.photos_drive_urls : [];
+
+          // AUTHORITATIVE LOGIC: Only allow placeholders to overwrite if existing is also placeholder or empty.
+          // If existing is already FINAL, and incoming is PLACEHOLDER, reject the incoming photos.
+          let finalPhotos = incomingPhotos;
+          if (isFinal(existingPhotos) && isPlaceholder(incomingPhotos)) {
+              console.log(`[N8N Proxy] Media Save Protection: Rejecting placeholder overwrite for ${currentId}. Keeping finalized URLs.`);
+              finalPhotos = existingPhotos;
+          } else if (incomingPhotos.length === 0 && existingPhotos.length > 0) {
+              // Also keep existing if incoming is empty (unless explicitly cleared, but we don't have a clear command yet)
+              finalPhotos = existingPhotos;
+          }
+
           const nextMedia = {
-              photosDriveUrls: payload.photosDriveUrls || exp.photos_drive_urls || [],
+              photosDriveUrls: finalPhotos,
               videoDriveUrl: payload.videoDriveUrl || exp.video_drive_url || '',
               videoUrl: payload.videoUrl || exp.video_url || ''
           };
@@ -580,26 +598,32 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
               };
           }
 
-          console.log(`[N8N Proxy] Update Experience ${currentId} with Media:`, {
-              photosCount: nextMedia.photosDriveUrls?.length,
-              video: !!nextMedia.videoDriveUrl
+          console.log(`[N8N Proxy] Media Save - Final Payload for ${currentId}:`, {
+              hasPhotos: !!nextMedia.photosDriveUrls?.length,
+              firstPhoto: nextMedia.photosDriveUrls?.[0],
+              isPlaceholder: nextMedia.photosDriveUrls?.[0]?.includes('anyoneWithLink')
           });
 
-          const { error: updateErr } = await admin.from('experiences')
+          const { error: updateErr, count } = await admin.from('experiences')
              .update({ 
                  photos_drive_urls: nextMedia.photosDriveUrls,
                  video_drive_url: nextMedia.videoDriveUrl,
                  video_url: nextMedia.videoUrl,
                  raw_data: JSON.stringify(nextRaw)
              })
-             .eq('id', currentId);
+             .eq('id', currentId)
+             .select('id');
 
           if (updateErr) {
               console.error(`[N8N Proxy] Supabase Update Error for ${currentId}:`, updateErr);
               return { success: false, error: updateErr.message };
           }
 
-          console.log(`[N8N Proxy] Media Save SUCCESS for ${currentId}`);
+          if (!count || count === 0) {
+              console.warn(`[N8N Proxy] Media Save - No rows were updated for ID ${currentId}`);
+          }
+
+          console.log(`[N8N Proxy] Media Save SUCCESS for ${currentId}. Rows updated: ${count || 1}`);
           return { success: true };
     } else if (type === 'bookings' && payload.bookings) {
         const admin = getAdminClient();
@@ -646,6 +670,11 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
         const allActivities = payload.activities.map((a: any) => {
             const raw = JSON.stringify({ ...a, _temp_id: a.id });
+            
+            // Protect against overwriting finalized URLs with placeholders or empty lists
+            const incomingPhotos = Array.isArray(a.photosDriveUrls) ? a.photosDriveUrls : [];
+            const isPlaceholder = (list: any[]) => list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
+            
             return {
                 id: a.id,
                 title: a.title,
@@ -656,7 +685,11 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 bokun_product_id: a.bokunProductId || null,
                 category: a.category || null,
                 raw_data: raw,
-                photos_drive_urls: a.photosDriveUrls || [],
+                // If incoming is placeholder but we might have finalized data, we should ideally merge or skip.
+                // For simplicity here, we pass what we have, but the RPC could be smarter.
+                // BETTER: If incoming is empty or has placeholders, we set it to NULL so COALESCE in RPC can skip it?
+                // Actually, let's keep it as is for now but fix the MEDIA save to be the authoritative one.
+                photos_drive_urls: incomingPhotos,
                 video_drive_url: a.videoDriveUrl || '',
                 video_url: a.videoUrl || '',
                 status: a.status || null,

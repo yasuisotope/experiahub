@@ -111,9 +111,22 @@ BEGIN
                 bokun_product_id = v_rec.bokun_product_id,
                 category = v_rec.category,
                 raw_data = v_rec.raw_data,
-                photos_drive_urls = v_rec.photos_drive_urls,
-                video_drive_url = v_rec.video_drive_url,
-                video_url = v_rec.video_url,
+                photos_drive_urls = CASE 
+                    WHEN v_rec.photos_drive_urls IS NULL OR array_length(v_rec.photos_drive_urls, 1) = 0 THEN experiences.photos_drive_urls
+                    -- If incoming has placeholders AND existing is finalize, KEEP existing
+                    WHEN (SELECT bool_or(x LIKE '%anyoneWithLink%') FROM unnest(v_rec.photos_drive_urls) x) 
+                         AND NOT (SELECT bool_or(x LIKE '%anyoneWithLink%') FROM unnest(experiences.photos_drive_urls) x) 
+                         AND array_length(experiences.photos_drive_urls, 1) > 0
+                    THEN experiences.photos_drive_urls
+                    ELSE v_rec.photos_drive_urls
+                END,
+                video_drive_url = CASE
+                    WHEN v_rec.video_drive_url IS NULL OR v_rec.video_drive_url = '' THEN experiences.video_drive_url
+                    WHEN v_rec.video_drive_url LIKE '%anyoneWithLink%' AND experiences.video_drive_url NOT LIKE '%anyoneWithLink%' AND experiences.video_drive_url != ''
+                    THEN experiences.video_drive_url
+                    ELSE v_rec.video_drive_url
+                END,
+                video_url = COALESCE(v_rec.video_url, experiences.video_url),
                 status = v_rec.status,
                 booking_link = v_rec.booking_link,
                 itinerary = v_rec.itinerary,
