@@ -45,7 +45,12 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
 
     let body: any = undefined;
     if (request.method !== 'GET' && request.method !== 'HEAD') {
+      // For multipart uploads, we must be careful not to corrupt boundaries.
+      // Reading as blob is generally safe for small-to-medium files.
       body = await request.blob();
+      if (path.includes('media/upload')) {
+           console.log(`[N8N Proxy] Media Upload detected. Body size: ${body.size} bytes. Content-Type: ${contentType}`);
+      }
     }
 
     // PROACTIVE INTERCEPTION: Status Check (Primary source for Onboarding handshakes)
@@ -548,76 +553,54 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
          const freshUrl = payload.url || payload.background?.url;
          const nextMeta = { ...(current?.metadata || {}), background_url: freshUrl };
          updates = { ...updates, metadata: nextMeta };
-    } else if (type === 'media') {
-         const admin = getAdminClient();
-         const activeId = payload.activityId;
-         
-         if (activeId && admin) {
-             console.log(`[N8N Proxy] Media Save for Activity: ${activeId}`);
-             // Save to SPECIFIC EXPERIENCE
-             const { data: exp, error: expErr } = await admin.from('experiences').select('metadata, raw_data').eq('id', activeId).single();
-             if (!expErr && exp) {
-                 const currentMeta = exp.metadata || {};
-                 const nextMeta = {
-                     ...currentMeta,
-                     photosDriveUrls: payload.photosDriveUrls,
-                     videoDriveUrl: payload.videoDriveUrl,
-                     videoUrl: payload.videoUrl
-                 };
-                 
-                 // Safely merge raw_data
-                 let nextRaw = {};
-                 try {
-                     const rawData = typeof exp.raw_data === 'string' ? JSON.parse(exp.raw_data) : (exp.raw_data || {});
-                     nextRaw = {
-                         ...rawData,
-                         photosDriveUrls: payload.photosDriveUrls,
-                         videoDriveUrl: payload.videoDriveUrl,
-                         videoUrl: payload.videoUrl
-                     };
-                 } catch (e) {
-                     nextRaw = {
-                         photosDriveUrls: payload.photosDriveUrls,
-                         videoDriveUrl: payload.videoDriveUrl,
-                         videoUrl: payload.videoUrl
-                     };
-                 }
+     } else if (type === 'media') {
+          const admin = getAdminClient();
+          const activeId = payload.activityId;
+          
+          if (activeId && admin) {
+              console.log(`[N8N Proxy] Media Save for Activity: ${activeId}`);
+              // Save to SPECIFIC EXPERIENCE
+              const { data: exp, error: expErr } = await admin.from('experiences').select('metadata, raw_data').eq('id', activeId).single();
+              if (!expErr && exp) {
+                  const currentMeta = exp.metadata || {};
+                  const nextMeta = {
+                      ...currentMeta,
+                      photosDriveUrls: payload.photosDriveUrls || currentMeta.photosDriveUrls || [],
+                      videoDriveUrl: payload.videoDriveUrl || currentMeta.videoDriveUrl || '',
+                      videoUrl: payload.videoUrl || currentMeta.videoUrl || ''
+                  };
+                  
+                  // Safely merge raw_data
+                  let nextRaw = {};
+                  try {
+                      const rawData = typeof exp.raw_data === 'string' ? JSON.parse(exp.raw_data) : (exp.raw_data || {});
+                      nextRaw = {
+                          ...rawData,
+                          photosDriveUrls: nextMeta.photosDriveUrls,
+                          videoDriveUrl: nextMeta.videoDriveUrl,
+                          videoUrl: nextMeta.videoUrl
+                      };
+                  } catch (e) {
+                      nextRaw = {
+                          photosDriveUrls: nextMeta.photosDriveUrls,
+                          videoDriveUrl: nextMeta.videoDriveUrl,
+                          videoUrl: nextMeta.videoUrl
+                      };
+                  }
 
-                 const { error: updErr, data: updData } = await admin.from('experiences')
-                    .update({ 
-                        metadata: nextMeta, 
-                        raw_data: typeof exp.raw_data === 'string' ? JSON.stringify(nextRaw) : nextRaw 
-                    })
-                    .eq('id', activeId)
-                    .select('id');
-                
-                 if (updErr) {
-                     console.error('[N8N Proxy] Activity Media Update Error:', updErr);
-                     return { success: false, error: `Database Update Failed: ${updErr.message}` };
-                 } else {
-                     console.log('[N8N Proxy] Activity Media Update SUCCESS:', updData?.[0]?.id);
-                 }
-             } else if (expErr) {
-                 console.error('[N8N Proxy] Activity Fetch Error (for Media Save):', expErr);
-             }
-         } else {
-             console.log('[N8N Proxy] Media Save for Supplier (Fallback)');
-         }
+                  // Log exactly what we are about to save
+                  console.log(`[N8N Proxy] Update Experience ${activeId} with Media:`, nextMeta);
 
-         // ALWAYS Save to SUPPLIER as global fallback
-         const { data: current, error: fetchErr } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
-         if (fetchErr && !fetchErr.message.includes('metadata')) {
-             console.error('[N8N Proxy] Supplier Metadata Fetch Error:', fetchErr);
-         }
-         const meta = current?.metadata || {};
-         updates = { 
-             ...updates,
-             metadata: { 
-                 ...meta,
-                 photosDriveUrls: payload.photosDriveUrls,
-                 videoDriveUrl: payload.videoDriveUrl,
-                 videoUrl: payload.videoUrl
-             }
+                  const { error: updateErr } = await admin.from('experiences')
+                     .update({ 
+                         photos_drive_urls: nextMeta.photosDriveUrls,
+                         video_drive_url: nextMeta.videoDriveUrl,
+                         video_url: nextMeta.videoUrl,
+                         raw_data: JSON.stringify(nextRaw)
+                     })
+                     .eq('id', activeId);
+                  return { success: true };
+              }
          };
     } else if (type === 'bookings' && payload.bookings) {
         // Bulk Upsert Bookings via Admin Client
@@ -710,13 +693,11 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 start_times: a.startTimes || null,
                 cutoff_hours: a.cutoffHours || a.bookingLeadTime || null,
                 pricing_rows: a.pricingRows || null,
-                // Media Restorations (Sync to metadata column)
-                metadata: {
-                  photosDriveUrls: a.photosDriveUrls || [],
-                  videoDriveUrl: a.videoDriveUrl || '',
-                  videoUrl: a.videoUrl || '',
-                  status: a.status || null
-                }
+                // Media & Status Structured Columns (V145 Schema)
+                photos_drive_urls: a.photosDriveUrls || [],
+                video_drive_url: a.videoDriveUrl || '',
+                video_url: a.videoUrl || '',
+                status: a.status || null
             };
             
             console.log(`[N8N Proxy] Processing Activity ${a.id}:`, { title: a.title, dataSize: row.raw_data.length });
@@ -732,95 +713,66 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         // Consolidate admin client usage for all DB operations
         const admin = getAdminClient();
         const client = admin || supabase;
-        const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-
+        
         // AUTO-CLAIM: Link any orphan matching rows to the current user
         if (admin && userId) {
             console.log(`[N8N Proxy] Auto-Claiming orphan experiences for appId=${appId}...`);
             await admin.from('experiences').update({ user_id: userId }).eq('application_id', appId).is('user_id', null);
         }
         
-        // 0. Handle Deletions (Sync Strategy) - USE ADMIN CLIENT FOR VISIBILITY
-        const { data: existingRows } = await client
-            .from('experiences')
-            .select('id')
-            .eq('application_id', appId);
-        
+        // 0. Handle Deletions (Sync Strategy)
+        const { data: existingRows } = await client.from('experiences').select('id').eq('application_id', appId);
         const existingIds = new Set((existingRows || []).map((r: any) => r.id));
-        const incomingIds = new Set(toUpsert.map(r => r.id));
-        
+        const incomingIds = new Set(payload.activities.filter((a: any) => isUUID(a.id)).map((a: any) => a.id));
         const idsToDelete = Array.from(existingIds).filter(id => !incomingIds.has(id));
         
         if (idsToDelete.length > 0) {
-            console.log(`[N8N Proxy] Deleting ${idsToDelete.length} removed activities:`, idsToDelete);
-            const { error: delError } = await client
-                .from('experiences')
-                .delete()
-                .in('id', idsToDelete)
-                .eq('application_id', appId); 
-            
-            if (delError) console.error('[N8N Proxy] Delete Failed:', delError);
+            console.log(`[N8N Proxy] Deleting ${idsToDelete.length} removed activities`);
+            await client.from('experiences').delete().in('id', idsToDelete).eq('application_id', appId); 
         }
 
-        // 1. Upsert existing
+        // 1. Process All via RPC for atomicity and schema safety
+        const allActivities = payload.activities.map((a: any) => {
+            const raw = JSON.stringify({ ...a, _temp_id: a.id });
+            return {
+                id: a.id,
+                title: a.title,
+                description: a.summary || a.description || null,
+                price: a.price ? parseFloat(a.price) : (a.baseRate ? parseFloat(a.baseRate) : null),
+                currency: a.currency || null,
+                duration_minutes: a.durationMinutes ? parseInt(a.durationMinutes) : null,
+                bokun_product_id: a.bokunProductId || null,
+                category: a.category || null,
+                raw_data: raw,
+                photos_drive_urls: a.photosDriveUrls || [],
+                video_drive_url: a.videoDriveUrl || '',
+                video_url: a.videoUrl || '',
+                status: a.status || null,
+                booking_link: a.bookingLink || null,
+                itinerary: a.itinerary || null,
+                three_words: a.threeWords || null,
+                scheduling_mode: a.schedulingMode || null,
+                authentic_echoes: a.authenticEchoes || null,
+                unforgettable_feeling: a.unforgettableFeeling || null,
+                magic_moment: a.magicMoment || null,
+                hidden_gem: a.hiddenGem || null,
+                community_connection: a.communityConnection || null,
+                perfect_match: a.perfectMatch || null
+            };
+        });
 
+        console.log(`[N8N Proxy] Calling upsert_experience_system for ${allActivities.length} activities...`);
+        const { data: rpcData, error: rpcError } = await client.rpc('upsert_experience_system', {
+            p_application_id: appId,
+            p_experience_data: allActivities
+        });
 
-        // 1. Upsert existing (Robust Batch Upsert)
-        if (toUpsert.length > 0) {
-             console.log(`[N8N Proxy] Batch Upserting ${toUpsert.length} activities (using Admin: ${!!admin})...`);
-             
-             const { data, error } = await client.from('experiences')
-                 .upsert(toUpsert, { onConflict: 'id' })
-                 .select('id, raw_data, title');
-             
-             if (!error && (!data || data.length !== toUpsert.length)) {
-                 console.warn(`[N8N Proxy] Warning: Upsert Count Mismatch. Expected ${toUpsert.length}, Got ${data?.length}`);
-             } else if (data && data.length > 0) {
-                 const firstRaw = typeof data[0].raw_data === 'string' ? JSON.parse(data[0].raw_data) : data[0].raw_data;
-                 console.log(`[N8N Proxy] VERIFY SAVE (Activity): ID=${data[0].id} Title="${data[0].title}" Echoes="${firstRaw?.authenticEchoes?.substring(0,20)}..."`);
-             }
-             
-             if (error) {
-                 console.error('[N8N Proxy] Upsert Error:', error);
-                 const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-                 return { success: false, error: `${error.message} (AdminKey: ${sk})` };
-             }
+        if (rpcError) {
+            console.error('[N8N Proxy] RPC Error:', rpcError);
+            return { success: false, error: rpcError.message };
         }
 
-        // 2. Insert new
-        const idMappings: Record<string, string> = {};
-        if (toInsert.length > 0) {
-            console.log(`[N8N Proxy] Batch Inserting ${toInsert.length} new activities (Admin: ${!!admin})...`);
-            
-            // Explicitly use .insert() for new rows without IDs
-            let { data, error } = await client.from('experiences').insert(toInsert).select('id, raw_data');
-            
-            // RETRY WITH ADMIN CLIENT
-            if (error && (error.message?.includes('No suitable key') || error.message?.includes('signature'))) {
-                  console.warn(`[N8N Proxy] Retrying Bulk Insert with Admin Client...`);
-                  const admin = getAdminClient();
-                  if (admin) {
-                      const retry = await admin.from('experiences').insert(toInsert).select('id, raw_data');
-                      data = retry.data;
-                      error = retry.error;
-                  }
-            }
-
-            if (error) {
-                 console.error('[N8N Proxy] Insert Error:', error);
-                 const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-                 return { success: false, error: `${error.message} (AdminKey: ${sk})` };
-            }
-            // Map back using _temp_id in raw_data
-            (data || []).forEach((inserted: any) => {
-                const raw = typeof inserted.raw_data === 'string' ? JSON.parse(inserted.raw_data) : inserted.raw_data;
-                const temp = raw?._temp_id;
-                if (temp) idMappings[temp] = inserted.id;
-            });
-        }
-
-        console.log(`[N8N Proxy] Saved Activities (${toUpsert.length} updated, ${toInsert.length} inserted)`);
-        return { success: true, idMappings } as any; 
+        return { success: true, idMappings: rpcData?.idMappings || {} } as any; 
     }
     
     if (Object.keys(updates).length > 0) {
@@ -939,15 +891,60 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
         };
     } else if (type === 'media') {
         const activityId = u.searchParams.get('activityId');
-        let m = data.metadata || {};
+        let m: any = { photosDriveUrls: [], videoDriveUrl: '', videoUrl: '', status: null };
         
-        // If an activityId is provided, attempt to fetch its specific metadata from the experiences table
         if (activityId) {
+            console.log(`[N8N Proxy] Media Get for Activity (Robust): ${activityId}`);
             const admin = getAdminClient();
-            const { data: expRow } = await (admin || supabase).from('experiences').select('metadata').eq('id', activityId).maybeSingle();
-            if (expRow?.metadata) {
-                m = expRow.metadata;
+            const { data: expRow, error: expErr } = await (admin || supabase)
+                .from('experiences')
+                .select('photos_drive_urls, video_drive_url, video_url, status, raw_data, metadata')
+                .eq('id', activityId)
+                .maybeSingle();
+            
+            if (expRow) {
+                let raw: any = {};
+                try {
+                    raw = typeof expRow.raw_data === 'string' ? JSON.parse(expRow.raw_data) : (expRow.raw_data || {});
+                    if (typeof raw === 'string') raw = JSON.parse(raw);
+                } catch (e) {}
+
+                const structured = Array.isArray(expRow.photos_drive_urls) ? expRow.photos_drive_urls : [];
+                const metaPhotos = Array.isArray(expRow.metadata?.photosDriveUrls) ? expRow.metadata.photosDriveUrls : [];
+                const rawPhotos = Array.isArray(raw?.photosDriveUrls) ? raw.photosDriveUrls : [];
+                
+                const isFinal = (list: any[]) => {
+                    if (!Array.isArray(list) || list.length === 0) return false;
+                    return !list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
+                };
+
+                console.log(`[N8N Proxy] Media Sync Audit for ${activityId}: Structured=${structured.length} (Final=${isFinal(structured)}), Meta=${metaPhotos.length} (Final=${isFinal(metaPhotos)}), Raw=${rawPhotos.length} (Final=${isFinal(rawPhotos)})`);
+
+                let finalPhotos = structured;
+                if (isFinal(structured)) finalPhotos = structured;
+                else if (isFinal(metaPhotos)) finalPhotos = metaPhotos;
+                else if (isFinal(rawPhotos)) finalPhotos = rawPhotos;
+                else {
+                    // Fallback to whichever has content
+                    finalPhotos = structured.length > 0 ? structured : (metaPhotos.length > 0 ? metaPhotos : rawPhotos);
+                }
+
+                m = {
+                    photosDriveUrls: finalPhotos,
+                    videoDriveUrl: expRow.video_drive_url || expRow.metadata?.videoDriveUrl || raw?.videoDriveUrl || '',
+                    videoUrl: expRow.video_url || expRow.metadata?.videoUrl || raw?.videoUrl || '',
+                    status: expRow.status || null
+                };
             }
+            if (expErr) console.error(`[N8N Proxy] Media Get DB Error: ${expErr.message}`);
+        } else {
+             // Fallback to supplier metadata if no activityId
+             m = {
+                 photosDriveUrls: data.metadata?.photosDriveUrls || [],
+                 videoDriveUrl: data.metadata?.videoDriveUrl || '',
+                 videoUrl: data.metadata?.videoUrl || '',
+                 status: null
+             };
         }
         
         return {
@@ -1063,12 +1060,29 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
             startTimes: row.start_times || raw?.startTimes,
             cutoffHours: row.cutoff_hours || raw?.cutoffHours,
             pricingRows: row.pricing_rows || raw?.pricingRows,
-            // Media Restorations (Experience specific metadata)
-            photosDriveUrls: row.metadata?.photosDriveUrls || raw?.photosDriveUrls || [],
-            videoDriveUrl: row.metadata?.videoDriveUrl || raw?.videoDriveUrl || '',
-            videoUrl: row.metadata?.videoUrl || raw?.videoUrl || '',
+            // Media & Status Retrieval (Source of Truth Strategy)
+            photosDriveUrls: (() => {
+                const structured = Array.isArray(row.photos_drive_urls) ? row.photos_drive_urls : [];
+                const metadata = Array.isArray(row.metadata?.photosDriveUrls) ? row.metadata.photosDriveUrls : [];
+                const rawPhotos = Array.isArray(raw?.photosDriveUrls) ? raw.photosDriveUrls : [];
+                
+                // Helper to check for finalize status
+                const isFinal = (list: any[]) => {
+                    if (!Array.isArray(list) || list.length === 0) return false;
+                    return !list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
+                };
+                
+                if (isFinal(structured)) return structured;
+                if (isFinal(metadata)) return metadata;
+                if (isFinal(rawPhotos)) return rawPhotos;
+                
+                // Fallback to whichever has content
+                return structured.length > 0 ? structured : (metadata.length > 0 ? metadata : rawPhotos);
+            })(),
+            videoDriveUrl: row.video_drive_url || row.metadata?.videoDriveUrl || raw?.videoDriveUrl || '',
+            videoUrl: row.video_url || row.metadata?.videoUrl || raw?.videoUrl || '',
             // Status restoration
-            status: row.metadata?.status === 'Published' || row.bokun_product_id ? 'Published' : 'Unpublished'
+            status: row.status || row.metadata?.status === 'Published' || row.bokun_product_id ? 'Published' : 'Unpublished'
         };
       });
 

@@ -95,7 +95,7 @@ export default function ExperiencesPage() {
       <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>Experiences</h1>
       {process.env.NEXT_PUBLIC_BOKUN_DISABLED === '1' && (
         <div style={{ background: '#FFF6EC', color: '#9f5c00', padding: 8, borderRadius: 8, marginBottom: 12 }}>
-          Booking API activation in progress. Data shown from Airtable.
+          Booking API activation in progress. Experience data is synchronized with the Supplier Portal.
         </div>
       )}
       {process.env.NEXT_PUBLIC_BOKUN_DISABLED === '0' && (

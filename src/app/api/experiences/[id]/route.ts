@@ -1,29 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-type AirtableRecord = {
-  id: string;
-  fields: Record<string, any>;
-};
-
-const FIELDS = [
-  'bokunProductId',
-  'title',
-  'summary',
-  'city',
-  'Duration',
-  'Price',
-  'Currency',
-  'Booking Link',
-  'Status',
-  'Images',
-  'Category'
-];
-
-function getEnv(name: string): string {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing environment variable: ${name}`);
-  return v;
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
@@ -39,51 +17,69 @@ export async function GET(
       );
     }
 
-    const BASE_ID = getEnv('AIRTABLE_BASE_ID');
-    const TABLE_ID = getEnv('AIRTABLE_TABLE_ID');
-    const TOKEN = getEnv('AIRTABLE_TOKEN');
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase configuration missing');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch specific record by ID
-    const url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_ID)}/${experienceId}`;
-    
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${TOKEN}`,
-      },
-      cache: 'no-store',
-    });
+    const { data: row, error } = await supabase
+      .from('experiences')
+      .select('*')
+      .eq('id', experienceId)
+      .maybeSingle();
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        return NextResponse.json(
-          { error: 'Experience not found' },
-          { status: 404 }
-        );
-      }
-      const text = await response.text();
+    if (error) {
+      console.error('[API] Supabase fetch error:', error);
+      return NextResponse.json({ error: 'Database request failed', details: error.message }, { status: 502 });
+    }
+
+    if (!row) {
       return NextResponse.json(
-        { error: 'Airtable request failed', status: response.status, body: text },
-        { status: 502 }
+        { error: 'Experience not found' },
+        { status: 404 }
       );
     }
 
-    const record: AirtableRecord = await response.json();
-    const fields = record.fields || {};
+    // Robust image retrieval (Source of Truth Strategy)
+    const structured = row.photos_drive_urls || [];
+    const metaPhotos = row.metadata?.photosDriveUrls || [];
+    let raw: any = {};
+    try {
+      raw = typeof row.raw_data === 'string' ? JSON.parse(row.raw_data) : (row.raw_data || {});
+      if (typeof raw === 'string') raw = JSON.parse(raw);
+    } catch (e) {}
+    const rawPhotos = raw?.photosDriveUrls || [];
+    
+    // Helper to check for finalize status
+    const isFinal = (list: string[]) => list.length > 0 && !list.some(u => u.includes('anyoneWithLink'));
+    
+    let photos = structured;
+    if (isFinal(structured)) photos = structured;
+    else if (isFinal(metaPhotos)) photos = metaPhotos;
+    else if (isFinal(rawPhotos)) photos = rawPhotos;
+    else {
+      // Fallback to whichever has content
+      photos = structured.length > 0 ? structured : (metaPhotos.length > 0 ? metaPhotos : rawPhotos);
+    }
 
     const experience = {
-      id: record.id,
-      bokunProductId: String(fields.bokunProductId ?? ''),
-      title: fields.title ?? '',
-      summary: fields.summary ?? '',
-      city: fields.city ?? '',
-      duration: Number(fields.Duration ?? 0),
-      price: Number(fields.Price ?? 0),
-      currency: String(fields.Currency ?? 'USD'),
-      url: fields['Booking Link'] ?? '',
-      status: fields.Status ?? 'Active',
-      images: Array.isArray(fields.Images) ? fields.Images : [],
-      category: fields.Category ?? '',
-
+      id: row.id,
+      bokunProductId: row.bokun_product_id || '',
+      title: row.title || '',
+      summary: row.description || row.summary || '',
+      city: row.city || '',
+      duration: row.duration_minutes ? row.duration_minutes / 60 : 0,
+      price: row.price || 0,
+      currency: row.currency || 'USD',
+      url: row.booking_link || '',
+      status: row.status || 'Active',
+      images: photos.map((url: string) => ({ url })),
+      category: row.category || '',
     };
 
     return NextResponse.json({ experience });

@@ -24,6 +24,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
 import SummarizeIcon from '@mui/icons-material/Summarize';
+import SecurityIcon from '@mui/icons-material/Security';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import { getUserBackground, setUserBackground, searchUnsplash, trackDownload, loadCachedBackground, saveCachedBackground, getCuratedBackgrounds, prefetchBackgroundImage, type PortalBackground } from '@/services/backgroundService';
 import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
 
@@ -46,6 +48,36 @@ async function parseJsonSafe(res: Response): Promise<any | null> {
 }
 
 const defaultTimeZone = 'Asia/Tokyo';
+
+// Header component for experience management contexts
+const ContextHeader = ({ title }: { title: string }) => (
+  <Box sx={{ mb: 3, position: 'relative' }}>
+    <Typography variant="overline" sx={{ 
+      color: '#C5A059', 
+      fontWeight: 400, // Explicitly normal
+      letterSpacing: '0.3em', 
+      display: 'block', 
+      mb: 1,
+      fontSize: '0.7rem',
+      lineHeight: 1.2
+    }}>
+      CONFIGURING UNIT
+    </Typography>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+      <Typography variant="h4" sx={{ 
+        fontFamily: 'Agrandir, serif', 
+        fontWeight: 400, // Explicitly normal
+        color: '#010057',
+        letterSpacing: '-0.02em',
+        textTransform: 'none',
+        lineHeight: 1.1
+      }}>
+        {title}
+      </Typography>
+      <Box sx={{ flexGrow: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197, 160, 89, 0.3) 0%, rgba(197, 160, 89, 0) 100%)', mt: 1 }} />
+    </Box>
+  </Box>
+);
 
 // GridLikeMedia definition moved to @/components/supplier/GridLikeMedia.tsx
 
@@ -464,12 +496,12 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
                  color="error" 
                  startIcon={<DeleteOutlineIcon />}
                  onClick={() => confirmDelete()}
-                 sx={{ borderRadius: 1, textTransform: 'none', fontWeight: 700 }}
+                 sx={{ borderRadius: 1, textTransform: 'none', fontWeight: 400 }}
                >
                   Delete ({selectedIds.size})
                </Button>
            )}
-          <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#C5A059' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#fff', fontWeight: 700 }}>Add</Button>
+          <Button startIcon={<AddIcon />} variant="contained" onClick={openAdd} sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#C5A059' }, borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#fff', fontWeight: 400 }}>Add</Button>
           <Button variant="outlined" onClick={saveAll} disabled={saving} sx={{ borderRadius: 1, px: 2, fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>{saving ? 'Saving…' : 'Save all'}</Button>
         </Stack>
       </Stack>
@@ -484,13 +516,13 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
                 onChange={toggleAll}
               />
             </TableCell>
-            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Title</TableCell>
-            <TableCell align="center" sx={{ fontWeight: 'bold' }}>City</TableCell>
-            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Duration (min)</TableCell>
-            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Price</TableCell>
-            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Bókun</TableCell>
-            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Status</TableCell>
-            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 400 }}>Title</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 400 }}>City</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 400 }}>Duration (min)</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 400 }}>Price</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 400 }}>Bókun</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 400 }}>Status</TableCell>
+            <TableCell align="center" sx={{ fontWeight: 400 }}>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -509,14 +541,15 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
               <TableCell align="center">{r.bokunProductId ? <Typography variant="caption" sx={{ color: '#2e7d32' }}>{r.bokunProductId}</Typography> : <Typography variant="caption" sx={{ color: '#999' }}>—</Typography>}</TableCell>
               <TableCell align="center">
                 <Chip 
-                  label={syncId === r.id ? 'Publishing...' : (r.status === 'Published' ? 'Published' : 'Unpublished')} 
+                  label={syncId === r.id ? 'Deploying...' : (r.status === 'Published' ? 'Deployed' : 'Undeployed')} 
                   size="small" 
                   sx={{ 
-                    fontWeight: 700, 
+                    fontWeight: 400, 
                     fontSize: '0.65rem',
-                    bgcolor: syncId === r.id ? 'rgba(1, 0, 87, 0.05)' : (r.status === 'Published' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(100, 116, 139, 0.1)'),
-                    color: syncId === r.id ? '#010057' : (r.status === 'Published' ? '#059669' : '#475569'),
-                    border: syncId === r.id ? '1px solid #010057' : (r.status === 'Published' ? '1px solid #10b981' : '1px solid #94a3b8')
+                    bgcolor: syncId === r.id ? 'rgba(74, 124, 140, 0.1)' : (r.status === 'Published' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(100, 116, 139, 0.05)'),
+                    color: syncId === r.id ? '#4A7C8C' : (r.status === 'Published' ? '#059669' : '#64748B'),
+                    border: syncId === r.id ? '1px solid #4A7C8C' : (r.status === 'Published' ? '1px solid #10b981' : '1px solid #E2E8F0'),
+                    boxShadow: 'none'
                   }} 
                 />
               </TableCell>
@@ -534,8 +567,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
                       setRows(rs => [copy, ...rs]);
                       onToast('Experience duplicated');
                     }} sx={{ color: '#4A7C8C', borderColor: 'rgba(74,124,140,0.5)' }}>Duplicate</Button>
-                    <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#4A7C8C', borderColor: '#4A7C8C', whiteSpace: 'nowrap', fontWeight: 700 }} onClick={()=>onEditDetails && onEditDetails(r)}>Add Details</Button>
-                    <Button size="small" variant="contained" sx={{ bgcolor: '#C5A059', '&:hover': { bgcolor: '#B08D45' }, fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, color: '#fff' }} onClick={()=>onSync(r)}>Publish</Button>
+                    <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#4A7C8C', borderColor: '#4A7C8C', whiteSpace: 'nowrap', fontWeight: 400 }} onClick={()=>onEditDetails && onEditDetails(r)}>Manage details</Button>
                   </Box>
                 )}
               </TableCell>
@@ -605,7 +637,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle sx={{ fontFamily: 'Agrandir, serif', color: '#010057', fontWeight: 800 }}>
+        <DialogTitle sx={{ fontFamily: 'Agrandir, serif', color: '#010057', fontWeight: 400 }}>
              {targetDeleteId ? 'Delete Experience?' : `Delete ${selectedIds.size} Experiences?`}
         </DialogTitle>
         <DialogContent>
@@ -615,7 +647,7 @@ function ActivitiesSkeleton({ experiences, onUpdate, onSave, onToast, onEditDeta
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={() => setDeleteDialogOpen(false)} sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif' }}>Cancel</Button>
-          <Button onClick={performDelete} variant="contained" color="error" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700 }}>
+          <Button onClick={performDelete} variant="contained" color="error" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400 }}>
              Confirm Delete
           </Button>
         </DialogActions>
@@ -778,7 +810,7 @@ export default function SupplierPortalPage() {
       ...sx
     }}>
       {icon && <Box sx={{ mt: 0.25, color }}>{icon}</Box>}
-      <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#334155', lineHeight: 1.6, fontWeight: 500 }}>
+      <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#334155', lineHeight: 1.6, fontWeight: 400 }}>
         {children}
       </Typography>
     </Box>
@@ -788,7 +820,7 @@ export default function SupplierPortalPage() {
     <Fade in={active}>
       <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: '#059669', opacity: active ? 1 : 0 }}>
         <CheckCircleOutlineIcon sx={{ fontSize: '1rem' }} />
-        <Typography variant="caption" sx={{ fontWeight: 700, fontFamily: 'Nunito, sans-serif' }}>Saved</Typography>
+        <Typography variant="caption" sx={{ fontWeight: 400, fontFamily: 'Nunito, sans-serif' }}>Saved</Typography>
       </Stack>
     </Fade>
   );
@@ -843,9 +875,38 @@ export default function SupplierPortalPage() {
     status?: string;
   };
   const [experiences, setExperiences] = React.useState<Experience[]>([]);
-  const handleMediaUpdate = (id: string, media: { photosDriveUrls: string[]; videoDriveUrl: string; videoUrl: string }) => {
-    setExperiences(prev => prev.map(exp => exp.id === id ? { ...exp, ...media } : exp));
-  };
+  const handleMediaUpdate = React.useCallback((id: string, media: { photosDriveUrls: string[]; videoDriveUrl: string; videoUrl: string }) => {
+    // We use functional updates to ensure stability
+    setExperiences(prev => {
+      const exp = prev.find(e => e.id === id);
+      if (!exp) return prev;
+      
+      // Trust the incoming list from GridLikeMedia - it handles the merging/polling logic correctly.
+      // Re-adding placeholders from 'prev' here was causing infinite sync loops.
+      const finalPhotos = media.photosDriveUrls || [];
+      
+      const hasChanged = 
+        exp.photosDriveUrls?.join(',') !== finalPhotos.join(',') ||
+        exp.videoDriveUrl !== media.videoDriveUrl ||
+        exp.videoUrl !== media.videoUrl;
+        
+      if (!hasChanged) return prev;
+      return prev.map(e => e.id === id ? { ...e, ...media, photosDriveUrls: finalPhotos } : e);
+    });
+    
+    setDetails(prev => {
+      // Trust what GridLikeMedia says.
+      const finalPhotos = media.photosDriveUrls || [];
+      
+      const hasChanged = 
+        prev.photosDriveUrls?.join(',') !== finalPhotos.join(',') ||
+        prev.videoDriveUrl !== media.videoDriveUrl ||
+        prev.videoUrl !== media.videoUrl;
+
+      if (!hasChanged) return prev;
+      return { ...prev, ...media, photosDriveUrls: finalPhotos };
+    });
+  }, []);
   const [details, setDetails] = React.useState<Partial<Experience>>({});
   const [validating, setValidating] = React.useState(false);
   const [validationIssues, setValidationIssues] = React.useState<string[] | null>(null);
@@ -858,7 +919,7 @@ const defaultCurrency = 'USD';
 const PRIMARY_BUTTON_SX = {
   px: 3, py: 0.8, borderRadius: 1,
   bgcolor: '#010057', color: '#fff',
-  fontWeight: 700, fontFamily: 'Nunito, sans-serif',
+  fontWeight: 400, fontFamily: 'Nunito, sans-serif',
   textTransform: 'none',
   boxShadow: '0 4px 12px rgba(1, 0, 87, 0.2)',
   transition: 'all 0.5s ease',
@@ -873,7 +934,6 @@ const PRIMARY_BUTTON_SX = {
   const SUGGESTED_CATEGORIES = React.useMemo(() => ['Cultural','Food & Drink','Adventure','Nature','Sightseeing','Wellness','Nightlife','Workshops','Museums'], []);
   const TIME_ZONES = React.useMemo(() => ['UTC','Asia/Tokyo','America/Los_Angeles','Europe/London'], []);
   const [pricingRows, setPricingRows] = React.useState<{ category: string; amount: string; currency: string }[]>([]);
-  const [alsoUpsertAirtable, setAlsoUpsertAirtable] = React.useState<boolean>(false);
   // Stripe status placeholders (filled by n8n later)
   const [payoutStatus, setPayoutStatus] = React.useState<'pending'|'verified'|'unknown'>('unknown');
   const [stripeAccountId, setStripeAccountId] = React.useState<string>('');
@@ -1073,6 +1133,13 @@ const PRIMARY_BUTTON_SX = {
     if (!appId) return;
     if (!isWelcomeDismissed()) setSection('welcome');
   }, [appId, isWelcomeDismissed]);
+
+  // Auto-scan for distribution readiness when Finalize tab is opened
+  React.useEffect(() => {
+    if (section === 'experiences' && subsection === 'validation' && selectedExperienceId && validationIssues === null && !validating) {
+      runValidation();
+    }
+  }, [section, subsection, selectedExperienceId, validationIssues, validating]);
 
   // Load All Supplier Identity & Company Data
   React.useEffect(() => {
@@ -1392,7 +1459,7 @@ const PRIMARY_BUTTON_SX = {
             insurance: a.insurance,
             itinerary: a.itinerary,
             meetingPoint: a.meetingPoint,
-            photosDriveUrls: a.photosDriveUrls || [],
+            photosDriveUrls: Array.isArray(a.photosDriveUrls) ? a.photosDriveUrls : (typeof a.photosDriveUrls === 'string' ? a.photosDriveUrls.split(',').map((s:string)=>s.trim()).filter(Boolean) : []),
             videoDriveUrl: a.videoDriveUrl || '',
             videoUrl: a.videoUrl || ''
           }));
@@ -1493,9 +1560,15 @@ const PRIMARY_BUTTON_SX = {
     } catch (e: any) { setToast(e?.message || 'Save failed'); }
   };
 
-  // Autosave on idle for Details / Availability / Policies / Pricing
+  // Autosave on idle for Details / Availability / Policies / Pricing / Media
   React.useEffect(() => {
-    const eligible = section === 'experiences' && (subsection === 'details' || subsection === 'availability' || subsection === 'policies' || subsection === 'pricing');
+    const eligible = section === 'experiences' && (
+        subsection === 'details' || 
+        subsection === 'availability' || 
+        subsection === 'policies' || 
+        subsection === 'pricing' || 
+        subsection === 'media'
+    );
     if (!eligible || !selectedExperienceId) return;
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(async () => {
@@ -1517,11 +1590,23 @@ const PRIMARY_BUTTON_SX = {
           'title','summary','city','durationMinutes','category','maxParticipants','minParticipants',
           'schedulingMode','startTimes','cutoffHours','bookingLeadTime','cancellationPolicy',
           'timeZone','latitude','longitude','pricingCategories','baseRate','currency',
-          // Add new narrative fields to change detection
+          // Media fields
+          'photosDriveUrls', 'videoDriveUrl', 'videoUrl',
+          // Narrative and logistics
+          'itinerary', 'meetingPoint', 'safetyMeasures', 'requirements', 'included', 'notIncluded', 'insurance',
+          // Vibe fields
           'authenticEchoes', 'unforgettableFeeling', 'magicMoment', 'hiddenGem', 
           'communityConnection', 'perfectMatch', 'threeWords'
         ];
-        const hasChange = keys.some((k) => String((current as any)[k]||'') !== String(merged[k]||''));
+        // Special comparison for arrays (photosDriveUrls)
+        const hasChange = keys.some((k) => {
+            const v1 = (current as any)[k];
+            const v2 = merged[k];
+            if (Array.isArray(v1) || Array.isArray(v2)) {
+                return JSON.stringify(v1 || []) !== JSON.stringify(v2 || []);
+            }
+            return String(v1||'') !== String(v2||'');
+        });
         if (!hasChange) return;
         setAutoSaving(true);
         const next = experiences.map(e => e.id === selectedExperienceId ? merged as Experience : e);
@@ -1664,15 +1749,34 @@ const PRIMARY_BUTTON_SX = {
   const runValidation = async () => {
     if (!selectedExperienceId) return;
     setValidating(true);
-    try {
+      try {
       const issues = await validateSelected();
       setValidationIssues(issues);
-      setIsVerified(issues.length === 0);
+      const ok = issues.length === 0;
+      setIsVerified(ok);
+      
+      // Auto-trigger push if verified
+      if (ok && !syncing) {
+        setSyncing(true);
+        try {
+          await fetch(`${N8N_BASE}/supplier/sync/push`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ applicationId: appId, experienceId: selectedExperienceId })
+          });
+          setExperiences(prev => prev.map(e => e.id === selectedExperienceId ? { ...e, status: 'Published' } : e));
+          setToast('Experience Synchronized with Network');
+        } catch (e: any) {
+          console.error("Auto-sync failed", e);
+        } finally {
+          setSyncing(false);
+        }
+      }
+      
       setToast(issues.length ? 'Validation issues found' : 'Ready for deployment!');
     } finally {
       setValidating(false);
-    }
-  };
+    }  };
 
   const syncSelected = async () => {
     const a = experiences.find(e => e.id === selectedExperienceId);
@@ -1694,8 +1798,7 @@ const PRIMARY_BUTTON_SX = {
           AVAILABILITY_RULES: { schedulingMode: a.schedulingMode, startTimes: a.startTimes },
           CUTOFF: a.cutoffHours || a.bookingLeadTime,
           EXTERNAL_ID: a.id
-        },
-        alsoUpsertAirtable
+        }
       };
       const res = await fetch(`${N8N_BASE}/supplier/activities/sync`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
@@ -1707,12 +1810,11 @@ const PRIMARY_BUTTON_SX = {
       }
       if (!json?.success) throw new Error(json?.error || 'Sync failed');
       const bokunId = json.bokunProductId || '';
-      const airtableId = json.airtableId || '';
-      const next = experiences.map(e => e.id === a.id ? { ...e, bokunProductId: bokunId } : e);
-      const nextWithMeta = next.map(e => e.id === a.id ? { ...e, airtableId: airtableId || e.airtableId, lastSyncedAt: new Date().toISOString() } : e);
+      const next = experiences.map(e => e.id === a.id ? { ...e, bokunProductId: bokunId, status: 'Published' as const } : e);
+      const nextWithMeta = next.map(e => e.id === a.id ? { ...e, lastSyncedAt: new Date().toISOString() } : e);
       setExperiences(nextWithMeta);
-      try { await saveAllExperiences(next); } catch {}
-      setToast(`Synced to Bókun${bokunId ? ` (${bokunId})` : ''}${airtableId ? ` · Airtable ${airtableId}` : ''}`);
+      try { await saveAllExperiences(nextWithMeta); } catch {}
+      setToast(`Synced to Bókun${bokunId ? ` (${bokunId})` : ''}`);
     } catch (e: any) { setToast(e?.message || 'Sync failed'); }
   };
 
@@ -1720,13 +1822,12 @@ const PRIMARY_BUTTON_SX = {
     const a = experiences.find(e => e.id === selectedExperienceId);
     const checks: Record<string, { ok: boolean; count?: number }> = {
       details: { ok: !!(a?.title && a?.summary && a?.city && a?.durationMinutes && a?.category) },
-      media: { ok: false },
+      media: { ok: (a?.photosDriveUrls?.length || 0) > 0 },
       pricing: { ok: !!(a?.currency && ((a?.pricingCategories && a.pricingCategories.trim()) && ((a?.baseRate && String(a.baseRate).trim()) || (a?.price && String(a.price).trim())))) },
       availability: { ok: !!(a?.schedulingMode && a?.startTimes && (a?.cutoffHours || a?.bookingLeadTime) && a?.maxParticipants) },
       validation: { ok: (validationMap[selectedExperienceId] ?? 0) === 0, count: validationMap[selectedExperienceId] ?? 0 },
       sync: { ok: !!a?.bokunProductId }
     };
-    // media check async substitute: assume true if we have anything saved in photos in details (not stored) → leave false; caller can ignore strictness
     return checks;
   };
 
@@ -1778,14 +1879,14 @@ const PRIMARY_BUTTON_SX = {
           <Box sx={{ mb: 3 }}>
             <img src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png" alt="ExperiaHub" style={{ height: '32px', width: 'auto' }} />
           </Box>
-          <Typography variant="overline" sx={{ color: '#ffbf00', fontWeight: 800, letterSpacing: 3, mb: 2, display: 'block' }}>
+          <Typography variant="overline" sx={{ color: '#ffbf00', fontWeight: 400, letterSpacing: 3, mb: 2, display: 'block' }}>
             {authTab === 'login' ? 'PARTNER PORTAL' : 'PARTNERSHIP APPROVED'}
           </Typography>
           
           <Typography variant="h3" sx={{ 
             color: '#010057', 
             fontFamily: 'Agrandir, serif', 
-            fontWeight: 800, 
+            fontWeight: 400, 
             mb: 2,
             fontSize: { xs: '2rem', md: '2.5rem' },
             letterSpacing: '-0.02em',
@@ -1809,8 +1910,8 @@ const PRIMARY_BUTTON_SX = {
             ].map((item, i) => (
               <Grid item xs={12} sm={4} key={i} sx={{ display: 'flex' }}>
                 <Box sx={{ p: 1.5, borderLeft: '2px solid #ffbf00', bgcolor: 'transparent', borderRadius: '0 4px 4px 0', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-                  <Typography variant="caption" sx={{ color: '#ffbf00', fontWeight: 800, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
-                  <Typography variant="subtitle2" sx={{ color: '#010057', fontWeight: 700, lineHeight: 1.2 }}>{item.title}</Typography>
+                  <Typography variant="caption" sx={{ color: '#ffbf00', fontWeight: 400, letterSpacing: 1, display: 'block' }}>STEP {item.step}</Typography>
+                  <Typography variant="subtitle2" sx={{ color: '#010057', fontWeight: 400, lineHeight: 1.2 }}>{item.title}</Typography>
                   <Typography variant="caption" sx={{ color: '#64748B', lineHeight: 1.1 }}>{item.desc}</Typography>
                 </Box>
               </Grid>
@@ -1866,7 +1967,7 @@ const PRIMARY_BUTTON_SX = {
                 color: '#fff',
                 py: 2, 
                 borderRadius: '4px',
-                fontWeight: 700,
+                fontWeight: 400,
                 fontSize: '1.1rem',
                 mt: 1,
                 fontFamily: 'Agrandir, serif',
@@ -1890,7 +1991,7 @@ const PRIMARY_BUTTON_SX = {
                 onClick={() => setAuthTab(authTab === 'login' ? 'signup' : 'login')}
                 sx={{ 
                   color: '#475569', 
-                  fontWeight: 600, 
+                  fontWeight: 400, 
                   textTransform: 'none', 
                   fontFamily: 'Nunito, sans-serif',
                   '&:hover': { color: '#010057', bgcolor: 'transparent', textDecoration: 'underline' }
@@ -1960,7 +2061,7 @@ const PRIMARY_BUTTON_SX = {
               style={{ height: 'auto', width: '100%', maxWidth: '200px' }}
             />
           </Box>
-          <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 700, color: '#010057', textAlign: 'center', mb: 2, lineHeight: 1.1 }}>
+          <Typography variant="h6" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 400, color: '#010057', textAlign: 'center', mb: 2, lineHeight: 1.1 }}>
             Supplier Portal
           </Typography>
 
@@ -1968,22 +2069,22 @@ const PRIMARY_BUTTON_SX = {
           
           <List>
             <ListItemButton selected={section==='welcome'} onClick={() => { setSection('welcome'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='welcome'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
-              <ListItemText primary="Welcome" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='welcome'?700:500 }} />
+              <ListItemText primary="Welcome" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400 }} />
             </ListItemButton>
             <ListItemButton selected={section==='company'} onClick={() => { setSection('company'); setTab(0); setSubsection('profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='company'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
-              <ListItemText primary="Company" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='company'?700:500 }} />
+              <ListItemText primary="Company" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400 }} />
             </ListItemButton>
             <ListItemButton selected={section==='user'} onClick={() => { setSection('user'); setTab(0); setSubsection('user_profile'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='user'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
-              <ListItemText primary="User" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='user'?700:500 }} />
+              <ListItemText primary="User" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400 }} />
             </ListItemButton>
             <ListItemButton selected={section==='experiences'} onClick={() => { setSection('experiences'); setTab(0); setSubsection('overview'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='experiences'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
-              <ListItemText primary="Experiences" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='experiences'?700:500 }} />
+              <ListItemText primary="Experiences" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400 }} />
             </ListItemButton>
             <ListItemButton selected={section==='bookings'} onClick={() => { setSection('bookings'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='bookings'?{ bgcolor: isTransparent ? 'rgba(1,0,87,0.1)' : '#F0F4F6' }:{}) }}>
-              <ListItemText primary="Bookings" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='bookings'?700:500 }} />
+              <ListItemText primary="Bookings" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400 }} />
             </ListItemButton>
             <ListItemButton selected={section==='information'} onClick={() => { setSection('information'); setTab(0); setSubsection('resources'); }} sx={{ borderRadius: 1.5, mb: 0.5, ...(section==='information'?{ bgcolor: isTransparent ? 'rgba(74,124,140,0.15)' : '#EAF4F6' }:{}) }}>
-              <ListItemText primary="Information & Resources" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: section==='information'?700:500 }} />
+              <ListItemText primary="Information & Resources" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400 }} />
             </ListItemButton>
           </List>
 
@@ -1995,11 +2096,11 @@ const PRIMARY_BUTTON_SX = {
           <Box sx={{ mt: 'auto', pt: 2 }}>
             <Stack spacing={1} sx={{ mb: 2, px: 2, textAlign: 'center', bgcolor: 'rgba(1,0,87,0.03)', borderRadius: 2, py: 2, border: '1px solid rgba(1,0,87,0.05)' }}>
               <Box sx={{ py: 0 }}>
-                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 800, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 400, color: '#010057', lineHeight: 1.2, mb: 0.5 }}>
                   {user?.display_name || userDisplayName || statusData?.businessName || companyBilling.companyName || 'ExperiaHub Partner'}
                 </Typography>
                 {appId && (
-                  <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', display: 'block', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.8 }}>
+                  <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', display: 'block', fontSize: '0.75rem', fontWeight: 400, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.8 }}>
                     ID: {appId}
                   </Typography>
                 )}
@@ -2015,11 +2116,11 @@ const PRIMARY_BUTTON_SX = {
              <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v155</Typography>
             <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
+              <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 400, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>
               {isLoggedIn ? (
-                <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 700, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#FECACA', bgcolor: '#FEF2F2', color: '#DC2626' } }}>Log out</Button>
+                <Button variant="outlined" size="small" fullWidth onClick={() => { logout?.(); setHasBegun(false); }} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 400, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#FECACA', bgcolor: '#FEF2F2', color: '#DC2626' } }}>Log out</Button>
               ) : (
-                <Button variant="contained" size="small" fullWidth sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 700 }} onClick={() => { setHasBegun(false); }}>Sign in</Button>
+                <Button variant="contained" size="small" fullWidth sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 400 }} onClick={() => { setHasBegun(false); }}>Sign in</Button>
               )}
             </Stack>
           </Box>
@@ -2054,7 +2155,7 @@ const PRIMARY_BUTTON_SX = {
                   label="Guest Session"
                   size="small"
                   onClick={() => setHasBegun(false)}
-                  sx={{ bgcolor: 'rgba(197, 160, 89, 0.1)', color: '#ffbf00', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(197, 160, 89, 0.3)' }}
+                  sx={{ bgcolor: 'rgba(197, 160, 89, 0.1)', color: '#ffbf00', fontWeight: 400, cursor: 'pointer', border: '1px solid rgba(197, 160, 89, 0.3)' }}
                 />
               )}
               <Stack direction="row" spacing={0.5} alignItems="center" sx={{ p: 0.5, borderRadius: 1, border: '1px solid rgba(74,124,140,0.18)', bgcolor: 'rgba(74,124,140,0.04)' }}>
@@ -2081,7 +2182,7 @@ const PRIMARY_BUTTON_SX = {
               onChange={(_, v) => setSubsection(v === 'payouts' ? 'payouts_overview' : v)}
               variant="scrollable"
               scrollButtons="auto"
-              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
+              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 400, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
             >
               <Tab label="Profile" value="profile" />
               <Tab label="Billing" value="billing" />
@@ -2099,7 +2200,7 @@ const PRIMARY_BUTTON_SX = {
               onChange={(_, v) => setSubsection(v)}
               variant="scrollable"
               scrollButtons="auto"
-              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
+              sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 400, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
             >
               <Tab label="Profile" value="user_profile" />
               <Tab label="Security" value="user_security" />
@@ -2121,7 +2222,7 @@ const PRIMARY_BUTTON_SX = {
                     onChange={(_, v) => setSubsection(v)}
                     variant="scrollable"
                     scrollButtons="auto"
-                    sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
+                    sx={{ '& .MuiTab-root': { fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 400, fontSize: '0.95rem' }, '& .Mui-selected': { color: '#010057' }, '& .MuiTabs-indicator': { bgcolor: '#010057' } }}
                   >
                     <Tab label="Overview" value="overview" />
                     <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Details {c.details.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="details" />
@@ -2130,7 +2231,7 @@ const PRIMARY_BUTTON_SX = {
                     <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Availability {c.availability.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : null}</Box>} value="availability" />
                     <Tab label="Policies" value="policies" />
                     {/* <Tab label="Distribution" value="distribution" /> */}
-                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Validate {c.validation.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : (c.validation.count ? <Typography variant="caption" sx={{color:'warning.main', fontWeight:800}}>{c.validation.count}</Typography> : null)}</Box>} value="validation" />
+                    <Tab label={<Box sx={{display:'flex', gap:0.5, alignItems:'center'}}>Finalize {c.validation.ok ? <CheckCircleOutlineIcon fontSize="inherit" color="success" /> : (c.validation.count ? <Typography variant="caption" sx={{color:'warning.main', fontWeight:400}}>{c.validation.count}</Typography> : null)}</Box>} value="validation" />
                   </Tabs>
                 </Box>
                );
@@ -2159,7 +2260,7 @@ const PRIMARY_BUTTON_SX = {
                 )}
               </Box>
               <Box sx={{ width: '100%', maxWidth: 720 }}>
-                <Typography variant="h4" sx={{ mb: 1, color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 600, textAlign: 'center' }}>Welcome to the Supplier Portal</Typography>
+                <Typography variant="h4" sx={{ mb: 1, color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400, textAlign: 'center' }}>Welcome to the Supplier Portal</Typography>
                 <Typography sx={{ mb: 3, color: '#666', textAlign: 'center' }}>Let's set up your account. You can close this anytime and re-open from the left navigation.</Typography>
                 <List sx={{ mb: 2 }}>
                   <ListItemButton onClick={() => { setSection('company'); setSubsection('profile'); }}>
@@ -2176,9 +2277,9 @@ const PRIMARY_BUTTON_SX = {
                   </ListItemButton>
                 </List>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="center">
-                  <Button size="small" startIcon={<ApartmentIcon />} variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700 }} onClick={() => { setSection('company'); setSubsection('profile'); }}>Start Company</Button>
-                  <Button size="small" startIcon={<PersonOutlineIcon />} variant="outlined" sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700 }} onClick={() => { setSection('user'); setSubsection('user_profile'); }}>Start User</Button>
-                  <Button size="small" startIcon={<CollectionsIcon />} variant="outlined" sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 700 }} onClick={() => { setSection('experiences'); setSubsection('overview'); }}>Start Experiences</Button>
+                  <Button size="small" startIcon={<ApartmentIcon />} variant="contained" sx={{ bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 400 }} onClick={() => { setSection('company'); setSubsection('profile'); }}>Start Company</Button>
+                  <Button size="small" startIcon={<PersonOutlineIcon />} variant="outlined" sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 400 }} onClick={() => { setSection('user'); setSubsection('user_profile'); }}>Start User</Button>
+                  <Button size="small" startIcon={<CollectionsIcon />} variant="outlined" sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, fontWeight: 400 }} onClick={() => { setSection('experiences'); setSubsection('overview'); }}>Start Experiences</Button>
                 </Stack>
               </Box>
             </Paper>
@@ -2202,7 +2303,7 @@ const PRIMARY_BUTTON_SX = {
         {section === 'company' && subsection.startsWith('payouts_') && (
           <Fade in timeout={250}>
             <Box sx={{ p: 4 }}>
-              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>{subsectionLabel}</Typography>
+              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', letterSpacing: '0.01em' }}>{subsectionLabel}</Typography>
               {subsection === 'payouts_overview' && (
                 <Paper variant="outlined" sx={{ p: 3, borderRadius: 1, borderColor: 'rgba(0,0,0,0.08)' }}>
                   <Stack spacing={2}>
@@ -2214,11 +2315,11 @@ const PRIMARY_BUTTON_SX = {
                       {stripeAccountId && (<Chip size="small" label={`Acct: ${stripeAccountId}`} variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif' }} />)}
                     </Stack>
                     <Stack direction="row" spacing={1}>
-                      <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} onClick={()=>setSubsection('payouts_connect')}>
+                      <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 400 }} onClick={()=>setSubsection('payouts_connect')}>
                         {payoutStatus==='pending' ? 'Resume onboarding' : 'Start onboarding'}
                       </Button>
                       {stripeDashboardUrl && (
-                        <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 700 }} component="a" href={stripeDashboardUrl} target="_blank" rel="noreferrer">Open Stripe Dashboard</Button>
+                        <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', fontWeight: 400 }} component="a" href={stripeDashboardUrl} target="_blank" rel="noreferrer">Open Stripe Dashboard</Button>
                       )}
                     </Stack>
                   </Stack>
@@ -2228,7 +2329,7 @@ const PRIMARY_BUTTON_SX = {
               {subsection === 'payouts_connect' && (
                 <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
                   <Stack spacing={2}>
-                    <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Payouts & Onboarding</Typography>
+                    <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', mb: 2, letterSpacing: '0.01em' }}>Payouts & Onboarding</Typography>
                     <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>
                       Begin Stripe onboarding to add your bank details and business information.
                     </Typography>
@@ -2272,7 +2373,7 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Billing</Typography>
+                <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', mb: 1, letterSpacing: '0.01em' }}>Billing</Typography>
                 {/* Alert removed per user request */}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your invoice details and tax information.</Typography>
                 <Stack direction={{ xs:'column', sm:'row' }} spacing={2}>
@@ -2318,8 +2419,7 @@ const PRIMARY_BUTTON_SX = {
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Legal Entity</Typography>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Legal Entity</Typography>
+                <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', mb: 1, letterSpacing: '0.01em' }}>Legal Entity</Typography>
                 {/* Alert removed per user request */}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Update your legal entity registration and terms.</Typography>
                 <TextField label="Legal entity name" value={companyLegal.legalName} onChange={(e)=>setCompanyLegal(s=>({ ...s, legalName: e.target.value }))} fullWidth />
@@ -2364,7 +2464,7 @@ const PRIMARY_BUTTON_SX = {
             <Box sx={{ p: 4 }}>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
               <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Locations</Typography>
+                <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', mb: 1, letterSpacing: '0.01em' }}>Locations</Typography>
                 {/* Alert removed per user request */}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your physical office locations.</Typography>
                 {companyLocations.map((loc, idx) => (
@@ -2382,7 +2482,7 @@ const PRIMARY_BUTTON_SX = {
                 ))}
                 <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
                   <SavedBadge active={saveSuccess?.section === 'Locations'} />
-                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 700 }} startIcon={<AddIcon />} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
+                  <Button size="small" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', borderRadius: 1, color: '#010057', borderColor: 'rgba(1,0,87,0.5)', textTransform: 'none', fontWeight: 400 }} startIcon={<AddIcon />} onClick={()=>setCompanyLocations(arr=>[...arr, { name:'', address:'', city:'', country:'', timeZone: defaultTimeZone || 'UTC' }])}>Add Location</Button>
                   <Button size="small" variant="contained" sx={PRIMARY_BUTTON_SX} startIcon={<SaveIcon />} onClick={async ()=>{
                     try {
                       if (!appId) { setToast('Missing application ID'); return; }
@@ -2411,7 +2511,7 @@ const PRIMARY_BUTTON_SX = {
             <Box sx={{ p: 4 }}>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
                 <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Profile</Typography>
+                <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', mb: 1, letterSpacing: '0.01em' }}>Profile</Typography>
                 {/* Alert removed per user request */}
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Update your personal contact information.</Typography>
                 <TextField label="Display Name" value={userDisplayName} onChange={(e)=>setUserDisplayName(e.target.value)} fullWidth required error={!userDisplayName.trim()} helperText={!userDisplayName.trim() ? 'Required' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
@@ -2447,7 +2547,7 @@ const PRIMARY_BUTTON_SX = {
             <Box sx={{ p: 4 }}>
               {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
                 <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Security</Typography>
+                <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', mb: 1, letterSpacing: '0.01em' }}>Security</Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your password and security settings.</Typography>
                 <TextField type="password" label="Current Password" value={passwordCurrent} onChange={(e)=>setPasswordCurrent(e.target.value)} fullWidth required error={!passwordCurrent.trim()} helperText={!passwordCurrent.trim()?'Required':''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
                 <TextField label="New password" type="password" value={passwordNew} onChange={(e)=>setPasswordNew(e.target.value)} fullWidth required error={passwordNew.length>0 && passwordNew.length<8} helperText={passwordNew.length>0 && passwordNew.length<8 ? 'Min 8 characters' : ''} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
@@ -2492,7 +2592,7 @@ const PRIMARY_BUTTON_SX = {
           <Fade in timeout={250}>
             <Box sx={{ p: 4 }}>
               <Stack spacing={4}>
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>API Tokens</Typography>
+                <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', mb: 1, letterSpacing: '0.01em' }}>API Tokens</Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Manage your API access tokens.</Typography>
                 
                 <Stack spacing={3}>
@@ -2513,7 +2613,7 @@ const PRIMARY_BUTTON_SX = {
                   {apiTokens.map((t)=> (
                     <Stack key={t.uuid} direction="row" spacing={2} alignItems="center">
                       <TextField size="small" value={`${t.name} — ${t.uuid}`} fullWidth />
-                      <Button size="small" color="error" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700 }} disabled={tokenMutating} onClick={()=>deleteToken(t.uuid)}>Remove</Button>
+                      <Button size="small" color="error" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 400 }} disabled={tokenMutating} onClick={()=>deleteToken(t.uuid)}>Remove</Button>
                     </Stack>
                   ))}
                 </Stack>
@@ -2525,7 +2625,7 @@ const PRIMARY_BUTTON_SX = {
         {section === 'experiences' && subsection === 'overview' && (
           <Fade in timeout={250}>
             <Box sx={{ p: 4 }}>
-              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Experience Overview</Typography>
+              <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', letterSpacing: '0.01em' }}>Experience Overview</Typography>
 
               {/* Graphic Steps */}
               <Box sx={{ mb: 4, p: 2, bgcolor: isTransparent ? 'rgba(255,255,255,0.4)' : '#F8FAFC', borderRadius: 2 }}>
@@ -2538,13 +2638,13 @@ const PRIMARY_BUTTON_SX = {
                               width: 24, height: 24, borderRadius: '50%', 
                               bgcolor: '#C5A059', color: '#fff', 
                               display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                              fontWeight: 700, fontSize: '0.75rem' 
+                              fontWeight: 400, fontSize: '0.75rem' 
                             }}>
                               {index + 1}
                             </Box>
                           )}
                         >
-                          <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 700, color: '#010057', display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5, lineHeight: 1.2, minHeight: '3em', textAlign: 'center' }}>{label}</Typography>
+                          <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#010057', display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 0.5, lineHeight: 1.2, minHeight: '3em', textAlign: 'center' }}>{label}</Typography>
                         </StepLabel>
                       </Step>
                   ))}
@@ -2574,10 +2674,24 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'media' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
-          <Stack spacing={4}>
-            <Typography variant="h5" sx={{ mb: 1, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Photos & Video</Typography>
-            <GridLikeMedia onToast={(m)=>setToast(m)} defaultActivityId={selectedExperienceId} onUpdate={handleMediaUpdate} />
+          <Box sx={{ p: 4, lineHeight: 1.6 }}>
+          <Stack spacing={3}>
+            <ContextHeader title={experiences.find(e => e.id === selectedExperienceId)?.title || 'Selected Experience'} />
+            <Typography variant="h5" sx={{ mb: 0, fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', letterSpacing: '0.01em' }}>Photos & Video</Typography>
+            {(() => {
+              const exp = experiences.find(e => e.id === selectedExperienceId);
+              return (
+                <GridLikeMedia 
+                  onToast={(m)=>setToast(m)} 
+                  defaultActivityId={selectedExperienceId} 
+                  appId={appId} 
+                  defaultPhotos={exp?.photosDriveUrls?.join(', ') || ''}
+                  defaultVideoDrive={exp?.videoDriveUrl || ''}
+                  defaultVideoExternal={exp?.videoUrl || ''}
+                  onUpdate={handleMediaUpdate} 
+                />
+              );
+            })()}
           </Stack>
           </Box>
           </Fade>
@@ -2585,26 +2699,27 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'pricing' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
-          <Stack spacing={4}>
-            <Typography variant="h5" sx={{ mb: 1, fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Pricing & Rates</Typography>
+          <Box sx={{ p: 4, lineHeight: 1.6 }}>
+          <Stack spacing={3}>
+            <ContextHeader title={experiences.find(e => e.id === selectedExperienceId)?.title || 'Selected Experience'} />
+            <Typography variant="h5" sx={{ mb: 0, fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', letterSpacing: '0.01em' }}>Pricing & Rates</Typography>
             
             <Box sx={{ p: 0 }}>
             <TableContainer sx={{ p: 0, borderRadius: 3, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.05)', bgcolor: isTransparent ? 'rgba(255,255,255,0.7)' : '#fff', backdropFilter: isTransparent ? 'blur(20px)' : 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.05)' }}>
               <Table sx={{ minWidth: 650 }}>
                 <TableHead sx={{ bgcolor: '#F8FAFC' }}>
                   <TableRow>
-                    <TableCell sx={{ color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>Pricing Category</TableCell>
-                    <TableCell sx={{ color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>Amount</TableCell>
-                    <TableCell sx={{ color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>Currency</TableCell>
-                    <TableCell align="right" sx={{ color: '#64748B', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}>Actions</TableCell>
+                    <TableCell sx={{ color: '#64748B', fontWeight: 400, fontSize: '0.75rem', textTransform: 'uppercase' }}>Pricing Category</TableCell>
+                    <TableCell sx={{ color: '#64748B', fontWeight: 400, fontSize: '0.75rem', textTransform: 'uppercase' }}>Amount</TableCell>
+                    <TableCell sx={{ color: '#64748B', fontWeight: 400, fontSize: '0.75rem', textTransform: 'uppercase' }}>Currency</TableCell>
+                    <TableCell align="right" sx={{ color: '#64748B', fontWeight: 400, fontSize: '0.75rem', textTransform: 'uppercase' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {pricingRows.map((r, idx) => (
                     <TableRow key={idx} sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: '#F1F5F9' } }}>
                       <TableCell><TextField placeholder="e.g. Adult" fullWidth size="small" variant="standard" InputProps={{ disableUnderline: true, style: { fontFamily: 'Nunito, sans-serif', fontSize: '0.9rem', color: '#1E293B' } }} value={r.category} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, category:e.target.value}:x))} /></TableCell>
-                      <TableCell><TextField type="number" fullWidth size="small" variant="standard" inputProps={{ min: 0, step: '0.01' }} InputProps={{ disableUnderline: true, style: { fontFamily: 'Nunito, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#1E293B' } }} value={r.amount} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, amount:e.target.value}:x))} /></TableCell>
+                      <TableCell><TextField type="number" fullWidth size="small" variant="standard" inputProps={{ min: 0, step: '0.01' }} InputProps={{ disableUnderline: true, style: { fontFamily: 'Nunito, sans-serif', fontSize: '0.9rem', fontWeight: 400, color: '#1E293B' } }} value={r.amount} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, amount:e.target.value}:x))} /></TableCell>
                       <TableCell><TextField fullWidth size="small" variant="standard" InputProps={{ disableUnderline: true, style: { fontFamily: 'Nunito, sans-serif', fontSize: '0.9rem', color: '#64748B' } }} value={r.currency} onChange={(e)=>setPricingRows(rows=>rows.map((x,i)=>i===idx?{...x, currency:e.target.value}:x))} /></TableCell>
                       <TableCell align="right">
                         <IconButton size="small" color="error" onClick={()=>setPricingRows(rows=>rows.filter((_,i)=>i!==idx))}>
@@ -2648,44 +2763,10 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'details' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
-          <Stack spacing={2}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-              <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Product Details</Typography>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', fontWeight: 600 }}>Switch:</Typography>
-                <Select
-                  size="small"
-                  value={selectedExperienceId || ''}
-                  onChange={(e)=>{
-                      const id = e.target.value;
-                      const xp = experiences.find(x=>x.id===id);
-                      if (xp) {
-                        setSelectedExperienceId(id);
-                        setDetails(xp);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }
-                  }}
-                  displayEmpty
-                  sx={{ 
-                    minWidth: 200, 
-                    maxWidth: 300,
-                    height: 36,
-                    fontFamily: 'Nunito, sans-serif', 
-                    bgcolor: '#F1F5F9', 
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E2E8F0' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                    fontSize: '0.875rem'
-                  }}
-                >
-                  {experiences.map(e => (
-                    <MenuItem key={e.id} value={e.id} sx={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.875rem' }}>
-                      {e.title && e.title.length > 40 ? `${e.title.substring(0, 40)}...` : (e.title || 'Untitled Experience')}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Stack>
-            </Stack>
+          <Box sx={{ p: 4, lineHeight: 1.6 }}>
+          <Stack spacing={3}>
+            <ContextHeader title={experiences.find(e => e.id === selectedExperienceId)?.title || 'Selected Experience'} />
+            <Typography variant="h5" sx={{ mb: 0, fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', letterSpacing: '0.01em' }}>Product Details</Typography>
             {/* Alert removed per user request */}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit details.</Alert>)}
             {selectedExperienceId && (
@@ -2724,7 +2805,7 @@ const PRIMARY_BUTTON_SX = {
                 })()}
                 
                 {/* Story & Vibe Section */}
-                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mt: 3, mb: 1 }}>The Story & Vibe</Typography>
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 400, color: '#010057', mt: 2, mb: 1 }}>The Story & Vibe</Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <TextField label="Unforgettable Feeling" value={details.unforgettableFeeling || ''} onChange={(e)=>setDetails(d=>({ ...d, unforgettableFeeling: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
@@ -2750,7 +2831,7 @@ const PRIMARY_BUTTON_SX = {
                 </Grid>
 
                 {/* Inclusions & Logistics */}
-                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mt: 3, mb: 1 }}>Inclusions & Requirements</Typography>
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 400, color: '#010057', mt: 2, mb: 1 }}>Inclusions & Requirements</Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <TextField label="Included in Price" value={details.included || ''} onChange={(e)=>setDetails(d=>({ ...d, included: e.target.value }))} fullWidth multiline minRows={3} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
@@ -2764,7 +2845,7 @@ const PRIMARY_BUTTON_SX = {
                 </Grid>
 
                 {/* Safety */}
-                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mt: 3, mb: 1 }}>Safety & Insurance</Typography>
+                <Typography variant="subtitle1" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 400, color: '#010057', mt: 2, mb: 1 }}>Safety & Insurance</Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <TextField label="Safety Measures" value={details.safetyMeasures || ''} onChange={(e)=>setDetails(d=>({ ...d, safetyMeasures: e.target.value }))} fullWidth multiline minRows={2} InputLabelProps={{ style: { fontFamily: 'Nunito, sans-serif' } }} InputProps={{ style: { fontFamily: 'Nunito, sans-serif', color: '#334155' } }} />
@@ -2787,9 +2868,10 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'availability' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
-          <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Availability & Schedule</Typography>
+          <Box sx={{ p: 4, lineHeight: 1.6 }}>
+          <Stack spacing={3}>
+            <ContextHeader title={experiences.find(e => e.id === selectedExperienceId)?.title || 'Selected Experience'} />
+            <Typography variant="h5" sx={{ mb: 0, fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', letterSpacing: '0.01em' }}>Availability & Schedule</Typography>
             {/* Alert removed per user request */}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit availability.</Alert>)}
             {selectedExperienceId && (
@@ -2825,9 +2907,10 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'policies' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
-          <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Policies & Requirements</Typography>
+          <Box sx={{ p: 4, lineHeight: 1.6 }}>
+          <Stack spacing={3}>
+            <ContextHeader title={experiences.find(e => e.id === selectedExperienceId)?.title || 'Selected Experience'} />
+            <Typography variant="h5" sx={{ mb: 0, fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', letterSpacing: '0.01em' }}>Policies & Requirements</Typography>
             {/* Alert removed per user request */}
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to edit policies.</Alert>)}
             {selectedExperienceId && (
@@ -2849,9 +2932,9 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'distribution' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4 }}>
-          <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057' }}>Channel Distribution</Typography>
+          <Box sx={{ p: 4, lineHeight: 1.6 }}>
+          <Stack spacing={3}>
+            <Typography variant="h5" sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', mb: 0, letterSpacing: '0.01em' }}>Distribution & Publishing</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to view distribution.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -2909,214 +2992,96 @@ const PRIMARY_BUTTON_SX = {
 
         {section === 'experiences' && subsection === 'validation' && (
           <Fade in timeout={250}>
-          <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Box sx={{ width: '100%', maxWidth: 650 }}>
-              <Box sx={{ mb: 6, textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ 
-                  fontFamily: 'Agrandir, serif', 
-                  fontWeight: 900, 
-                  color: '#010057', 
-                  mb: 1.5,
-                  letterSpacing: -1
-                }}>
-                  Experience Health Check
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif', maxWidth: 450, mx: 'auto', fontWeight: 600 }}>
-                  We'll audit your content against 12+ distribution standards to ensure maximum visibility on the ExperiaHub Network.
-                </Typography>
-              </Box>
-
-              {!selectedExperienceId && (
-                <Box sx={{ p: 10, borderRadius: 8, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.4)', border: '1px solid rgba(1, 0, 87, 0.08)', boxShadow: '0 20px 60px rgba(0,0,0,0.03)' }}>
-                  <VerifiedUserIcon sx={{ fontSize: 80, color: 'rgba(1, 0, 87, 0.03)', mb: 3 }} />
-                  <Typography variant="h6" sx={{ color: '#010057', mb: 1, fontWeight: 800 }}>Select an Experience</Typography>
-                  <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 600 }}>Choose a product from the list to begin the optimization process.</Typography>
+            <Box sx={{ p: 4, lineHeight: 1.6 }}>
+              <Stack spacing={4}>
+                {selectedExperienceId && <ContextHeader title={experiences.find(e => e.id === selectedExperienceId)?.title || 'Selected Experience'} />}
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box>
+                    <Typography variant="h5" sx={{ mb: 0, fontFamily: 'Nunito, sans-serif', fontWeight: 400, color: '#4A7C8C', letterSpacing: '0.01em' }}>Network Finalization</Typography>
+                    <Typography variant="body2" sx={{ color: '#64748B', fontFamily: 'Nunito, sans-serif', opacity: 0.8 }}>Structural integrity audit and network deployment status.</Typography>
+                  </Box>
+                  {isVerified && (
+                     <Chip 
+                        icon={<VerifiedIcon sx={{ fontSize: '1.2rem !important', color: '#059669 !important' }} />}
+                        label="NETWORK READY" 
+                        sx={{ bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#065F46', fontWeight: 400, border: '1px solid #10b981' }} 
+                     />
+                  )}
                 </Box>
-              )}
 
-              {selectedExperienceId && (
-                <Stack spacing={4}>
-                  {/* Status Header */}
-                  <Box sx={{ 
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                    p: 3, borderRadius: 6, bgcolor: '#fff', boxShadow: '0 10px 40px rgba(0,0,0,0.03)',
-                    border: '1px solid rgba(0,0,0,0.04)'
-                  }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-                       <Box sx={{ 
-                         width: 56, height: 56, borderRadius: '20px', 
-                         bgcolor: isVerified ? 'rgba(16, 185, 129, 0.08)' : 'rgba(197, 160, 89, 0.08)',
-                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                         boxShadow: isVerified ? 'inset 0 0 20px rgba(16, 185, 129, 0.05)' : 'inset 0 0 20px rgba(197, 160, 89, 0.05)'
-                       }}>
-                         {isVerified ? <CheckCircleOutlineIcon sx={{ color: '#10b981', fontSize: 28 }} /> : <SummarizeIcon sx={{ color: '#C5A059', fontSize: 28 }} />}
-                       </Box>
-                       <Box>
-                         <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.1, fontSize: '1.1rem' }}>
-                            {experiences.find(e => e.id === selectedExperienceId)?.title || 'Global Distribution'}
-                         </Typography>
-                         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-                            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: experiences.find(e => e.id === selectedExperienceId)?.status === 'Published' ? '#10b981' : '#94a3b8' }} />
-                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: '0.65rem' }}>
-                                {experiences.find(e => e.id === selectedExperienceId)?.status === 'Published' ? 'Active on Network' : 'Unpublished Draft'}
-                            </Typography>
-                         </Stack>
-                       </Box>
-                    </Box>
+                {!selectedExperienceId ? (
+                  <Box sx={{ p: 10, textAlign: 'center' }}>
+                    <VerifiedUserIcon sx={{ fontSize: 64, color: 'rgba(1,0,87,0.1)', mb: 2 }} />
+                    <Typography sx={{ color: '#010057', fontWeight: 400 }}>Choose an Experience to Begin</Typography>
                   </Box>
+                ) : (
+                  <Box>
+                    <Grid container spacing={6} sx={{ mt: 2 }}>
 
-                  {/* Audit Results Container */}
-                  <Box sx={{ position: 'relative' }}>
-                    <Typography variant="caption" sx={{ ml: 2, mb: 1.5, display: 'block', fontWeight: 900, color: '#94a3b8', letterSpacing: 1 }}>
-                        AUDIT FINDINGS
-                    </Typography>
-                    
-                    <Box sx={{ 
-                        borderRadius: 6, bgcolor: 'rgba(255,255,255,0.6)', p: 1,
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255,255,255,0.8)',
-                        boxShadow: '0 30px 60px rgba(0,0,0,0.05)'
-                    }}>
-                        {validating && (
-                        <Box sx={{ p: 10, textAlign: 'center' }}>
-                            <CircularProgress size={40} thickness={4} sx={{ mb: 3, color: '#010057' }} />
-                            <Typography variant="subtitle1" sx={{ color: '#010057', fontWeight: 800 }}>Deep Scan Initiated</Typography>
-                            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>Analyzing Narrative & Logistic Integrity...</Typography>
-                        </Box>
-                        )}
-
-                        {!validating && validationIssues === null && (
-                        <Box sx={{ p: 8, textAlign: 'center' }}>
-                            <Typography variant="body2" sx={{ color: '#94a3b8', fontWeight: 700, fontStyle: 'italic' }}>
-                                Analysis results will appear here after scanning.
-                            </Typography>
-                        </Box>
-                        )}
-
-                        {!validating && validationIssues && (
-                        <Stack spacing={1}>
-                            {validationIssues.length === 0 ? (
-                            <Box sx={{ p: 8, textAlign: 'center' }}>
-                                <Fade in>
-                                    <Box>
-                                        <Box sx={{ 
-                                            width: 80, height: 80, borderRadius: '40px', bgcolor: '#ecfdf5', 
-                                            mx: 'auto', mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            border: '2px solid #10b981'
-                                        }}>
-                                            <CheckCircleOutlineIcon sx={{ fontSize: 40, color: '#10b981' }} />
-                                        </Box>
-                                        <Typography variant="h5" sx={{ fontWeight: 900, color: '#065f46', mb: 1 }}>100% Score</Typography>
-                                        <Typography variant="body2" sx={{ color: '#059669', opacity: 0.8, fontWeight: 600, maxWidth: 300, mx: 'auto' }}>
-                                            Your content is flawless and ready for premium distribution.
-                                        </Typography>
-                                    </Box>
-                                </Fade>
-                            </Box>
-                            ) : (
-                            validationIssues.map((iss, i) => {
-                                const isT1 = iss.includes('T1');
-                                return (
-                                <Fade in key={i} style={{ transitionDelay: `${i * 50}ms` }}>
-                                <Box sx={{ 
-                                    display: 'flex', alignItems: 'center', gap: 3, p: 3, 
-                                    borderRadius: 5, transition: 'all 0.2s',
-                                    bgcolor: '#fff',
-                                    mb: 1,
-                                    border: '1px solid rgba(0,0,0,0.02)',
-                                    '&:hover': { transform: 'translateX(4px)', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }
-                                }}>
-                                    <Box sx={{ 
-                                    width: 12, height: 12, borderRadius: '50%', 
-                                    bgcolor: isT1 ? '#f43f5e' : '#f59e0b',
-                                    flexShrink: 0
-                                    }} />
-                                    <ListItemText 
-                                    primary={iss.split(': ')[1]} 
-                                    secondary={isT1 ? 'BLOCKING ERROR' : 'OPTIMIZATION TIP'}
-                                    primaryTypographyProps={{ sx: { fontWeight: 800, color: '#1e293b', fontSize: '0.95rem' } }}
-                                    secondaryTypographyProps={{ sx: { fontWeight: 900, fontSize: '0.65rem', color: isT1 ? '#f43f5e' : '#f59e0b', letterSpacing: 1 } }}
-                                    />
-                                    <Box sx={{ px: 2, py: 0.5, borderRadius: 2, bgcolor: isT1 ? '#fff1f2' : '#fffbeb', border: `1px solid ${isT1 ? '#fecdd3' : '#fef3c7'}` }}>
-                                        <Typography variant="caption" sx={{ fontWeight: 900, fontSize: '0.6rem', color: isT1 ? '#e11d48' : '#d97706' }}>
-                                            {isT1 ? 'REQUIRED' : 'SUGGESTED'}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                                </Fade>
-                                );
-                            })
-                            )}
+                      <Grid item xs={12} md={5}>
+                        <Stack spacing={4}>
+                          <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 400, color: '#010057', mb: 2 }}>NETWORK STATUS</Typography>
+                             <Box sx={{ p: 3, borderRadius: 2, bgcolor: isVerified ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)', border: `1px solid ${isVerified ? '#10b981' : '#EF4444'}`, textAlign: 'center' }}>
+                               {isVerified ? (
+                                 <>
+                                   <VerifiedIcon sx={{ color: '#059669', fontSize: 48, mb: 1.5 }} />
+                                   <Typography variant="h6" sx={{ color: '#065F46', fontWeight: 400, mb: 0.5 }}>SYNCHRONIZED</Typography>
+                                   <Typography variant="caption" sx={{ color: '#065F46', opacity: 0.7, display: 'block' }}>This unit is live and distributing to the global network.</Typography>
+                                 </>
+                               ) : (
+                                 <>
+                                   <SyncIcon sx={{ color: '#EF4444', fontSize: 48, mb: 1.5 }} />
+                                   <Typography variant="h6" sx={{ color: '#991B1B', fontWeight: 400, mb: 0.5 }}>WAITING FOR FIXES</Typography>
+                                   <Typography variant="caption" sx={{ color: '#991B1B', opacity: 0.7, display: 'block' }}>See audit findings to the right to enable network distribution.</Typography>
+                                 </>
+                               )}
+                             </Box>
+                             <Typography variant="caption" sx={{ mt: 3, display: 'block', color: '#64748B', lineHeight: 1.6, fontStyle: 'italic' }}>
+                               The Network Finalization is an automated gateway. Once all structural blocks are cleared, your experience is immediately flagged for the global distribution queue.
+                             </Typography>
+                          </Box>
                         </Stack>
-                        )}
-                    </Box>
-                  </Box>
+                      </Grid>
 
-                  {/* Actions Area */}
-                  <Stack spacing={2} sx={{ pt: 2 }}>
-                    <Button 
-                      fullWidth 
-                      variant="contained" 
-                      onClick={runValidation} 
-                      disabled={validating}
-                      sx={{ 
-                        height: 60, borderRadius: 4, textTransform: 'none', fontWeight: 900,
-                        fontSize: '1rem',
-                        bgcolor: isVerified ? '#f1f5f9' : '#010057',
-                        color: isVerified ? '#64748b' : '#fff',
-                        boxShadow: isVerified ? 'none' : '0 10px 30px rgba(1, 0, 87, 0.2)',
-                        '&:hover': { 
-                            bgcolor: isVerified ? '#e2e8f0' : '#020080',
-                            transform: 'translateY(-2px)'
-                        }
-                      }}
-                    >
-                      {validating ? 'Running Comprehensive Audit...' : (isVerified ? 'Force Re-scan Content' : 'Analyze Experience Integrity')}
-                    </Button>
-
-                    {isVerified && (
-                      <Fade in>
-                        <Box sx={{ p: 4, borderRadius: 6, bgcolor: 'rgba(1, 0, 87, 0.03)', border: '1px solid rgba(1, 0, 87, 0.05)', textAlign: 'center' }}>
-                           <Typography variant="h6" sx={{ fontWeight: 900, color: '#010057', mb: 1 }}>Ready for Orbit</Typography>
-                           <Typography variant="body2" sx={{ color: '#64748b', mb: 3, fontWeight: 600 }}>Your experience has passed all Quality Assurance checks.</Typography>
-                           
-                           <Button
-                            fullWidth
-                            variant="contained"
-                            disabled={syncing}
-                            onClick={async () => {
-                                if (syncing) return;
-                                setSyncing(true);
-                                try {
-                                const res = await fetch(`${N8N_BASE}/supplier/sync/push`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ applicationId: appId, experienceId: selectedExperienceId })
-                                });
-                                const j = await res.json();
-                                if (!j?.success) throw new Error(j?.error || 'Direct sync push failed');
-                                setToast('Success! Experience is now live.');
-                                setExperiences(prev => prev.map(e => e.id === selectedExperienceId ? { ...e, status: 'Published' } : e));
-                                } catch (e: any) { setToast(e.message); }
-                                finally { setSyncing(false); }
-                            }}
-                            sx={{
-                                bgcolor: '#C5A059', color: '#fff', height: 72, borderRadius: 4,
-                                fontWeight: 900, fontSize: '1.2rem', textTransform: 'none',
-                                boxShadow: '0 20px 40px rgba(197, 160, 89, 0.3)',
-                                '&:hover': { bgcolor: '#B08D45', boxShadow: '0 25px 50px rgba(197, 160, 89, 0.4)', transform: 'translateY(-2px)' }
-                            }}
-                            >
-                            {syncing ? 'Pushing Live...' : 'Publish to Global Network'}
-                            </Button>
+                      <Grid item xs={12} md={7}>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 400, color: '#010057', mb: 3 }}>AUDIT FINDINGS</Typography>
+                          {validating ? (
+                            <Box sx={{ py: 6, textAlign: 'center' }}>
+                              <CircularProgress sx={{ color: '#010057', mb: 2, opacity: 0.3 }} />
+                              <Typography sx={{ color: '#64748B', fontWeight: 400 }}>Scanning metadata...</Typography>
+                            </Box>
+                          ) : validationIssues?.length === 0 ? (
+                            <Box sx={{ py: 4, px: 2, borderLeft: '4px solid #10b981', bgcolor: 'transparent' }}>
+                               <Typography variant="h6" sx={{ color: '#065F46', fontWeight: 400, mb: 1 }}>Structural Integrity Verified</Typography>
+                               <Typography variant="body2" sx={{ color: '#065F46', opacity: 0.8 }}>No blocks detected. This unit is optimized for travel distribution.</Typography>
+                            </Box>
+                          ) : (
+                            <Stack spacing={1}>
+                              {(validationIssues || []).map((iss, i) => (
+                                <Box key={i} sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, borderBottom: '1px solid rgba(1,0,87,0.05)' }}>
+                                  <Box sx={{ color: iss.startsWith('T1:') ? '#EF4444' : '#C5A059', display:'flex' }}>
+                                    {iss.startsWith('T1:') ? <ClearIcon fontSize="small" /> : <SyncIcon fontSize="small" />}
+                                  </Box>
+                                  <Box sx={{ flex: 1 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 400, color: '#1E293B' }}>{iss.split(': ')[1]}</Typography>
+                                    <Typography variant="caption" sx={{ color: '#94A3B8' }}>{iss.startsWith('T1:') ? 'Required for network connection' : 'Recommended for better conversion'}</Typography>
+                                  </Box>
+                                  <Chip label={iss.startsWith('T1:') ? 'BLOCK' : 'NOTE'} size="small" sx={{ height: 18, fontSize: '0.6rem', fontWeight: 400, bgcolor: iss.startsWith('T1:') ? '#EF4444' : '#F1F5F9', color: iss.startsWith('T1:') ? '#fff' : '#64748B' }} />
+                                </Box>
+                              ))}
+                              {!validationIssues && <Typography variant="caption" color="text.secondary">Waiting for audit to complete...</Typography>}
+                            </Stack>
+                          )}
                         </Box>
-                      </Fade>
-                    )}
-                  </Stack>
-                </Stack>
-              )}
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+              </Stack>
             </Box>
-          </Box>
           </Fade>
         )}
 
@@ -3124,7 +3089,7 @@ const PRIMARY_BUTTON_SX = {
           <Fade in timeout={250}>
           <Box sx={{ p: 4 }}>
           <Stack spacing={2}>
-            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 1 }}>Distribution & Publishing</Typography>
+            <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 400, color: '#010057', mb: 1 }}>Distribution & Publishing</Typography>
             {!selectedExperienceId && (<Alert severity="warning">Select an Experience to sync.</Alert>)}
             {selectedExperienceId && (
               <>
@@ -3132,13 +3097,6 @@ const PRIMARY_BUTTON_SX = {
                   <strong>Publishing:</strong> This action commits your data to the global registry and prepares it for distribution to channels like Bókun, Expedia, and TripAdvisor. Verify all details before going live.
                 </PremiumAlert>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <FormControl size="small">
-                    <InputLabel id="airtable-toggle">Airtable</InputLabel>
-                    <Select labelId="airtable-toggle" label="Airtable" value={alsoUpsertAirtable ? 'yes' : 'no'} onChange={(e)=>setAlsoUpsertAirtable(String(e.target.value)==='yes')}>
-                      <MenuItem value="no">Don't upsert</MenuItem>
-                      <MenuItem value="yes">Upsert to Airtable</MenuItem>
-                    </Select>
-                  </FormControl>
                   {(() => { const a = experiences.find(e=>e.id===selectedExperienceId); return a?.lastSyncedAt ? (
                     <Typography variant="caption" sx={{ color: '#666' }}>Last synced: {new Date(a.lastSyncedAt).toLocaleString()}</Typography>
                   ) : null; })()}
@@ -3183,7 +3141,7 @@ const PRIMARY_BUTTON_SX = {
                           fontFamily: 'Nunito, sans-serif', 
                           textTransform: 'none', 
                           borderRadius: 2, 
-                          fontWeight: 700, 
+                          fontWeight: 400, 
                           color: '#fff', 
                           py: 1.5,
                           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
@@ -3196,7 +3154,7 @@ const PRIMARY_BUTTON_SX = {
                         Publish Experience
                       </Button>
                       {!canPublish && (
-                        <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 400, color: '#1E293B', display: 'flex', alignItems: 'center', gap: 1 }}>
                           <ClearIcon sx={{ fontSize: '1rem' }} /> Verification Required: Run Validation and fix issues before publishing.
                         </Typography>
                       )}
@@ -3239,7 +3197,7 @@ const PRIMARY_BUTTON_SX = {
             {subsection === 'resources' && (
               <>
                 {/* content heading removed to avoid duplicate with subtitle breadcrumb */}
-                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 600, color: '#010057', mb: 2 }}>Information & Resources</Typography>
+                <Typography variant="h5" sx={{ fontFamily: 'Agrandir, serif', fontWeight: 400, color: '#010057', mb: 2 }}>Information & Resources</Typography>
                 <List>
                   <ListItemButton dense component="a" href="https://experiahub.com/supplier-agreement/" target="_blank"><ListItemText primary="Supplier Agreement" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', color: '#334155' }} /></ListItemButton>
                   <ListItemButton dense component="a" href="https://experiahub.com/suppliers/" target="_blank"><ListItemText primary="Supplier Signup Info" primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', color: '#334155' }} /></ListItemButton>
@@ -3304,7 +3262,7 @@ const PRIMARY_BUTTON_SX = {
                     ) : null
                   }}
                 />
-                <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 700, borderRadius: 3 }} onClick={async ()=>{
+                <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 400, borderRadius: 3 }} onClick={async ()=>{
                   try {
                     setBgLoading(true);
                     const results = await searchUnsplash(bgSearch.trim(), 1, 30);
@@ -3366,7 +3324,7 @@ const PRIMARY_BUTTON_SX = {
 
               </Box>
               {(bgLoading || bgLoadingMore) && (<Skeleton variant="rectangular" height={60} />)}
-              <Button size="small" color="error" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 700, borderRadius: 3 }} onClick={async ()=>{
+              <Button size="small" color="error" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', fontWeight: 400, borderRadius: 3 }} onClick={async ()=>{
                 const token = AuthService.getToken();
                 setBg(null); saveCachedBackground(null, 'supplier');
                 try { await setUserBackground(token, null as any); } catch {}
@@ -3396,4 +3354,3 @@ const PRIMARY_BUTTON_SX = {
     </>
   );
 }
-
