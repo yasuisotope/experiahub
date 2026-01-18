@@ -422,18 +422,13 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
     // FIX: Retrieve User ID for RLS compliance
     let userId: string | null = null;
     if (authHeader) {
-        // If we are using Service Key, we can't just call getUser() on the admin client easily with the user's token 
-        // without setting the session. But we can create a separate stateless check or just trust the header if we are admin.
-        // Actually, if using Service Key, RLS is bypassed, so we can insert whatever we want.
-        // But we WANT to save the correct user_id.
-        // So we should verify the token to get the ID.
         try {
             const token = authHeader.replace('Bearer ', '');
-            // 1. Try Service Client (usually fails for Anon tokens)
-            let { data: { user }, error: authError } = await supabase.auth.getUser(token);
+            // 1. Try Service Client
+            const { data: userData } = await supabase.auth.getUser(token);
             
-            if (user) {
-                userId = user.id;
+            if (userData?.user) {
+                userId = userData.user.id;
             } else {
                  // 2. Try Anon Client
                  console.warn('[N8N Proxy] Service Client rejected token, verifying with Anon Client...');
@@ -444,25 +439,20 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                      const tempAnon = createClient(supabaseUrl, anonKey, {
                         auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
                      });
-                     const { data: anonAttempt, error: anonError } = await tempAnon.auth.getUser(token);
+                     const { data: anonAttempt } = await tempAnon.auth.getUser(token);
                      
                      if (anonAttempt?.user) {
                          userId = anonAttempt.user.id;
                          console.log('[N8N Proxy] Anon Client Verification SUCCESS. UserID:', userId);
                          anonVerified = true;
-                     } else {
-                         console.error('[N8N Proxy] Anon Client Verification Failed:', anonError?.message);
                      }
                  }
                  
                  // 3. FINAL FALLBACK: Manual Unverified Decode
-                 // If verification failed (likely due to Env Var mismatch), we MUST still extract the ID 
-                 // to ensure the row is saved with the correct owner, otherwise RLS hides it.
                  if (!anonVerified) {
                      console.warn('[N8N Proxy] JWT Verification Failed. Attempting Unsafe Manual Decode...');
                      try {
                          const parts = token.split('.');
-                         console.log(`[N8N Proxy] Token Parts: ${parts.length}`);
                          if (parts.length === 3) {
                              const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
                              const jsonPayload = Buffer.from(base64, 'base64').toString();
@@ -470,11 +460,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                              if (payload.sub) {
                                  userId = payload.sub;
                                  console.log('[N8N Proxy] Unsafe Manual Decode SUCCEEDED. UserID:', userId);
-                             } else {
-                                 console.warn('[N8N Proxy] Token payload missing "sub" claim:', Object.keys(payload));
                              }
-                         } else {
-                             console.warn('[N8N Proxy] Invalid Token structure (not 3 parts)');
                          }
                      } catch (decodeErr) {
                          console.error('[N8N Proxy] Manual Decode Failed:', decodeErr);
@@ -484,16 +470,6 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         } catch (e: any) {
              console.warn('[N8N Proxy] Auth Extraction Fatal Error:', e.message);
         }
-    }
-
-    // IDENTIFICATION FALLBACK
-    if (authHeader && !userId) {
-         if (isServiceKey) {
-             console.warn('[N8N Proxy] Identifying User ID failed (likely a WordPress token). Proceeding as ADMIN for reliability.');
-         } else {
-             console.error('[N8N Proxy] SAVE ABORTED: Unable to identify User ID from token and no Service Key available.');
-             return { success: false, error: 'Authentication Failed: Unable to verify User Identity. Please re-login.' };
-         }
     }
 
     console.log(`[N8N Proxy] Save '${type}' - ServiceKey: ${isServiceKey}, AuthHeader: ${!!authHeader}, UserID: ${userId}`);
@@ -530,8 +506,8 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             contact_name: p.displayName || p.contact_name || p.full_name,
             contact_phone: p.phone || p.contact_phone || p.phoneNumber,
             contact_email: p.email || p.contact_email || p.user_email || p.userEmail,
-            email: p.email || p.contact_email || p.user_email || p.userEmail, // Explicit column fallback
-            full_name: p.displayName || p.contact_name || p.full_name // Explicit column fallback
+            email: p.email || p.contact_email || p.user_email || p.userEmail,
+            full_name: p.displayName || p.contact_name || p.full_name
         };
     } else if (type === 'onboarding') {
         const d = payload.data || {};
@@ -544,16 +520,12 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             email: d.contactEmail || d.email
         };
     } else if (type === 'background') {
-         // Need to fetch current generic metadata first to preserve other fields
-         const { data: current, error: fetchErr } = await supabase.from('suppliers').select('metadata').eq('application_id', appId).single();
-         if (fetchErr && !fetchErr.message.includes('metadata')) {
-             console.error('[N8N Proxy] Metadata Fetch Error:', fetchErr);
-         }
-         // Payload might be { url: "..." } or { background: { url: "..." } } depending on caller
+         const admin = getAdminClient();
+         const { data: current } = await (admin || supabase).from('suppliers').select('onboarding_json').eq('application_id', appId).maybeSingle();
          const freshUrl = payload.url || payload.background?.url;
-         const nextMeta = { ...(current?.metadata || {}), background_url: freshUrl };
-         updates = { ...updates, metadata: nextMeta };
-      } else if (type === 'media') {
+         const nextOnboarding = { ...(current?.onboarding_json || {}), background_url: freshUrl };
+         updates = { ...updates, onboarding_json: nextOnboarding };
+    } else if (type === 'media') {
           const admin = getAdminClient();
           const activeId = payload.activityId;
           
@@ -564,13 +536,10 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
           console.log(`[N8N Proxy] Media Save Attempt: ${activeId}`);
           
-          // 1. Find the record (Try ID first, then fallback to searching within raw_data for _temp_id)
-          let { data: exp, error: expErr } = await admin.from('experiences').select('id, metadata, raw_data, photos_drive_urls').eq('id', activeId).maybeSingle();
+          let { data: exp, error: expErr } = await admin.from('experiences').select('id, raw_data, photos_drive_urls, video_drive_url, video_url').eq('id', activeId).maybeSingle();
           
-          // Fallback: If not found and activeId looks like a temp ID, search raw_data
           if (!exp && !expErr) {
-              console.log(`[N8N Proxy] Media Save: ${activeId} not found by UUID. Searching raw_data for _temp_id...`);
-              const { data: fallbackRows } = await admin.from('experiences').select('id, metadata, raw_data, photos_drive_urls').contains('raw_data', { _temp_id: activeId });
+              const { data: fallbackRows } = await admin.from('experiences').select('id, raw_data, photos_drive_urls, video_drive_url, video_url').contains('raw_data', { _temp_id: activeId });
               if (fallbackRows && fallbackRows.length > 0) {
                   exp = fallbackRows[0] as any;
                   console.log(`[N8N Proxy] Media Save: Found match via _temp_id. Real ID: ${exp?.id}`);
@@ -588,42 +557,39 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
           }
 
           const currentId = exp.id;
-          const currentMeta = exp.metadata || {};
-          const nextMeta = {
-              ...currentMeta,
-              photosDriveUrls: payload.photosDriveUrls || currentMeta.photosDriveUrls || [],
-              videoDriveUrl: payload.videoDriveUrl || currentMeta.videoDriveUrl || '',
-              videoUrl: payload.videoUrl || currentMeta.videoUrl || ''
+          const nextMedia = {
+              photosDriveUrls: payload.photosDriveUrls || exp.photos_drive_urls || [],
+              videoDriveUrl: payload.videoDriveUrl || exp.video_drive_url || '',
+              videoUrl: payload.videoUrl || exp.video_url || ''
           };
           
-          // Safely merge raw_data
           let nextRaw = {};
           try {
               const rawData = typeof exp.raw_data === 'string' ? JSON.parse(exp.raw_data) : (exp.raw_data || {});
               nextRaw = {
                   ...rawData,
-                  photosDriveUrls: nextMeta.photosDriveUrls,
-                  videoDriveUrl: nextMeta.videoDriveUrl,
-                  videoUrl: nextMeta.videoUrl
+                  photosDriveUrls: nextMedia.photosDriveUrls,
+                  videoDriveUrl: nextMedia.videoDriveUrl,
+                  videoUrl: nextMedia.videoUrl
               };
           } catch (e) {
               nextRaw = {
-                  photosDriveUrls: nextMeta.photosDriveUrls,
-                  videoDriveUrl: nextMeta.videoDriveUrl,
-                  videoUrl: nextMeta.videoUrl
+                  photosDriveUrls: nextMedia.photosDriveUrls,
+                  videoDriveUrl: nextMedia.videoDriveUrl,
+                  videoUrl: nextMedia.videoUrl
               };
           }
 
           console.log(`[N8N Proxy] Update Experience ${currentId} with Media:`, {
-              photosCount: nextMeta.photosDriveUrls?.length,
-              video: !!nextMeta.videoDriveUrl
+              photosCount: nextMedia.photosDriveUrls?.length,
+              video: !!nextMedia.videoDriveUrl
           });
 
           const { error: updateErr } = await admin.from('experiences')
              .update({ 
-                 photos_drive_urls: nextMeta.photosDriveUrls,
-                 video_drive_url: nextMeta.videoDriveUrl,
-                 video_url: nextMeta.videoUrl,
+                 photos_drive_urls: nextMedia.photosDriveUrls,
+                 video_drive_url: nextMedia.videoDriveUrl,
+                 video_url: nextMedia.videoUrl,
                  raw_data: JSON.stringify(nextRaw)
              })
              .eq('id', currentId);
@@ -635,9 +601,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
           console.log(`[N8N Proxy] Media Save SUCCESS for ${currentId}`);
           return { success: true };
-      } 
-    else if (type === 'bookings' && payload.bookings) {
-        // Bulk Upsert Bookings via Admin Client
+    } else if (type === 'bookings' && payload.bookings) {
         const admin = getAdminClient();
         if (!admin) return { success: false, error: 'Server Config Error: Missing Service Key for Booking Sync' };
 
@@ -661,111 +625,25 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             console.error('[N8N Proxy] Booking Sync Error:', error);
             return { success: false, error: error.message };
         }
-        console.log(`[N8N Proxy] Synced ${toUpsert.length} bookings for ${appId}`);
         return { success: true };
 
     } else if (type === 'activities' && payload.activities) {
-        const toUpsert: any[] = [];
-        const toInsert: any[] = [];
-        const tempIdMap: Record<string, any> = {};
-
-        // Helper to check for valid UUID (simple regex)
-        const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-
-        payload.activities.forEach((a: any) => {
-            const rawObj = { 
-                ...a, 
-                // Explicitly ensure critical narrative fields are preserved in raw_data
-                authenticEchoes: a.authenticEchoes || null,
-                unforgettableFeeling: a.unforgettableFeeling || null,
-                magicMoment: a.magicMoment || null,
-                hiddenGem: a.hiddenGem || null,
-                communityConnection: a.communityConnection || null,
-                perfectMatch: a.perfectMatch || null,
-                threeWords: a.threeWords || null,
-                _temp_id: a.id, 
-                Build: 'V69_REVERT_USERID' 
-            };
-
-            const row: any = {
-                application_id: appId,
-                user_id: userId, // Inject verified User ID
-                title: a.title,
-                // FORCE STRINGIFY: Safest overlap for TEXT vs JSONB columns. prevents [object Object].
-                raw_data: JSON.stringify(rawObj),
-                updated_at: new Date().toISOString(),
-                // Explicit Mapping to structured columns (V143 Schema)
-                city: a.city || null,
-                description: a.summary || a.description || null,
-                duration_minutes: a.durationMinutes ? parseInt(a.durationMinutes) : null,
-                price: a.price ? parseFloat(a.price) : (a.baseRate ? parseFloat(a.baseRate) : null),
-                currency: a.currency || null,
-                bokun_product_id: a.bokunProductId || null,
-                category: a.category || null,
-                // Narrative & Logistical Fields
-                itinerary: a.itinerary || null,
-                three_words: a.threeWords || null,
-                scheduling_mode: a.schedulingMode || null,
-                authentic_echoes: a.authenticEchoes || null,
-                unforgettable_feeling: a.unforgettableFeeling || null,
-                magic_moment: a.magicMoment || null,
-                hidden_gem: a.hiddenGem || null,
-                community_connection: a.communityConnection || null,
-                perfect_match: a.perfectMatch || null,
-                meeting_point: a.meetingPoint || null,
-                safety_measures: a.safetyMeasures || null,
-                requirements: a.requirements || null,
-                included: a.included || null,
-                not_included: a.notIncluded || null,
-                insurance: a.insurance || null,
-                // Pricing & Logistics Fields (V144 Schema)
-                pricing_categories: a.pricingCategories || null,
-                base_rate: a.baseRate ? parseFloat(a.baseRate) : (a.price ? parseFloat(a.price) : null),
-                cancellation_policy: a.cancellationPolicy || null,
-                booking_lead_time: a.bookingLeadTime || null,
-                languages: Array.isArray(a.languages) ? a.languages.join(', ') : a.languages || null,
-                start_times: a.startTimes || null,
-                cutoff_hours: a.cutoffHours || a.bookingLeadTime || null,
-                pricing_rows: a.pricingRows || null,
-                // Media & Status Structured Columns (V145 Schema)
-                photos_drive_urls: a.photosDriveUrls || [],
-                video_drive_url: a.videoDriveUrl || '',
-                video_url: a.videoUrl || '',
-                status: a.status || null
-            };
-            
-            console.log(`[N8N Proxy] Processing Activity ${a.id}:`, { title: a.title, dataSize: row.raw_data.length });
-            if (isUUID(a.id)) {
-                row.id = a.id;
-                toUpsert.push(row);
-            } else {
-                tempIdMap[a.id] = row;
-                toInsert.push(row);
-            }
-        });
-
-        // Consolidate admin client usage for all DB operations
         const admin = getAdminClient();
         const client = admin || supabase;
         
-        // AUTO-CLAIM: Link any orphan matching rows to the current user
         if (admin && userId) {
-            console.log(`[N8N Proxy] Auto-Claiming orphan experiences for appId=${appId}...`);
             await admin.from('experiences').update({ user_id: userId }).eq('application_id', appId).is('user_id', null);
         }
         
-        // 0. Handle Deletions (Sync Strategy)
         const { data: existingRows } = await client.from('experiences').select('id').eq('application_id', appId);
         const existingIds = new Set((existingRows || []).map((r: any) => r.id));
-        const incomingIds = new Set(payload.activities.filter((a: any) => isUUID(a.id)).map((a: any) => a.id));
+        const incomingIds = new Set(payload.activities.filter((a: any) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(a.id)).map((a: any) => a.id));
         const idsToDelete = Array.from(existingIds).filter(id => !incomingIds.has(id));
         
         if (idsToDelete.length > 0) {
-            console.log(`[N8N Proxy] Deleting ${idsToDelete.length} removed activities`);
             await client.from('experiences').delete().in('id', idsToDelete).eq('application_id', appId); 
         }
 
-        // 1. Process All via RPC for atomicity and schema safety
         const allActivities = payload.activities.map((a: any) => {
             const raw = JSON.stringify({ ...a, _temp_id: a.id });
             return {
@@ -795,59 +673,39 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             };
         });
 
-        console.log(`[N8N Proxy] Calling upsert_experience_system for ${allActivities.length} activities...`);
         const { data: rpcData, error: rpcError } = await client.rpc('upsert_experience_system', {
             p_application_id: appId,
             p_experience_data: allActivities
         });
 
-        if (rpcError) {
-            console.error('[N8N Proxy] RPC Error:', rpcError);
-            return { success: false, error: rpcError.message };
-        }
-
+        if (rpcError) return { success: false, error: rpcError.message };
         return { success: true, idMappings: rpcData?.idMappings || {} } as any; 
     }
     
     if (Object.keys(updates).length > 0) {
-        // Use UPSERT with Admin Client for robust Company Data saving
         const admin = getAdminClient();
         const client = admin || supabase;
-        console.log(`[N8N Proxy] Direct Save ${type} (${appId}) using Admin: ${!!admin}`);
 
-        // RLS/Orphan Fix: If we have a user_id and we are admin, ensure any orphan matching this appId is claimed
         if (userId && admin) {
             await admin.from('suppliers').update({ user_id: userId }).eq('application_id', appId).is('user_id', null);
         }
 
-        // Revert to Update -> Insert for Suppliers because 'application_id' might not be unique/constrained
-        // causing code 42P10 on upsert.
         let { data, error } = await client.from('suppliers')
             .update(updates)
             .eq('application_id', appId)
             .select('id');
 
         if (!error && (!data || data.length === 0)) {
-            // Row doesn't exist, Insert.
-            console.log(`[N8N Proxy] Supplier not found for ${appId}, inserting...`);
             const { data: insData, error: insError } = await client.from('suppliers')
                 .insert({ application_id: appId, ...updates })
                 .select('id');
-            
             data = insData;
             error = insError;
         }
 
-        if (data && data.length > 0) {
-             console.log(`[N8N Proxy] VERIFY SAVE (Supplier): Updated ID=${data[0].id}`);
-        }
-
         if (error) {
-            console.error('[N8N Proxy] Direct Save Error:', error);
-            const sk = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-            return { success: false, error: `${error.message} (AdminKey: ${sk})` };
+            return { success: false, error: error.message };
         }
-        console.log(`[N8N Proxy] Direct Save Success for ${type} (${appId})`);
     }
     return { success: true };
   } catch (e: any) {
@@ -867,11 +725,9 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) return null;
 
-    // USE ADMIN CLIENT BY DEFAULT for Backend Handshakes to ensure data visibility
     const options: any = {
         auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
     };
-    // If not admin, we must use auth header for RLS
     if (!isServiceKey && authHeader) {
         options.global = { headers: { Authorization: authHeader } };
         delete options.auth;
@@ -879,18 +735,13 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
     
     const supabase = createClient(supabaseUrl, supabaseKey, options);
 
-    // Prefer rows with user_id to avoid being shadowed by old null-user rows
-    // Also fetch using Admin if available to bypass RLS "Ghosting"
     const { data: rows, error } = await supabase.from('suppliers')
         .select('*')
         .eq('application_id', appId)
         .order('user_id', { ascending: false, nullsFirst: false })
         .limit(1);
-    if (error) {
-         console.error('[N8N Proxy] Direct Get Error:', error);
-         return null;
-    }
-    if (!rows || rows.length === 0) return null;
+    
+    if (error || !rows || rows.length === 0) return null;
     const data = rows[0];
 
     if (type === 'billing') {
@@ -921,18 +772,17 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
         };
     } else if (type === 'background') {
         return {
-            url: data.metadata?.background_url || null
+            url: data.onboarding_json?.background_url || null
         };
     } else if (type === 'media') {
         const activityId = u.searchParams.get('activityId');
         let m: any = { photosDriveUrls: [], videoDriveUrl: '', videoUrl: '', status: null };
         
         if (activityId) {
-            console.log(`[N8N Proxy] Media Get for Activity (Robust): ${activityId}`);
             const admin = getAdminClient();
-            const { data: expRow, error: expErr } = await (admin || supabase)
+            const { data: expRow } = await (admin || supabase)
                 .from('experiences')
-                .select('photos_drive_urls, video_drive_url, video_url, status, raw_data, metadata')
+                .select('photos_drive_urls, video_drive_url, video_url, status, raw_data')
                 .eq('id', activityId)
                 .maybeSingle();
             
@@ -940,11 +790,9 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
                 let raw: any = {};
                 try {
                     raw = typeof expRow.raw_data === 'string' ? JSON.parse(expRow.raw_data) : (expRow.raw_data || {});
-                    if (typeof raw === 'string') raw = JSON.parse(raw);
                 } catch (e) {}
 
                 const structured = Array.isArray(expRow.photos_drive_urls) ? expRow.photos_drive_urls : [];
-                const metaPhotos = Array.isArray(expRow.metadata?.photosDriveUrls) ? expRow.metadata.photosDriveUrls : [];
                 const rawPhotos = Array.isArray(raw?.photosDriveUrls) ? raw.photosDriveUrls : [];
                 
                 const isFinal = (list: any[]) => {
@@ -952,31 +800,23 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
                     return !list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
                 };
 
-                console.log(`[N8N Proxy] Media Sync Audit for ${activityId}: Structured=${structured.length} (Final=${isFinal(structured)}), Meta=${metaPhotos.length} (Final=${isFinal(metaPhotos)}), Raw=${rawPhotos.length} (Final=${isFinal(rawPhotos)})`);
-
                 let finalPhotos = structured;
                 if (isFinal(structured)) finalPhotos = structured;
-                else if (isFinal(metaPhotos)) finalPhotos = metaPhotos;
                 else if (isFinal(rawPhotos)) finalPhotos = rawPhotos;
-                else {
-                    // Fallback to whichever has content
-                    finalPhotos = structured.length > 0 ? structured : (metaPhotos.length > 0 ? metaPhotos : rawPhotos);
-                }
+                else finalPhotos = structured.length > 0 ? structured : rawPhotos;
 
                 m = {
                     photosDriveUrls: finalPhotos,
-                    videoDriveUrl: expRow.video_drive_url || expRow.metadata?.videoDriveUrl || raw?.videoDriveUrl || '',
-                    videoUrl: expRow.video_url || expRow.metadata?.videoUrl || raw?.videoUrl || '',
-                    status: expRow.status || null
+                    videoDriveUrl: expRow.video_drive_url || raw?.videoDriveUrl || '',
+                    videoUrl: expRow.video_url || raw?.videoUrl || '',
+                    status: expRow.status || raw?.status || null
                 };
             }
-            if (expErr) console.error(`[N8N Proxy] Media Get DB Error: ${expErr.message}`);
         } else {
-             // Fallback to supplier metadata if no activityId
              m = {
-                 photosDriveUrls: data.metadata?.photosDriveUrls || [],
-                 videoDriveUrl: data.metadata?.videoDriveUrl || '',
-                 videoUrl: data.metadata?.videoUrl || '',
+                 photosDriveUrls: data.onboarding_json?.photosDriveUrls || [],
+                 videoDriveUrl: data.onboarding_json?.videoDriveUrl || '',
+                 videoUrl: data.onboarding_json?.videoUrl || '',
                  status: null
              };
         }
@@ -1016,7 +856,6 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
         const options: any = {
             auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
         };
-        // If not admin, we must use auth header for RLS
         if (!serviceKey && authHeader) {
             options.global = { headers: { Authorization: authHeader } };
             delete options.auth;
@@ -1024,101 +863,57 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
 
         const supabase = createClient(supabaseUrl, supabaseKey, options);
 
-        console.log(`[N8N Proxy] Direct List: Fetching for appId=${applicationId} (ServiceKey: ${!!serviceKey})`);
+        console.log(`[N8N Proxy] Direct List: Fetching for appId=${applicationId}`);
         const { data, error } = await supabase.from('experiences').select('*').eq('application_id', applicationId);
         
         if (error) { 
             console.error('[N8N Proxy] List Activities Error:', error); 
             return null;
         }
-        console.log(`[N8N Proxy] Direct List: Found ${data?.length} rows`);
-        if (data && data.length > 0) console.log('[N8N Proxy] Sample Row ID:', data[0].id);
         
         return (data || []).map((row: any) => {
             let raw: any = {};
             try {
                 if (typeof row.raw_data === 'string') {
-                    // Check for "poisoned" [object Object]
                     if (row.raw_data.includes('[object Object]')) {
                         console.warn(`[N8N Proxy] Skipping corrupted raw_data for ${row.id}`);
                         raw = {};
                     } else {
                         raw = JSON.parse(row.raw_data);
-                        // CRITICAL FIX: Handle Double-Encoding (Stringified JSON saved in JSONB)
-                        if (typeof raw === 'string') {
-                             try { raw = JSON.parse(raw); } catch(e) { /* keep as string if second parse fails? unlikely */ }
-                        }
                     }
                 } else {
                     raw = row.raw_data || {};
                 }
-            } catch (err: any) {
-                console.error(`[N8N Proxy] JSON Parse Error for row ${row.id}:`, err.message);
-                raw = {}; // Fallback to empty to allow row to render with just DB columns
-            }
+            } catch (e) { raw = {}; }
 
             return {
-            ...raw, // Start with JSON blob as base
-            // OVERRIDE with explicit columns (The Source of Truth in V143+)
-            id: row.id,
-            title: row.title,
-            description: row.description,
-            summary: row.description || raw?.summary,
-            durationMinutes: row.duration_minutes?.toString() || raw?.durationMinutes,
-            price: row.price?.toString() || (raw?.price || raw?.baseRate),
-            currency: row.currency || raw?.currency,
-            category: row.category || raw?.category,
-            bokunProductId: row.bokun_product_id || raw?.bokunProductId,
-            // Narrative Restorations (Prioritize DB columns)
-            itinerary: row.itinerary || raw?.itinerary,
-            threeWords: row.three_words || raw?.threeWords,
-            schedulingMode: row.scheduling_mode || raw?.schedulingMode,
-            authenticEchoes: row.authentic_echoes || raw?.authenticEchoes,
-            unforgettableFeeling: row.unforgettable_feeling || raw?.unforgettableFeeling,
-            magicMoment: row.magic_moment || raw?.magicMoment,
-            hiddenGem: row.hidden_gem || raw?.hiddenGem,
-            communityConnection: row.community_connection || raw?.communityConnection,
-            perfectMatch: row.perfect_match || raw?.perfectMatch,
-            meetingPoint: row.meeting_point || raw?.meetingPoint,
-            safetyMeasures: row.safety_measures || raw?.safetyMeasures,
-            requirements: row.requirements || raw?.requirements,
-            included: row.included || raw?.included,
-            notIncluded: row.not_included || raw?.notIncluded,
-            insurance: row.insurance || raw?.insurance,
-            // Pricing & Logistics Restorations
-            pricingCategories: row.pricing_categories || raw?.pricingCategories,
-            baseRate: row.base_rate?.toString() || raw?.baseRate,
-            cancellationPolicy: row.cancellation_policy || raw?.cancellationPolicy,
-            bookingLeadTime: row.booking_lead_time || raw?.bookingLeadTime,
-            languages: row.languages || raw?.languages,
-            startTimes: row.start_times || raw?.startTimes,
-            cutoffHours: row.cutoff_hours || raw?.cutoffHours,
-            pricingRows: row.pricing_rows || raw?.pricingRows,
-            // Media & Status Retrieval (Source of Truth Strategy)
-            photosDriveUrls: (() => {
-                const structured = Array.isArray(row.photos_drive_urls) ? row.photos_drive_urls : [];
-                const metadata = Array.isArray(row.metadata?.photosDriveUrls) ? row.metadata.photosDriveUrls : [];
-                const rawPhotos = Array.isArray(raw?.photosDriveUrls) ? raw.photosDriveUrls : [];
-                
-                // Helper to check for finalize status
-                const isFinal = (list: any[]) => {
-                    if (!Array.isArray(list) || list.length === 0) return false;
-                    return !list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
-                };
-                
-                if (isFinal(structured)) return structured;
-                if (isFinal(metadata)) return metadata;
-                if (isFinal(rawPhotos)) return rawPhotos;
-                
-                // Fallback to whichever has content
-                return structured.length > 0 ? structured : (metadata.length > 0 ? metadata : rawPhotos);
-            })(),
-            videoDriveUrl: row.video_drive_url || row.metadata?.videoDriveUrl || raw?.videoDriveUrl || '',
-            videoUrl: row.video_url || row.metadata?.videoUrl || raw?.videoUrl || '',
-            // Status restoration
-            status: row.status || row.metadata?.status === 'Published' || row.bokun_product_id ? 'Published' : 'Unpublished'
-        };
-      });
-
+                id: row.id,
+                title: row.title || raw?.title,
+                city: row.city || raw?.city,
+                description: row.description || raw?.summary || raw?.description,
+                price: row.price || raw?.price,
+                currency: row.currency || raw?.currency,
+                duration_minutes: row.duration_minutes || raw?.durationMinutes,
+                bokun_product_id: row.bokun_product_id || raw?.bokunProductId,
+                category: row.category || raw?.category,
+                // Media & Status Retrieval (Source of Truth Strategy)
+                photosDriveUrls: (() => {
+                    const structured = Array.isArray(row.photos_drive_urls) ? row.photos_drive_urls : [];
+                    const rawPhotos = Array.isArray(raw?.photosDriveUrls) ? raw.photosDriveUrls : [];
+                    
+                    const isFinal = (list: any[]) => {
+                        if (!Array.isArray(list) || list.length === 0) return false;
+                        return !list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
+                    };
+                    
+                    if (isFinal(structured)) return structured;
+                    if (isFinal(rawPhotos)) return rawPhotos;
+                    return structured.length > 0 ? structured : rawPhotos;
+                })(),
+                videoDriveUrl: row.video_drive_url || raw?.videoDriveUrl || '',
+                videoUrl: row.video_url || raw?.videoUrl || '',
+                status: row.status || row.bokun_product_id ? 'Published' : 'Unpublished'
+            };
+        });
     } catch (e) { return []; }
 }

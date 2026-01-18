@@ -28,7 +28,6 @@ export async function GET() {
     const items = (data || []).map(row => {
       // Robust image retrieval (Source of Truth Strategy)
       const structured = row.photos_drive_urls || [];
-      const metaPhotos = row.metadata?.photosDriveUrls || [];
       let raw: any = {};
       try {
         raw = typeof row.raw_data === 'string' ? JSON.parse(row.raw_data) : (row.raw_data || {});
@@ -40,10 +39,9 @@ export async function GET() {
       
       let photos = structured;
       if (isFinal(structured)) photos = structured;
-      else if (isFinal(metaPhotos)) photos = metaPhotos;
       else if (isFinal(rawPhotos)) photos = rawPhotos;
       else {
-        photos = structured.length > 0 ? structured : (metaPhotos.length > 0 ? metaPhotos : rawPhotos);
+        photos = structured.length > 0 ? structured : rawPhotos;
       }
 
       // Map Supabase columns to existing frontend type
