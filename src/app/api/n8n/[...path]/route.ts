@@ -581,21 +581,32 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
               : (Array.isArray(payload.metadata?.photosDriveUrls) ? payload.metadata.photosDriveUrls : []);
           const existingPhotos = Array.isArray(exp.photos_drive_urls) ? exp.photos_drive_urls : [];
 
-          // AUTHORITATIVE LOGIC: Only allow placeholders to overwrite if existing is also placeholder or empty.
-          // If existing is already FINAL, and incoming is PLACEHOLDER, reject the incoming photos.
+          // AUTHORITATIVE LOGIC: Per-item protection. 
+          // If we have an existing real URL at index i, don't let a placeholder at index i overwrite it.
           let finalPhotos = incomingPhotos;
-          if (isFinal(existingPhotos) && isPlaceholder(incomingPhotos)) {
-              console.log(`[N8N Proxy] Media Save Protection: Rejecting placeholder overwrite for ${currentId}. Keeping finalized URLs.`);
-              finalPhotos = existingPhotos;
-          } else if (incomingPhotos.length === 0 && existingPhotos.length > 0) {
-              // Also keep existing if incoming is empty (unless explicitly cleared, but we don't have a clear command yet)
-              finalPhotos = existingPhotos;
+          if (existingPhotos.length > 0) {
+              // Create a merged list based on the incoming structure but preserving existing finalized URLs where they match by index or existence
+              finalPhotos = incomingPhotos.map((inUrl: any, i: number) => {
+                  const exUrl = existingPhotos[i];
+                  const inIsPlaceholder = typeof inUrl === 'string' && inUrl.includes('anyoneWithLink');
+                  const exIsFinal = typeof exUrl === 'string' && !exUrl.includes('anyoneWithLink');
+                  
+                  if (inIsPlaceholder && exIsFinal) {
+                      return exUrl; // Keep the real one that was already there
+                  }
+                  return inUrl;
+              });
+              
+              // Also, if incoming is empty/missing but existing has data, it might be a partial update from a legacy workflow
+              if (incomingPhotos.length === 0 && existingPhotos.length > 0) {
+                  finalPhotos = existingPhotos;
+              }
           }
 
           const nextMedia = {
               photosDriveUrls: finalPhotos,
-              videoDriveUrl: payload.videoDriveUrl || exp.video_drive_url || '',
-              videoUrl: payload.videoUrl || exp.video_url || ''
+              videoDriveUrl: payload.videoDriveUrl || payload.video_drive_url || exp.video_drive_url || '',
+              videoUrl: payload.videoUrl || payload.video_url || exp.video_url || ''
           };
           
           let nextRaw = {};
@@ -705,11 +716,11 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 raw_data: raw,
                 // If incoming is placeholder but we might have finalized data, we should ideally merge or skip.
                 // For simplicity here, we pass what we have, but the RPC could be smarter.
-                // BETTER: If incoming is empty or has placeholders, we set it to NULL so COALESCE in RPC can skip it?
+                // If incoming is empty or has placeholders, we set it to NULL so COALESCE in RPC can skip it?
                 // Actually, let's keep it as is for now but fix the MEDIA save to be the authoritative one.
-                photos_drive_urls: incomingPhotos,
-                video_drive_url: a.videoDriveUrl || '',
-                video_url: a.videoUrl || '',
+                photos_drive_urls: Array.isArray(a.photosDriveUrls) ? a.photosDriveUrls : (Array.isArray(a.photos_drive_urls) ? a.photos_drive_urls : []),
+                video_drive_url: a.videoDriveUrl || a.video_drive_url || '',
+                video_url: a.videoUrl || a.video_url || '',
                 status: a.status || null,
                 booking_link: a.bookingLink || null,
                 itinerary: a.itinerary || null,
