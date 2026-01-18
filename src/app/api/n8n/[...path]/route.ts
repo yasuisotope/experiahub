@@ -383,7 +383,8 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
     const text = await body.text();
     const payload = JSON.parse(text);
-    const appId = payload.applicationId;
+    const u = new URL(url);
+    const appId = payload.applicationId || u.searchParams.get('applicationId');
     if (!appId) return { success: false, error: 'Missing applicationId' };
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -527,10 +528,10 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
          updates = { ...updates, onboarding_json: nextOnboarding };
     } else if (type === 'media') {
           const admin = getAdminClient();
-          const activeId = payload.activityId;
+          const activeId = payload.activityId || payload.id || u.searchParams.get('activityId') || u.searchParams.get('id');
           
           if (!activeId || !admin) {
-              console.error('[N8N Proxy] Media Save failed: Missing activityId or admin client');
+              console.error(`[N8N Proxy] Media Save failed for appId ${appId}: Missing activityId. Payload keys: ${Object.keys(payload || {})}. URL Params: ${u.searchParams.toString()}`);
               return { success: false, error: 'Missing activityId or Admin Client' };
           }
 
@@ -561,7 +562,9 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
           const isPlaceholder = (list: any[]) => Array.isArray(list) && list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
           const isFinal = (list: any[]) => Array.isArray(list) && list.length > 0 && !isPlaceholder(list);
 
-          const incomingPhotos = Array.isArray(payload.photosDriveUrls) ? payload.photosDriveUrls : [];
+          const incomingPhotos = Array.isArray(payload.photosDriveUrls) 
+              ? payload.photosDriveUrls 
+              : (Array.isArray(payload.metadata?.photosDriveUrls) ? payload.metadata.photosDriveUrls : []);
           const existingPhotos = Array.isArray(exp.photos_drive_urls) ? exp.photos_drive_urls : [];
 
           // AUTHORITATIVE LOGIC: Only allow placeholders to overwrite if existing is also placeholder or empty.
