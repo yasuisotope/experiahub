@@ -536,10 +536,10 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
           console.log(`[N8N Proxy] Media Save Attempt: ${activeId}`);
           
-          let { data: exp, error: expErr } = await admin.from('experiences').select('id, raw_data, photos_drive_urls, video_drive_url, video_url').eq('id', activeId).maybeSingle();
+          let { data: exp, error: expErr } = await admin.from('experiences').select('id, raw_data, photos_drive_urls, video_drive_url, video_url, metadata').eq('id', activeId).maybeSingle();
           
           if (!exp && !expErr) {
-              const { data: fallbackRows } = await admin.from('experiences').select('id, raw_data, photos_drive_urls, video_drive_url, video_url').contains('raw_data', { _temp_id: activeId });
+              const { data: fallbackRows } = await admin.from('experiences').select('id, raw_data, photos_drive_urls, video_drive_url, video_url, metadata').contains('raw_data', { _temp_id: activeId });
               if (fallbackRows && fallbackRows.length > 0) {
                   exp = fallbackRows[0] as any;
                   console.log(`[N8N Proxy] Media Save: Found match via _temp_id. Real ID: ${exp?.id}`);
@@ -609,7 +609,8 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                  photos_drive_urls: nextMedia.photosDriveUrls,
                  video_drive_url: nextMedia.videoDriveUrl,
                  video_url: nextMedia.videoUrl,
-                 raw_data: JSON.stringify(nextRaw)
+                 raw_data: JSON.stringify(nextRaw),
+                 metadata: payload.metadata || undefined
              })
              .eq('id', currentId)
              .select('id');
@@ -815,7 +816,7 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
             const admin = getAdminClient();
             const { data: expRow } = await (admin || supabase)
                 .from('experiences')
-                .select('photos_drive_urls, video_drive_url, video_url, status, raw_data')
+                .select('photos_drive_urls, video_drive_url, video_url, status, raw_data, metadata')
                 .eq('id', activityId)
                 .maybeSingle();
             
@@ -827,6 +828,7 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
 
                 const structured = Array.isArray(expRow.photos_drive_urls) ? expRow.photos_drive_urls : [];
                 const rawPhotos = Array.isArray(raw?.photosDriveUrls) ? raw.photosDriveUrls : [];
+                const metadataPhotos = Array.isArray(expRow.metadata?.photosDriveUrls) ? expRow.metadata.photosDriveUrls : [];
                 
                 const isFinal = (list: any[]) => {
                     if (!Array.isArray(list) || list.length === 0) return false;
@@ -836,7 +838,13 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
                 let finalPhotos = structured;
                 if (isFinal(structured)) finalPhotos = structured;
                 else if (isFinal(rawPhotos)) finalPhotos = rawPhotos;
-                else finalPhotos = structured.length > 0 ? structured : rawPhotos;
+                else if (isFinal(metadataPhotos)) finalPhotos = metadataPhotos;
+                else {
+                    // Fallback order: structured > metadata > raw
+                    if (structured.length > 0) finalPhotos = structured;
+                    else if (metadataPhotos.length > 0) finalPhotos = metadataPhotos;
+                    else finalPhotos = rawPhotos;
+                }
 
                 m = {
                     photosDriveUrls: finalPhotos,
@@ -933,6 +941,7 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
                 photosDriveUrls: (() => {
                     const structured = Array.isArray(row.photos_drive_urls) ? row.photos_drive_urls : [];
                     const rawPhotos = Array.isArray(raw?.photosDriveUrls) ? raw.photosDriveUrls : [];
+                    const metadataPhotos = Array.isArray(row.metadata?.photosDriveUrls) ? row.metadata.photosDriveUrls : [];
                     
                     const isFinal = (list: any[]) => {
                         if (!Array.isArray(list) || list.length === 0) return false;
@@ -941,7 +950,11 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
                     
                     if (isFinal(structured)) return structured;
                     if (isFinal(rawPhotos)) return rawPhotos;
-                    return structured.length > 0 ? structured : rawPhotos;
+                    if (isFinal(metadataPhotos)) return metadataPhotos;
+                    
+                    if (structured.length > 0) return structured;
+                    if (metadataPhotos.length > 0) return metadataPhotos;
+                    return rawPhotos;
                 })(),
                 videoDriveUrl: row.video_drive_url || raw?.videoDriveUrl || '',
                 videoUrl: row.video_url || raw?.videoUrl || '',

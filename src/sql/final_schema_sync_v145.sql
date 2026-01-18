@@ -49,6 +49,10 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='perfect_match') THEN
         ALTER TABLE public.experiences ADD COLUMN perfect_match text;
     END IF;
+    -- ADD BACK METADATA AS COMPATIBILITY LAYER
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='metadata') THEN
+        ALTER TABLE public.experiences ADD COLUMN metadata jsonb;
+    END IF;
 END $$;
 
 -- 2. Update RPC to handle structured media and status
@@ -78,6 +82,7 @@ BEGIN
         bokun_product_id text,
         category text,
         raw_data text,
+        metadata jsonb,
         photos_drive_urls text[],
         video_drive_url text,
         video_url text,
@@ -111,6 +116,7 @@ BEGIN
                 bokun_product_id = v_rec.bokun_product_id,
                 category = v_rec.category,
                 raw_data = v_rec.raw_data,
+                metadata = COALESCE(v_rec.metadata, experiences.metadata),
                 photos_drive_urls = CASE 
                     WHEN v_rec.photos_drive_urls IS NULL OR array_length(v_rec.photos_drive_urls, 1) = 0 THEN experiences.photos_drive_urls
                     -- If incoming has placeholders AND existing is finalize, KEEP existing
@@ -144,12 +150,12 @@ BEGIN
             IF NOT FOUND THEN
                  INSERT INTO public.experiences (
                     id, application_id, title, description, price, currency, duration_minutes, 
-                    bokun_product_id, category, raw_data, photos_drive_urls, video_drive_url, video_url, status,
+                    bokun_product_id, category, raw_data, metadata, photos_drive_urls, video_drive_url, video_url, status,
                     booking_link, itinerary, three_words, scheduling_mode, authentic_echoes, 
                     unforgettable_feeling, magic_moment, hidden_gem, community_connection, perfect_match
                 ) VALUES (
                     v_id, p_application_id, v_rec.title, v_rec.description, v_rec.price, v_rec.currency, 
-                    v_rec.duration_minutes, v_rec.bokun_product_id, v_rec.category, v_rec.raw_data,
+                    v_rec.duration_minutes, v_rec.bokun_product_id, v_rec.category, v_rec.raw_data, v_rec.metadata,
                     v_rec.photos_drive_urls, v_rec.video_drive_url, v_rec.video_url, v_rec.status,
                     v_rec.booking_link, v_rec.itinerary, v_rec.three_words, v_rec.scheduling_mode, v_rec.authentic_echoes, 
                     v_rec.unforgettable_feeling, v_rec.magic_moment, v_rec.hidden_gem, v_rec.community_connection, v_rec.perfect_match
@@ -158,12 +164,12 @@ BEGIN
         ELSE
             INSERT INTO public.experiences (
                 application_id, title, description, price, currency, duration_minutes, 
-                bokun_product_id, category, raw_data, photos_drive_urls, video_drive_url, video_url, status,
+                bokun_product_id, category, raw_data, metadata, photos_drive_urls, video_drive_url, video_url, status,
                 booking_link, itinerary, three_words, scheduling_mode, authentic_echoes, 
                 unforgettable_feeling, magic_moment, hidden_gem, community_connection, perfect_match
             ) VALUES (
                 p_application_id, v_rec.title, v_rec.description, v_rec.price, COALESCE(v_rec.currency, 'USD'), 
-                v_rec.duration_minutes, v_rec.bokun_product_id, v_rec.category, v_rec.raw_data,
+                v_rec.duration_minutes, v_rec.bokun_product_id, v_rec.category, v_rec.raw_data, v_rec.metadata,
                 v_rec.photos_drive_urls, v_rec.video_drive_url, v_rec.video_url, v_rec.status,
                 v_rec.booking_link, v_rec.itinerary, v_rec.three_words, v_rec.scheduling_mode, v_rec.authentic_echoes, 
                 v_rec.unforgettable_feeling, v_rec.magic_moment, v_rec.hidden_gem, v_rec.community_connection, v_rec.perfect_match
