@@ -13,6 +13,20 @@ const getAdminClient = () => {
     });
 };
 
+// Health check to verify deployment + standard GET proxy
+export async function GET(req: NextRequest, ctx: any) {
+  const path = ctx.params?.path || [];
+  if (path.length === 0 || path[0] === 'health') {
+    return NextResponse.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      version: 'v1.4.7',
+      env: process.env.NODE_ENV
+    });
+  }
+  return proxyRequest(req, ctx);
+}
+
 async function proxyRequest(request: NextRequest, { params }: { params: { path: string[] } }) {
   const path = params.path.join('/');
   const searchParams = request.nextUrl.searchParams.toString();
@@ -363,7 +377,7 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
   }
 }
 
-export async function GET(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
+// Groups all other exports together
 export async function POST(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 export async function PUT(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
 export async function PATCH(req: NextRequest, ctx: any) { return proxyRequest(req, ctx); }
