@@ -223,7 +223,10 @@ BEGIN
                 cutoff_hours = v_rec.cutoff_hours,
                 pricing_categories = v_rec.pricing_categories,
                 base_rate = v_rec.base_rate,
-                pricing_rows = COALESCE(v_rec.pricing_rows, '[]'::jsonb),
+                pricing_rows = CASE 
+                    WHEN v_rec.pricing_rows IS NULL THEN experiences.pricing_rows 
+                    ELSE v_rec.pricing_rows 
+                END,
                 updated_at = now()
             WHERE id = v_id AND application_id = p_application_id;
             

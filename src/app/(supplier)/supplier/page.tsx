@@ -945,6 +945,7 @@ const PRIMARY_BUTTON_SX = {
   const [isTransparent, setIsTransparent] = React.useState(true);
   const [username, setUsername] = React.useState('');
   const [syncing, setSyncing] = React.useState(false);
+  const [manualSaving, setManualSaving] = React.useState(false);
   
   // Force 'signup' tab if we have an appId (Onboarding Flow)
   React.useEffect(() => {
@@ -1547,11 +1548,13 @@ const PRIMARY_BUTTON_SX = {
   };
 
   const onSaveDetails = async (overrides?: Partial<Experience>) => {
+    if (manualSaving) return; // Block manual save if already in progress
     if (!selectedExperienceId) { setToast('Select an Experience'); return; }
     const target = experiences.find(e => e.id === selectedExperienceId);
     if (!target) { setToast('Sync Error: Experience not found. Please refresh page.'); return; }
 
     try {
+      setManualSaving(true); // Indicate manual save is in progress
       // Merge: Target + Current Details + Explicit Overrides. Force valid ID.
       const merged = { ...target, ...details, ...overrides, id: selectedExperienceId, applicationId: appId };
       
@@ -1579,6 +1582,7 @@ const PRIMARY_BUTTON_SX = {
       // Removed forced navigation to allow continued editing
       handleSaveSuccess('Experience');
     } catch (e: any) { setToast(e?.message || 'Save failed'); }
+    finally { setManualSaving(false); }
   };
 
   // Autosave on idle for Details / Availability / Policies / Pricing / Media
@@ -1590,7 +1594,7 @@ const PRIMARY_BUTTON_SX = {
         subsection === 'pricing' || 
         subsection === 'media'
     );
-    if (!eligible || !selectedExperienceId) return;
+    if (!eligible || !selectedExperienceId || manualSaving) return;
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(async () => {
       try {

@@ -731,6 +731,15 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             };
         });
 
+        console.log(`[N8N Proxy] Direct Activity Save: Upserting ${allActivities.length} rows for AppID: ${appId}`);
+        if (allActivities.length > 0) {
+            console.log(`[N8N Proxy] Sample row pricing:`, { 
+                categories: allActivities[0].pricing_categories, 
+                baseRate: allActivities[0].base_rate,
+                rowsCount: allActivities[0].pricing_rows?.length 
+            });
+        }
+
         const { data: rpcData, error: rpcError } = await client.rpc('upsert_experience_system', {
             p_application_id: appId,
             p_experience_data: allActivities
@@ -957,9 +966,11 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
         }
 
         const supabase = createClient(supabaseUrl, supabaseKey, options);
+        // Use service client if available for listing to ensure any data written by admin during save is visible
+        const client = getAdminClient() || supabase;
 
-        console.log(`[N8N Proxy] Direct List: Fetching for appId=${applicationId}`);
-        const { data, error } = await supabase.from('experiences').select('*').eq('application_id', applicationId);
+        console.log(`[N8N Proxy] Direct List: Fetching for appId=${applicationId} using client: ${getAdminClient() ? 'ADMIN' : 'ANON'}`);
+        const { data, error } = await client.from('experiences').select('*').eq('application_id', applicationId);
         
         if (error) { 
             console.error('[N8N Proxy] List Activities Error:', error); 
@@ -1011,7 +1022,7 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
                 cutoffHours: row.cutoff_hours || raw?.cutoffHours || raw?.cutoff_hours || '',
                 pricingCategories: row.pricing_categories || raw?.pricingCategories || raw?.pricing_categories || '',
                 baseRate: row.base_rate || raw?.baseRate || raw?.base_rate || '',
-                pricingRows: row.pricing_rows || raw?.pricingRows || [],
+                pricingRows: (row.pricing_rows && Array.isArray(row.pricing_rows)) ? row.pricing_rows : (raw?.pricingRows || []),
                 bookingLink: row.booking_link || raw?.bookingLink || raw?.booking_link || '',
 
                 // Narrative & Restoration
