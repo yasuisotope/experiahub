@@ -686,7 +686,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 id: a.id,
                 title: a.title,
                 description: a.summary || a.description || null,
-                price: a.price ? parseFloat(a.price) : (a.baseRate ? parseFloat(a.baseRate) : null),
+                price: (a.price && !isNaN(parseFloat(String(a.price).replace(/,/g, '')))) ? parseFloat(String(a.price).replace(/,/g, '')) : (a.baseRate && !isNaN(parseFloat(String(a.baseRate).replace(/,/g, '')))) ? parseFloat(String(a.baseRate).replace(/,/g, '')) : null,
                 currency: a.currency || null,
                 duration_minutes: a.durationMinutes ? parseInt(a.durationMinutes) : null,
                 bokun_product_id: a.bokunProductId || '',
@@ -725,9 +725,16 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 city: a.city || null,
                 start_times: a.startTimes || a.start_times || null,
                 cutoff_hours: a.cutoffHours || a.cutoff_hours || null,
-                pricing_categories: a.pricingCategories || a.pricing_categories || null,
-                base_rate: (a.baseRate && !isNaN(parseFloat(String(a.baseRate).replace(/,/g, '')))) ? parseFloat(String(a.baseRate).replace(/,/g, '')) : (a.base_rate && !isNaN(parseFloat(String(a.base_rate).replace(/,/g, ''))) ? parseFloat(String(a.base_rate).replace(/,/g, '')) : null),
-                pricing_rows: (Array.isArray(a.pricingRows) && a.pricingRows.length > 0) ? a.pricingRows : (Array.isArray(a.pricing_rows) && a.pricing_rows.length > 0 ? a.pricing_rows : null)
+                pricing_categories: (a.pricingCategories || a.pricing_categories) ? (a.pricingCategories || a.pricing_categories) : null,
+                base_rate: (() => {
+                    const val = a.baseRate ?? a.base_rate;
+                    if (val === undefined || val === null || val === '') return null;
+                    const parsed = parseFloat(String(val).replace(/,/g, ''));
+                    return isNaN(parsed) ? null : parsed;
+                })(),
+                pricing_rows: (Array.isArray(a.pricingRows)) 
+                    ? a.pricingRows 
+                    : (Array.isArray(a.pricing_rows) ? a.pricing_rows : null)
             };
         });
 
@@ -752,13 +759,15 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             console.error('[N8N Proxy] RPC Save Error:', rpcError);
         } else {
             console.log('[N8N Proxy] RPC Save Success:', rpcData);
-            // Verify first row actually has data in DB now
             if (allActivities.length > 0) {
-                const { data: verifyRow } = await client.from('experiences').select('pricing_rows, base_rate').eq('id', allActivities[0].id).maybeSingle();
+                // Determine the correct ID to verify (newly generated ID if it was a temp ID)
+                const targetId = rpcData?.idMappings?.[allActivities[0].id] || allActivities[0].id;
+                const { data: verifyRow } = await client.from('experiences').select('pricing_rows, base_rate, currency').eq('id', targetId).maybeSingle();
                 console.log('[N8N Proxy] Post-Save Verification:', {
-                    id: allActivities[0].id,
+                    id: targetId,
                     dbPricingRows: verifyRow?.pricing_rows?.length,
-                    dbBaseRate: verifyRow?.base_rate
+                    dbBaseRate: verifyRow?.base_rate,
+                    dbCurrency: verifyRow?.currency
                 });
             }
         }

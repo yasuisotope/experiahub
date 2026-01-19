@@ -1450,10 +1450,10 @@ const PRIMARY_BUTTON_SX = {
             schedulingMode: a.schedulingMode || '',
             startTimes: a.startTimes || '',
             cutoffHours: a.cutoffHours || (a.bookingLeadTime || ''),
-            pricingCategories: a.pricingCategories || '',
-            baseRate: a.baseRate || '',
+            pricingCategories: a.pricingCategories ?? a.pricing_categories ?? '',
+            baseRate: a.baseRate ?? a.base_rate ?? '',
             bokunProductId: a.bokunProductId || '',
-            pricingRows: Array.isArray(a.pricingRows) ? a.pricingRows : [],
+            pricingRows: Array.isArray(a.pricingRows) ? a.pricingRows : (Array.isArray(a.pricing_rows) ? a.pricing_rows : []),
             // Populate restored fields if available from API
             authenticEchoes: a.authenticEchoes,
             unforgettableFeeling: a.unforgettableFeeling,
@@ -1559,12 +1559,14 @@ const PRIMARY_BUTTON_SX = {
       const merged = { ...target, ...details, ...overrides, id: selectedExperienceId, applicationId: appId };
       
       // CRITICAL: Always include latest pricingRows from state if we are in the experiences section
-      if (section === 'experiences' && pricingRows.length > 0) {
+      if (section === 'experiences') {
           merged.pricingRows = pricingRows;
           // Sync CSV and baseRate too
-          merged.pricingCategories = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
-          merged.baseRate = pricingRows[0]?.amount || merged.baseRate;
-          merged.currency = pricingRows[0]?.currency || merged.currency;
+          if (pricingRows.length > 0) {
+              merged.pricingCategories = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
+              merged.baseRate = pricingRows[0]?.amount || merged.baseRate;
+              merged.currency = pricingRows[0]?.currency || merged.currency;
+          }
       }
 
       // Sync legacy price field with baseRate
@@ -1611,7 +1613,7 @@ const PRIMARY_BUTTON_SX = {
         let merged: any = { ...current, ...details, id: current.id };
         // CRITICAL: Always include latest pricingRows from state to avoid accidental wipes
         // We now include it if the section is experiences, regardless of subsection, to ensure it persists during any edit.
-        if (pricingRows && Array.isArray(pricingRows)) {
+        if (Array.isArray(pricingRows)) {
             merged.pricingRows = pricingRows;
             if (pricingRows.length > 0) {
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
@@ -1619,8 +1621,8 @@ const PRIMARY_BUTTON_SX = {
                 const curr = pricingRows[0]?.currency || merged.currency || defaultCurrency || 'JPY';
                 merged.pricingCategories = catsCsv;
                 merged.baseRate = base;
-                merged.price = base; 
                 merged.currency = curr;
+                merged.price = base; 
             }
         }
         // Detect changes on key fields to avoid unnecessary saves
