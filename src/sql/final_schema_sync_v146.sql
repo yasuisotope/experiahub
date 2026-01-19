@@ -173,8 +173,7 @@ BEGIN
             SET 
                 title = v_rec.title,
                 description = v_rec.description,
-                price = v_rec.price,
-                currency = COALESCE(v_rec.currency, 'USD'),
+                price = CASE WHEN v_rec.price IS NULL THEN experiences.price ELSE v_rec.price END,
                 duration_minutes = v_rec.duration_minutes,
                 bokun_product_id = v_rec.bokun_product_id,
                 category = v_rec.category,
