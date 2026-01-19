@@ -27,7 +27,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="https://res.cloudinary.com/dasahamyc/image/upload/v1764230943/ExperiaHub_Logo_512x512_mlgydt.png" type="image/png" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Urbanist:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Urbanist:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/common@6.1.19/main.min.css" />
@@ -36,7 +36,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.19/main.min.css" />
       </head>
       <body>
-        <ThemeProvider theme={theme} id="theme-provider">
+        <ThemeProvider theme={theme}>
             <CssBaseline />
             <GlobalStyles styles={{
               '@font-face': {

@@ -452,7 +452,22 @@ export default function ChatPage() {
           {(!currentChat?.messages || currentChat.messages.length === 0) && (
             <Box sx={{ p: { xs: 1, sm: 2 }, display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
               {quickReplies.map((q) => (
-                <Button key={q} size="small" variant="outlined" onClick={() => { track('quick_reply_click', { query: q }); if (!loading) { sendMessage(q).catch(() => {}); } }} sx={{ textTransform: 'none' }}>
+                <Button 
+                  key={q} 
+                  size="small" 
+                  variant="text" 
+                  onClick={() => { track('quick_reply_click', { query: q }); if (!loading) { sendMessage(q).catch(() => {}); } }} 
+                  sx={{ 
+                    textTransform: 'none', 
+                    bgcolor: 'rgba(255,255,255,0.7)', 
+                    backdropFilter: 'blur(8px)',
+                    color: '#333',
+                    border: '1px solid rgba(255,255,255,0.8)',
+                    borderRadius: '12px',
+                    px: 2,
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.9)', borderColor: '#fff' }
+                  }}
+                >
                   {q}
                 </Button>
               ))}
