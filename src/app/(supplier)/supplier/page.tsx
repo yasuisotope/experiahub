@@ -1351,20 +1351,24 @@ const PRIMARY_BUTTON_SX = {
       const next: any = { ...current };
       if ((!next.currency || !String(next.currency).trim()) && defaultCurrency) next.currency = defaultCurrency;
       if ((!next.timeZone || !String(next.timeZone).trim()) && defaultTimeZone) next.timeZone = defaultTimeZone;
-      setDetails(next);
+      
       // Initialize pricing rows from details
+      let initialRows = [];
       try {
         if (next.pricingRows && Array.isArray(next.pricingRows) && next.pricingRows.length > 0) {
-          setPricingRows(next.pricingRows);
+          initialRows = next.pricingRows;
         } else {
           const cats = String(next.pricingCategories || '').split(',').map((s: string)=>s.trim()).filter(Boolean);
           const base = String(next.baseRate || next.price || '');
           const curr = String(next.currency || defaultCurrency || 'JPY');
-          if (cats.length > 0) setPricingRows(cats.map((c: string) => ({ category: c, amount: base, currency: curr })));
-          else if (base || curr) setPricingRows([{ category: '', amount: base, currency: curr }]);
-          else setPricingRows([]);
+          if (cats.length > 0) initialRows = cats.map((c: string) => ({ category: c, amount: base, currency: curr }));
+          else if (base || curr) initialRows = [{ category: '', amount: base, currency: curr }];
         }
-      } catch { setPricingRows([]); }
+      } catch (e) { console.error('Pricing Init Error:', e); }
+
+      // Atomic update to prevent race conditions in effects watching these states
+      setPricingRows(initialRows);
+      setDetails(next);
     } else {
       setDetails({});
       setPricingRows([]);
@@ -1595,15 +1599,18 @@ const PRIMARY_BUTTON_SX = {
         // CRITICAL FIX: Force ID to match current (authoritative) to prevent stale details.id (row_...) from reverting UUIDs
         let merged: any = { ...current, ...details, id: current.id };
         // CRITICAL: Always include latest pricingRows from state to avoid accidental wipes
-        if (pricingRows.length > 0) {
+        // We now include it if the section is experiences, regardless of subsection, to ensure it persists during any edit.
+        if (pricingRows && Array.isArray(pricingRows)) {
             merged.pricingRows = pricingRows;
-            const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
-            const base = pricingRows[0]?.amount || merged.baseRate || '';
-            const curr = pricingRows[0]?.currency || merged.currency || defaultCurrency || 'JPY';
-            merged.pricingCategories = catsCsv;
-            merged.baseRate = base;
-            merged.price = base; 
-            merged.currency = curr;
+            if (pricingRows.length > 0) {
+                const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
+                const base = pricingRows[0]?.amount || merged.baseRate || '';
+                const curr = pricingRows[0]?.currency || merged.currency || defaultCurrency || 'JPY';
+                merged.pricingCategories = catsCsv;
+                merged.baseRate = base;
+                merged.price = base; 
+                merged.currency = curr;
+            }
         }
         // Detect changes on key fields to avoid unnecessary saves
         const keys = [
