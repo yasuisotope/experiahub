@@ -1354,12 +1354,16 @@ const PRIMARY_BUTTON_SX = {
       setDetails(next);
       // Initialize pricing rows from details
       try {
-        const cats = String(next.pricingCategories || '').split(',').map((s: string)=>s.trim()).filter(Boolean);
-        const base = String(next.baseRate || next.price || '');
-        const curr = String(next.currency || defaultCurrency || '');
-        if (cats.length > 0) setPricingRows(cats.map((c: string) => ({ category: c, amount: base, currency: curr })));
-        else if (base || curr) setPricingRows([{ category: '', amount: base, currency: curr }]);
-        else setPricingRows([]);
+        if (next.pricingRows && Array.isArray(next.pricingRows) && next.pricingRows.length > 0) {
+          setPricingRows(next.pricingRows);
+        } else {
+          const cats = String(next.pricingCategories || '').split(',').map((s: string)=>s.trim()).filter(Boolean);
+          const base = String(next.baseRate || next.price || '');
+          const curr = String(next.currency || defaultCurrency || 'JPY');
+          if (cats.length > 0) setPricingRows(cats.map((c: string) => ({ category: c, amount: base, currency: curr })));
+          else if (base || curr) setPricingRows([{ category: '', amount: base, currency: curr }]);
+          else setPricingRows([]);
+        }
       } catch { setPricingRows([]); }
     } else {
       setDetails({});
@@ -1444,6 +1448,7 @@ const PRIMARY_BUTTON_SX = {
             pricingCategories: a.pricingCategories || '',
             baseRate: a.baseRate || '',
             bokunProductId: a.bokunProductId || '',
+            pricingRows: Array.isArray(a.pricingRows) ? a.pricingRows : [],
             // Populate restored fields if available from API
             authenticEchoes: a.authenticEchoes,
             unforgettableFeeling: a.unforgettableFeeling,
@@ -1545,6 +1550,18 @@ const PRIMARY_BUTTON_SX = {
     try {
       // Merge: Target + Current Details + Explicit Overrides. Force valid ID.
       const merged = { ...target, ...details, ...overrides, id: selectedExperienceId, applicationId: appId };
+      
+      // CRITICAL: Always include latest pricingRows from state if we are in the experiences section
+      if (section === 'experiences' && pricingRows.length > 0) {
+          merged.pricingRows = pricingRows;
+          // Sync CSV and baseRate too
+          merged.pricingCategories = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
+          merged.baseRate = pricingRows[0]?.amount || merged.baseRate;
+          merged.currency = pricingRows[0]?.currency || merged.currency;
+      }
+
+      // Sync legacy price field with baseRate
+      if (merged.baseRate) merged.price = merged.baseRate;
 
       // Update local details state if overrides exist
       if (overrides) {
@@ -1577,13 +1594,16 @@ const PRIMARY_BUTTON_SX = {
         if (!current) return;
         // CRITICAL FIX: Force ID to match current (authoritative) to prevent stale details.id (row_...) from reverting UUIDs
         let merged: any = { ...current, ...details, id: current.id };
-        if (subsection === 'pricing') {
-          const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
-          const base = pricingRows[0]?.amount || merged.baseRate || '';
-          const curr = pricingRows[0]?.currency || merged.currency || defaultCurrency || '';
-          merged.pricingCategories = catsCsv;
-          merged.baseRate = base;
-          merged.currency = curr;
+        // CRITICAL: Always include latest pricingRows from state to avoid accidental wipes
+        if (pricingRows.length > 0) {
+            merged.pricingRows = pricingRows;
+            const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
+            const base = pricingRows[0]?.amount || merged.baseRate || '';
+            const curr = pricingRows[0]?.currency || merged.currency || defaultCurrency || 'JPY';
+            merged.pricingCategories = catsCsv;
+            merged.baseRate = base;
+            merged.price = base; 
+            merged.currency = curr;
         }
         // Detect changes on key fields to avoid unnecessary saves
         const keys = [
@@ -1596,7 +1616,8 @@ const PRIMARY_BUTTON_SX = {
           'itinerary', 'meetingPoint', 'safetyMeasures', 'requirements', 'included', 'notIncluded', 'insurance',
           // Vibe fields
           'authenticEchoes', 'unforgettableFeeling', 'magicMoment', 'hiddenGem', 
-          'communityConnection', 'perfectMatch', 'threeWords'
+          'communityConnection', 'perfectMatch', 'threeWords',
+          'pricingRows'
         ];
         // Special comparison for arrays (photosDriveUrls)
         const hasChange = keys.some((k) => {
@@ -2745,7 +2766,7 @@ const PRIMARY_BUTTON_SX = {
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
                 const base = pricingRows[0]?.amount || details.baseRate || '';
                 const curr = pricingRows[0]?.currency || details.currency || defaultCurrency || '';
-                await onSaveDetails({ pricingCategories: catsCsv, baseRate: base, currency: curr });
+                await onSaveDetails({ pricingCategories: catsCsv, baseRate: base, currency: curr, pricingRows });
               }}>Save Pricing</Button>
             </Stack>
           </Stack>

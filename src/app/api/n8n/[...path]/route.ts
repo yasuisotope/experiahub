@@ -119,9 +119,8 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
           return NextResponse.json({ success: true, stub: true, saved_direct: true });
     }
     if (targetUrl.includes('supplier/bookings/sync')) {
-          const res = await handleDirectSave('bookings', body, targetUrl, authHeader);
-          if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
-          return NextResponse.json({ success: true, stub: true, saved_direct: true });
+        await handleDirectSave('bookings', body, targetUrl, authHeader);
+        // Continue to N8N
     }
 
     // FORCE DIRECT GET for Company Data
@@ -150,14 +149,12 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
         if (res) return NextResponse.json({ success: true, ...res, direct: true });
     }
     if (targetUrl.includes('supplier/media/save')) {
-        const res = await handleDirectSave('media', body, targetUrl, authHeader);
-        if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
-        return NextResponse.json({ success: true, stub: true, saved_direct: true });
+        await handleDirectSave('media', body, targetUrl, authHeader);
+        // Continue to N8N
     }
     if (targetUrl.includes('supplier/onboarding/save')) {
-        const res = await handleDirectSave('onboarding', body, targetUrl, authHeader);
-        if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
-        return NextResponse.json({ success: true, stub: true, saved_direct: true });
+        await handleDirectSave('onboarding', body, targetUrl, authHeader);
+        // Continue to N8N
     }
     if (targetUrl.includes('supplier/sync/push')) {
         console.log(`[N8N Proxy] Direct Sync Push intercepted for UI update`);
@@ -571,33 +568,35 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
               return { success: false, error: 'Experience not found' };
           }
 
-          const currentId = exp.id;
+          const activityId = u.searchParams.get('activityId') || payload.activityId;
+          if (!activityId) return { success: false, error: 'Missing activityId' };
           
-          const isPlaceholder = (list: any[]) => Array.isArray(list) && list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
-          const isFinal = (list: any[]) => Array.isArray(list) && list.length > 0 && !isPlaceholder(list);
+          const incomingPhotos = Array.isArray(payload.photosDriveUrls) ? payload.photosDriveUrls : [];
 
-          const incomingPhotos = Array.isArray(payload.photosDriveUrls) 
-              ? payload.photosDriveUrls 
-              : (Array.isArray(payload.metadata?.photosDriveUrls) ? payload.metadata.photosDriveUrls : []);
-          const existingPhotos = Array.isArray(exp.photos_drive_urls) ? exp.photos_drive_urls : [];
+          // AUTHORITATIVE SAVE: Fetch fresh state to merge correctly and prevent wiping raw_data
+          const { data: currentExp, error: fetchErr } = await admin.from('experiences')
+              .select('*')
+              .eq('id', activityId)
+              .maybeSingle() as any;
 
-          // AUTHORITATIVE LOGIC: Per-item protection. 
-          // If we have an existing real URL at index i, don't let a placeholder at index i overwrite it.
+          if (fetchErr || !currentExp) {
+              return { success: false, error: fetchErr?.message || 'Experience not found' };
+          }
+
+          const existingPhotos = Array.isArray(currentExp.photos_drive_urls) ? currentExp.photos_drive_urls : [];
+          
+          // AUTHORITATIVE MERGE: If a slot has a final URL, don't let a stub placeholder overwrite it
           let finalPhotos = incomingPhotos;
           if (existingPhotos.length > 0) {
-              // Create a merged list based on the incoming structure but preserving existing finalized URLs where they match by index or existence
               finalPhotos = incomingPhotos.map((inUrl: any, i: number) => {
                   const exUrl = existingPhotos[i];
-                  const inIsPlaceholder = typeof inUrl === 'string' && inUrl.includes('anyoneWithLink');
-                  const exIsFinal = typeof exUrl === 'string' && !exUrl.includes('anyoneWithLink');
+                  const inIsStub = typeof inUrl === 'string' && (inUrl.includes('anyoneWithLink') || inUrl.includes('uc?id=anyoneWithLink'));
+                  const exIsFinal = typeof exUrl === 'string' && !exUrl.includes('anyoneWithLink') && !exUrl.includes('uc?id=anyoneWithLink');
                   
-                  if (inIsPlaceholder && exIsFinal) {
-                      return exUrl; // Keep the real one that was already there
-                  }
+                  if (inIsStub && exIsFinal) return exUrl; 
                   return inUrl;
               });
               
-              // Also, if incoming is empty/missing but existing has data, it might be a partial update from a legacy workflow
               if (incomingPhotos.length === 0 && existingPhotos.length > 0) {
                   finalPhotos = existingPhotos;
               }
@@ -605,54 +604,33 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
 
           const nextMedia = {
               photosDriveUrls: finalPhotos,
-              videoDriveUrl: payload.videoDriveUrl || payload.video_drive_url || exp.video_drive_url || '',
-              videoUrl: payload.videoUrl || payload.video_url || exp.video_url || ''
+              videoDriveUrl: payload.videoDriveUrl || payload.video_drive_url || currentExp.video_drive_url || '',
+              videoUrl: payload.videoUrl || payload.video_url || currentExp.video_url || ''
           };
           
           let nextRaw = {};
           try {
-              const rawData = typeof exp.raw_data === 'string' ? JSON.parse(exp.raw_data) : (exp.raw_data || {});
+              // Deep merge with existing raw_data to prevent field loss
+              const rawData = typeof currentExp.raw_data === 'string' ? JSON.parse(currentExp.raw_data) : (currentExp.raw_data || {});
               nextRaw = {
                   ...rawData,
-                  photosDriveUrls: nextMedia.photosDriveUrls,
-                  videoDriveUrl: nextMedia.videoDriveUrl,
-                  videoUrl: nextMedia.videoUrl
+                  ...nextMedia
               };
           } catch (e) {
-              nextRaw = {
-                  photosDriveUrls: nextMedia.photosDriveUrls,
-                  videoDriveUrl: nextMedia.videoDriveUrl,
-                  videoUrl: nextMedia.videoUrl
-              };
+              nextRaw = { ...nextMedia };
           }
 
-          console.log(`[N8N Proxy] Media Save - Final Payload for ${currentId}:`, {
-              hasPhotos: !!nextMedia.photosDriveUrls?.length,
-              firstPhoto: nextMedia.photosDriveUrls?.[0],
-              isPlaceholder: nextMedia.photosDriveUrls?.[0]?.includes('anyoneWithLink')
-          });
-
-          const { error: updateErr, count } = await admin.from('experiences')
+          const { error: updateErr } = await admin.from('experiences')
              .update({ 
                  photos_drive_urls: nextMedia.photosDriveUrls,
                  video_drive_url: nextMedia.videoDriveUrl,
                  video_url: nextMedia.videoUrl,
                  raw_data: JSON.stringify(nextRaw),
-                 metadata: payload.metadata || undefined
+                 metadata: payload.metadata || currentExp.metadata || undefined
              })
-             .eq('id', currentId)
-             .select('id');
+             .eq('id', activityId);
 
-          if (updateErr) {
-              console.error(`[N8N Proxy] Supabase Update Error for ${currentId}:`, updateErr);
-              return { success: false, error: updateErr.message };
-          }
-
-          if (!count || count === 0) {
-              console.warn(`[N8N Proxy] Media Save - No rows were updated for ID ${currentId}`);
-          }
-
-          console.log(`[N8N Proxy] Media Save SUCCESS for ${currentId}. Rows updated: ${count || 1}`);
+          if (updateErr) return { success: false, error: updateErr.message };
           return { success: true };
     } else if (type === 'bookings' && payload.bookings) {
         const admin = getAdminClient();
@@ -711,7 +689,7 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 price: a.price ? parseFloat(a.price) : (a.baseRate ? parseFloat(a.baseRate) : null),
                 currency: a.currency || null,
                 duration_minutes: a.durationMinutes ? parseInt(a.durationMinutes) : null,
-                bokun_product_id: a.bokunProductId || null,
+                bokun_product_id: a.bokunProductId || '',
                 category: a.category || null,
                 raw_data: raw,
                 // If incoming is placeholder but we might have finalized data, we should ideally merge or skip.
@@ -722,16 +700,34 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 video_drive_url: a.videoDriveUrl || a.video_drive_url || '',
                 video_url: a.videoUrl || a.video_url || '',
                 status: a.status || null,
-                booking_link: a.bookingLink || null,
+                booking_link: a.bookingLink || a.booking_link || null,
                 itinerary: a.itinerary || null,
-                three_words: a.threeWords || null,
-                scheduling_mode: a.schedulingMode || null,
-                authentic_echoes: a.authenticEchoes || null,
-                unforgettable_feeling: a.unforgettableFeeling || null,
-                magic_moment: a.magicMoment || null,
-                hidden_gem: a.hiddenGem || null,
-                community_connection: a.communityConnection || null,
-                perfect_match: a.perfectMatch || null
+                three_words: a.threeWords || a.three_words || null,
+                scheduling_mode: a.schedulingMode || a.scheduling_mode || null,
+                authentic_echoes: a.authenticEchoes || a.authentic_echoes || null,
+                unforgettable_feeling: a.unforgettableFeeling || a.unforgettable_feeling || null,
+                magic_moment: a.magicMoment || a.magic_moment || null,
+                hidden_gem: a.hiddenGem || a.hidden_gem || null,
+                community_connection: a.communityConnection || a.community_connection || null,
+                perfect_match: a.perfectMatch || a.perfect_match || null,
+                meeting_point: a.meetingPoint || a.meeting_point || null,
+                safety_measures: a.safetyMeasures || a.safety_measures || null,
+                requirements: a.requirements || null,
+                included: a.included || null,
+                not_included: a.notIncluded || a.not_included || null,
+                insurance: a.insurance || null,
+                languages: a.languages || null,
+                max_participants: a.maxParticipants ? parseInt(a.maxParticipants) : null,
+                min_participants: a.minParticipants ? parseInt(a.minParticipants) : null,
+                cancellation_policy: a.cancellationPolicy || a.cancellation_policy || null,
+                booking_lead_time: a.bookingLeadTime || a.booking_lead_time || null,
+                time_zone: a.timeZone || a.time_zone || 'Asia/Tokyo',
+                city: a.city || null,
+                start_times: a.startTimes || a.start_times || null,
+                cutoff_hours: a.cutoffHours || a.cutoff_hours || null,
+                pricing_categories: a.pricingCategories || a.pricing_categories || null,
+                base_rate: a.baseRate ? parseFloat(a.baseRate) : null,
+                pricing_rows: Array.isArray(a.pricingRows) ? a.pricingRows : (Array.isArray(a.pricing_rows) ? a.pricing_rows : [])
             };
         });
 
@@ -844,7 +840,7 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
             const admin = getAdminClient();
             const { data: expRow } = await (admin || supabase)
                 .from('experiences')
-                .select('photos_drive_urls, video_drive_url, video_url, status, raw_data, metadata')
+                .select('*')
                 .eq('id', activityId)
                 .maybeSingle();
             
@@ -875,10 +871,44 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
                 }
 
                 m = {
+                    id: expRow.id,
                     photosDriveUrls: finalPhotos,
                     videoDriveUrl: expRow.video_drive_url || raw?.videoDriveUrl || '',
                     videoUrl: expRow.video_url || raw?.videoUrl || '',
-                    status: expRow.status || raw?.status || null
+                    status: expRow.status || raw?.status || (expRow.bokun_product_id ? 'Published' : 'Unpublished'),
+                    
+                    // Exhaustive mapping for form persistence
+                    title: expRow.title || raw?.title || '',
+                    summary: expRow.description || raw?.summary || raw?.description || '',
+                    description: expRow.description || raw?.description || '',
+                    city: expRow.city || raw?.city || '',
+                    price: expRow.price || raw?.price || '',
+                    currency: expRow.currency || raw?.currency || 'JPY',
+                    durationMinutes: expRow.duration_minutes || raw?.durationMinutes || '',
+                    itinerary: expRow.itinerary || raw?.itinerary || '',
+                    meetingPoint: expRow.meeting_point || raw?.meetingPoint || raw?.meeting_point || '',
+                    maxParticipants: expRow.max_participants || raw?.maxParticipants || '',
+                    minParticipants: expRow.min_participants || raw?.minParticipants || '',
+                    languages: expRow.languages || raw?.languages || '',
+                    cancellationPolicy: expRow.cancellation_policy || raw?.cancellationPolicy || '',
+                    bookingLink: expRow.booking_link || raw?.bookingLink || raw?.booking_link || '',
+                    safetyMeasures: expRow.safety_measures || raw?.safetyMeasures || '',
+                    requirements: expRow.requirements || raw?.requirements || '',
+                    threeWords: expRow.three_words || raw?.threeWords || '',
+                    included: expRow.included || raw?.included || '',
+                    notIncluded: expRow.not_included || raw?.notIncluded || '',
+                    insurance: expRow.insurance || raw?.insurance || '',
+                    authenticEchoes: expRow.authentic_echoes || raw?.authenticEchoes || '',
+                    unforgettableFeeling: expRow.unforgettable_feeling || raw?.unforgettableFeeling || '',
+                    magicMoment: expRow.magic_moment || raw?.magicMoment || '',
+                    hiddenGem: expRow.hidden_gem || raw?.hiddenGem || '',
+                    communityConnection: expRow.community_connection || raw?.communityConnection || '',
+                    perfectMatch: expRow.perfect_match || raw?.perfectMatch || '',
+                    schedulingMode: expRow.scheduling_mode || raw?.schedulingMode || '',
+                    pricingCategories: expRow.pricing_categories || raw?.pricingCategories || '',
+                    baseRate: expRow.base_rate || raw?.baseRate || '',
+                    pricingRows: expRow.pricing_rows || raw?.pricingRows || [],
+                    bokunProductId: expRow.bokun_product_id || raw?.bokunProductId || ''
                 };
             }
         } else {
@@ -890,11 +920,7 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
              };
         }
         
-        return {
-             photosDriveUrls: m.photosDriveUrls || [],
-             videoDriveUrl: m.videoDriveUrl || '',
-             videoUrl: m.videoUrl || ''
-        };
+        return m;
     } else if (type as string === 'status') {
         return {
             exists: true,
@@ -960,11 +986,46 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
                 title: row.title || raw?.title,
                 city: row.city || raw?.city,
                 description: row.description || raw?.summary || raw?.description,
+                summary: row.description || raw?.summary || raw?.description, // For frontend compatibility
                 price: row.price || raw?.price,
                 currency: row.currency || raw?.currency,
-                duration_minutes: row.duration_minutes || raw?.durationMinutes,
-                bokun_product_id: row.bokun_product_id || raw?.bokunProductId,
-                category: row.category || raw?.category,
+                durationMinutes: row.duration_minutes || raw?.durationMinutes || '',
+                category: row.category || raw?.category || '',
+                
+                // Logistics & Requirements
+                meetingPoint: row.meeting_point || raw?.meetingPoint || raw?.meeting_point || '',
+                safetyMeasures: row.safety_measures || raw?.safetyMeasures || raw?.safety_measures || '',
+                requirements: row.requirements || raw?.requirements || '',
+                included: row.included || raw?.included || '',
+                notIncluded: row.not_included || raw?.notIncluded || raw?.not_included || '',
+                insurance: row.insurance || raw?.insurance || '',
+                languages: row.languages || raw?.languages || '',
+                
+                // Pricing & Capacity
+                maxParticipants: row.max_participants || raw?.maxParticipants || raw?.max_participants || '',
+                minParticipants: row.min_participants || raw?.minParticipants || raw?.min_participants || '',
+                cancellationPolicy: row.cancellation_policy || raw?.cancellationPolicy || raw?.cancellation_policy || '',
+                bookingLeadTime: row.booking_lead_time || raw?.bookingLeadTime || raw?.booking_lead_time || '',
+                timeZone: row.time_zone || raw?.timeZone || row.time_zone || 'Asia/Tokyo',
+                startTimes: row.start_times || raw?.startTimes || raw?.start_times || '',
+                cutoffHours: row.cutoff_hours || raw?.cutoffHours || raw?.cutoff_hours || '',
+                pricingCategories: row.pricing_categories || raw?.pricingCategories || raw?.pricing_categories || '',
+                baseRate: row.base_rate || raw?.baseRate || raw?.base_rate || '',
+                pricingRows: row.pricing_rows || raw?.pricingRows || [],
+                bookingLink: row.booking_link || raw?.bookingLink || raw?.booking_link || '',
+
+                // Narrative & Restoration
+                authenticEchoes: row.authentic_echoes || raw?.authenticEchoes || '',
+                unforgettableFeeling: row.unforgettable_feeling || raw?.unforgettableFeeling || '',
+                magicMoment: row.magic_moment || raw?.magicMoment || '',
+                hiddenGem: row.hidden_gem || raw?.hiddenGem || row.hidden_gem || '',
+                communityConnection: row.community_connection || raw?.communityConnection || '',
+                perfectMatch: row.perfect_match || raw?.perfectMatch || '',
+                itinerary: row.itinerary || raw?.itinerary || '',
+                threeWords: row.three_words || raw?.threeWords || '',
+                schedulingMode: row.scheduling_mode || raw?.schedulingMode || '',
+                bokunProductId: row.bokun_product_id || raw?.bokunProductId || '',
+
                 // Media & Status Retrieval (Source of Truth Strategy)
                 photosDriveUrls: (() => {
                     const structured = Array.isArray(row.photos_drive_urls) ? row.photos_drive_urls : [];
@@ -973,7 +1034,7 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
                     
                     const isFinal = (list: any[]) => {
                         if (!Array.isArray(list) || list.length === 0) return false;
-                        return !list.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
+                        return !list.some(u => typeof u === 'string' && (u.includes('anyoneWithLink') || u.includes('uc?id=anyoneWithLink')));
                     };
                     
                     if (isFinal(structured)) return structured;
@@ -986,7 +1047,7 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
                 })(),
                 videoDriveUrl: row.video_drive_url || raw?.videoDriveUrl || '',
                 videoUrl: row.video_url || raw?.videoUrl || '',
-                status: row.status || row.bokun_product_id ? 'Published' : 'Unpublished'
+                status: row.status || (row.bokun_product_id ? 'Published' : 'Unpublished')
             };
         });
     } catch (e) { return []; }

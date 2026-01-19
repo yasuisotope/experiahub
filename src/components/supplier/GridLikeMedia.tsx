@@ -24,18 +24,22 @@ const N8N_BASE = '/api/n8n';
 const SYNC_PROGRESS_SVG = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiB2aWV3Qm94PSIwIDAgNDAwIDMwMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI0YxRjUvOSIvPjxwYXRoIGZpbGw9IiM5NEEzQjgiIGQ9Im05Ni4wNiAxMzcuNjM1LTEuMTEgMi4xcS0uMTkuMzUtLjQyLjV0LS4yMi4xNnEtLjU1LjE2LS4zNSAwLS43NS0uMjYtLjQtLjI1LS45Ny0uNTYtLjU2LS4zMi0xLjMxLS41N3QtLjc1LS4yNi0xLjc3LS4yNnEtLjkyIDAtMS42Mi4yMnQtLjY5LjIzLTEuMTYuNjJ0LS40Ny40LS43Ljk1dC0uMjMgMS4yMXEwIC44NS40NyAxLjQxdDEuMjQuOTVxLjc4LjQgMS43Ny43MXEuOTkuMzIgMi4wMy42N3ExLjA0LjM2IDIuMDMuODN0MS43NiAxLjE4cS43OC43MiAxLjI1IDEuNzZ0LjQ3IDIuNTNxMCAxLjYxLS41NSAzLjAyLS41NiAxLjQxLTEuNjIgMi40NnQtMS4wNyAxLjA1LTIuNiAxLjY1dC0zLjUxLjZxLTEuMTQgMC0yLjI1LS4yMnQtMS4xLS4yMi0yLjEyLS42M3QtMS4wMS0uNDItMS45LS45OXQtLjktLjU4LTEuNTktMS4yOWwxLjMxLTIuMTNxLjE2LS4yMy40Mi0uMzl0LjI3LS4xNS41Ny0uMTVxLjQxIDAgLjg5LjMzdC40Ny4zNCAxLjEzLjc1cS42Ni40MiAxLjU1Ljc2cS44OC4zMyAyLjEyLjMzIDEuOSAwIDIuOTMtLjkwIDEuMDQtLjg5IDEuMDQtMi41OCAwLS45NC0uNDctMS41M3QtLjQ3LS42LTEuMjQtMS4wLS43OC0uNC0xLjc3LS42OXEtLjk5LS4yOC0yLjAxLS42MXQtMi4wMS0uNzktMS43Ny0xLjIwcS0uNzctLjc0LTEuMjQtMS44NnQtLjQ3LTEuMTEtLjQ3LTIuNzUgMC0xLjMwLjUxLTIuNTR0LjUyLTEuMjMgMS41MS0yLjE5dDIuNDUtMS41NHExLjQ1LS41NyAzLjMzLS41NyAyLjExIDAgMy44OS42NnQxLjc5LjY2IDMuMDQgMS44NG0xNS43NiA0LjY5aDMuMjZsLTkuMjIgMjEuNThxLS4xOC40My0uNDcuNjV0LS4yOS4yMy0uODguMjNoLTMuMDRsMy4xNy02LjhsLTYuODUtMTUuNjZoMy41OHEuNDggMCAuNzUuMjN0LjI4LjIzLjQxLjUzbDMuNTkgOC43OHEuMTkuNDQuMzEuODl0LjEyLjQ0LjI0LjkxcS4xNS0uNDcuMzAtLjkycHQuMTQtLjQ1LjMzLS45bDMuNC04Ljc2cS4xMy0uMzMudC40My0uNTR0LjMxLS4yMi42OS0uMjJtOC44Mi43NGwuMjkgMS4zNHEuNTEtLjUxIDEuMDgtLjk1dDEuMi0uNzRxLjY0LS4zMSAxLjM2LS40OHQuNzMtLjE3IDEuNTktLjE3IDEuMzggMCAyLjQ1LjQ3dDEuMDguNDcgMS43OSAxLjMydC43Mi44NSAxLjA5IDIuMDN0LjM3IDIuNnYxMC43N2gtNC4wN3YtMTAuNzdxMC0xLjU2LS43MS0yLjQxdC0yLjE2LS44NXEtMS4wNiAwLTEuOTguNDh0LS45My40OC0xLjc1IDEuMzF2MTIuMjRoLTQuMDh2LTE2LjkzaDIuNXEuNzkgMCAxLjAzLjc0bTI4LjI5IDEuMzYtMS4wOCAxLjQ4cS0uMTguMjN0LS4zNS4zNnEtLjE3LjE0LS41LjE0cS0uMzIgMC0uNjItLjE5dC0uMjktLjE5LS43LS40M3EtLjQyLS4yNC0uOTktLjQzdC0xLjQxLS4xOXEtMS4wNyAwLTEuODguMzl0LS44MS4zOC0xLjM0IDEuMTF0LS41NC43My0uOCAxLjc2cS0uMjcgMS4wMy0uMjcgMi4zMyAwIDEuMzYuMjkgMi40MXQuMjkgMS4wNi44MyAxLjc4dC41NS43MSAxLjMyIDEuMDh0Ljc4LjM4IDEuNzUuMzhxLjk4IDAgMS41OC0uMjR0MS4wMS0uNTNxLjQyLS4yOS43Mi0uNTNxLjMxLS4yNC42OS0uMjRxLjQ5IDAgLjc0LjM4bDEuMTcgMS40OXEtLjY4Ljc5LTEuNDcgMS4zMnQtLjc5LjU0LTEuNjQuODZ0LTEuNzUuNDZxLS45LjEzLTEuNzkuMTMtMS41NyAwLTIuOTUtLjU5dC0xLjM5LS41OC0yLjQzLTEuNzF0LTEuMDQtMS4xMi0xLjY0LTIuNzR0LS42LTEuNjMtLjYtMy43MSAwLTEuODYuNTMtMy40NS41NC0xLjYgMS41OC0yLjc2dDIuNTctMS44MnExLjU0LS42NiAzLjU0LS42NiAxLjg5IDAgMy4zMi42MXQyLjU3IDEuNzVtMTAuODUtMi4xaDQuMDl2MTYuOTNoLTQuMDl6bTQuNjYtNC45M3EwIC41My0uMjIuOTlxLS4yMS40Ni0uNTcuODF0LS4zNS4zNC0uODMuNTV0LTEuMDIuMjFxLS41MyAwLTEtLjIxdC0uODItLjU1cS0uMzUtLjM1LS41NS0uODF0LS4yMS0uOTlxMC0uNTUuMjEtMS4wM3QuMi0uNDcuNTUtLjgydC44Mi0uNTVxLjQ3LS4yMSAxLS4yMXQuNTQgMCAxLjAyLjIxdC40OC4yLjgzLjU1dC4zNi4zNS41Ny44MnQuMjIuNDguMjIgMS4wM203LjEyIDUuNjdsLjI4IDEuMzRxLjUyLS41MSAxLjA4LS45NS41Ny0uNDQgMS4yMS0uNzRxLjYzLS4zMSAxLjM2LS40OHQxLjU4LS4xN3ExLjM5IDAgMi40Ni40N3QxLjA4LjQ3IDEuNzkgMS4zMnQuNzIuODUgMS4wOSAyLjAzdC4zNyAyLjZ2MTAuNzdoLTQuMDd2LTEwLjc3cTAtMS41Ni0uNzEtMi40MXQtMi4xNi0uODVxLTEuMDYgMC0xLjk4LjQ4dC0uOTMuNDgtMS43NSAxLjMxdjEyLjI0aC00LjA4di0xNi45M2gyLjQ5cS44MCAwIDEuMDQuNzRtMjguMTkgNC4zM2gzLjMxcTEuMjIgMCAyLjEzLS4zMXQuOTEtLjMwIDEuNTEtLjg3dC45LTEuMzkuMy0xLjgycTAtLjk2LS4zLTEuNzN0LS4zLS43OC0uODktMS4zMnQtLjYtLjU1LTEuNS0uODR0LS45MS0uMjktMi4xNS0uMjloLTMuMzF6bS00LjQ0LTEyaDcuNzVxMi4zOSAwIDQuMTQuNTZ0Mi44OSAxLjU3IDEuNjkgMi40MXEuNTYgMS40LjU2IDMuMDcgMCAxLjczLS41OCAzLjE3dC0uNTggMS40NS0xLjczIDIuNDl0LTEuMTYgMS4wNC0yLjkgMS42MXQtMS43NC41OC00LjA3LjU4aC0zLjMxdjguNGgtNC40NHptMjMuMzggNy45NWwuMjUgMS45MnEuNzktMS41MiAxLjg4LTIuMzl0MS4wOS0uODYgMi41Ny0uODYgMS4xNyAwIDEuODguNTFsLS4yNiAzLjA1cS0uMDkuMy0uMjQuNDJ0LS4xNi4xMy0uNDIuMTNxLS4yNSAwLS43NC0uMDl0LS40OC0uMDgtLjk1LS4wOHEtLjY3IDAgMS4yLjJ0LS45NS41Ny0uNzQuOS0uNiAxLjJ2MTAuNDNoLTQuMDh2LTE2LjkzaDIuMzlxLjYzIDAgLjg4LjIydC4yNS4yMy4zMy44bTE2LjItMS4yOHExLjg4IDAgMy40Mi42MSAxLjU1LjYxIDIuNjQgMS43M3QxLjEgMS4xMiAxLjcgMi43NHQuNTkgMS42Mi41OSAzLjYxIDAgMi4wMi0uNTkgMy42M3QtLjYgMS42Mi0xLjcgMi43NnQtMS4wOSAxLjE0LTIuNjQgMS43NXQtMS41NC42MS0zLjQyLjYxLTEuOSAwLTMuNDUtLjYxdC0yLjY1LTEuNzV0LTEuMDktMS4xNC0xLjctMi43NnQtLjYtMS42MS0uNi0zLjYzIDAgMS45OXQuNi0zLjYxdC42MS0xLjYyIDEuNy0yLjc0dDEuMS0xLjEyIDIuNjUtMS43M3QzLjQ1LS42MW0wIDE0LjNxMi4xMSAwIDMuMTMtMS40MnQxLjAxLTEuNDIgMS4wMS00LjE1IDAtMi43NC0xLjAxLTQuMTh0LTEuMDItMS40My0zLjEzLTEuNDN0LTIuMTQgMC0zLjE4IDEuNDR0LTEuMDMgMS40NC0xLjAzIDQuMTcgMCAyLjcyIDEuMDMgNC4xNXQxLjA0IDEuNDIgMy4xOCAxLjQybTE3LjY2LTUuOTlxLjc1IDAgMS4zMi0uMnQuNTYtLjIxLjkzLS41N3QuMzctLjM3LjU2LS44OHQuMTktMS4xMnEwLTEuMjUtLjc1LTEuOTl0LS43NS0uNzMtMi4yNS0uNzN0LTEuNTEgMC0yLjI2LjczdC0uNzUuNzQtLjc1IDEuOTkgMCAuNnEuMTkgMS4xMXQuNTYuODguOTQuNThxLjU3LjIgMS4zMi4y bTQuNiA5LjY0cTAtLjUtLjMtLjgxdC0uMjktLjMxLS44MS0uNDlxLS41MS0uMTctMS4xOS0uMjV0LS42OS0uMDgtMS40NS0uMTN0LS43Ny0uMDQtMS41OS0uMDd0LTEuNTktLjEzcS0uNjguMzgtMS4xLjg5dC0uNDIgMS4xOXEwIC40NC4yMi44M3QuMjMuMzkuNzEuNjd0LjQ5LjI4IDEuMjcuNDR0Ljc3LjE1IDEuODkuMTVxMS4xNCAwIDEuOTctLjE3dC44Mi0uMTcgMS4zNi0uNDh0LjUzLS4zMC43OC0uNzN0LjI1LS40Mi4yNS0uOTFtLS44MS0xNy4xMWg0Ljg3djEuNTJxMCAuNzItLjg4Ljg5bC0xLjUxLjI4cS4zNC44Ny4zNCAxLjkxIDAgMS4yNi0uNSAyLjI3dC0uNSAxLjAyLTEuNCAxLjcycS0uODkuNzEtMi4xIDEuMXQtMi42MS4zOXEtLjUgMC0uOTYtLjA1dC0uOTEtLjEzcS0uNzkuNDgtLjc5IDEuMDcgMCAuNTEuNDcuNzV0MS4yNS4zNHQuNzcuMSAxLjc2LjEyLjE5OS4wMyAyLjAzLjExdDIuMDMuMjl0MS43Ny42NXEuNzcuNDUgMS4yNCAxLjIxLjQ3Ljc3LjQ3IDEuOTggMCAxLjEyLS41NSAyLjE3dC0uNTUgMS4wNi0xLjYgMS44OXQtMS4wNS44Mi0yLjU4IDEuMzJ0LTEuNTIuNTEtMy40Ny41MXEtMS45MSAwLTMuMzMtLjM3dC0xLjQyLS4zOC0yLjM2LS45OXQtLjk0LS42Mi0xLjQtMS40M3QtLjQ3LS44MS0uNDctMS42OCAwLTEuMTkuNzItMS45OXQxLjk3LTEuMjhxLS42Ny0uMzUtMS4wNy0uOTN0LS40LS41Ny0uNC0xLjUxIDAtLjM4LjE0LS43OXQuMTUtLjQwLjQyLS44MHQuMjctLjM5LjY4LS43NXQuNDEtLjM1Ljk4LS42My0xLjI5LS43MC0yLjAzLTEuODV0LS43My0xLjE2LS43My0yLjcxIDAtMS4yNS41LTIuMjd0LjUxLTEuMDEgMS40MS0xLjczdDIuMTItMS4xMXExLjIzLS4zOCAyLjY5LS4zOHExLjA4IDAgMi4wNC4yM3QuOTYuMjIgMS43NS42NW0xMS4wNC40NC4yNSAxLjkycS43OS0xLjUyIDEuODgtMi4zOXQxLjA5LS44NiAyLjU3LS44NiAxLjE3IDAgMS44OC41MWwtLjI2IDMuMDVxLS4wOC4zLS4yNC40MnQtLjE2LjEzLS40Mi4xM3EtLjI1IDAtLjc0LS4wOXQtLjQ4LS4wOC0uOTQtLjA4cS0uNjggMCAxLjIxLjJ0LS45NS41Ny0uNzQuOS0uNiAxLjJ2MTAuNDNoLTQuMDh2LTE2LjkzaDIuMzlxLjYzIDAgLjg4LjIydC4yNS4yMy4zMy44bTExLjkzIDUuNTBIMjg3cTAtLjc5LS4yMy0xLjQ5dC0uMjItLjcxLS42Ni0xLjIzdC0uNDUtLjUzLTEuMTMtLjg0dC0uNjktLjMwLTEuNi0uMzB0LTEuNzYgMC0yLjc4IDF0LTEuMDEgMS4wMS0xLjI5IDIuODZtMTAuMzkgMi40NmgtMTAuNDdxLjEwIDEuMzAuNDYgMi4yNXQuOTYgMS41N3EuNTkuNjIgMS40MS45MnQuODEuMzEgMS44MC4zMXQxLjcxLS4yNHQuNzItLjIzIDEuMjUtLjUxdC41NC0uMjguOTQtLjUxdC40MS0uMjMuNzktLjIzcS41MSAwIC43Ni4zOGwxLjE3IDEuNDlxLS42OC43OS0xLjUyIDEuMzJ0LS44NC41NC0xLjc2Ljg2dC0uOTEuMzItMS44Ni40NnQtLjk1LjEzLTEuODQuMTN0LTEuNzcgMC0zLjI4LS41OXQtMS41Mi0uNTgtMi42NC0xLjczdC0xLjEzLTEuMTUtMS43Ny0yLjg0dC0uNjQtMy45MnEwLTEuNzMuNTYtMy4yNnQuNTYtMS41MiAxLjYxLTIuNjV0MS4wNC0xLjEzIDIuNTUtMS43OXQzLjQxLS42NnExLjYwIDAgMi45Ni41MXQxLjM1LjUxIDIuMzIgMS40OXQuOTguOTggMS41MyAyLjQxdC41NSAzLjI2cTAgLjkyLS4yIDEuMjV0LS4yMC4zMi0uNzYuMzJtMTUuMjctNy4xNS0uOTMgMS40N3EtLjE2LjI2LS4zNC4zN3QtLjE5LjExLS40Ny4xMXEtLjI5IDAtLjYzLS4xN2wtLjc5LS4zN3EtLjQ0LS4yMC0xLjAxLS4zN3QtLjU3LS4xNi0xLjM0LS4xNnEtMS4yMSAwLTEuODkuNTF0LS42OS41MS0uNjkgMS4zM3EwIC41NS4zNi45MnQuMzUuMzcuOTQuNjV0LjU4LjI4IDEuMzIuNTF0Ljc1LjIyIDEuNTEuNDh0Ljc3LjI3IDEuNTEuNjB0Ljc1LjM0IDEuMzMuODZ0LjU5LjUyLjk0IDEuMjV0LjM2LjcyLjM2IDEuNzVxMCAxLjIyLS40NCAyLjI1dC0xLjI5IDEuNzh0Ljg2Ljc1LTIuMTMgMS4xN3QtMS4yNi40Mi0yLjkxLjQycS0uODcgMC0xLjcxLS4xNXQtLjgzLS4xNi0xLjYtLjQ0dC0uNzYtLjI4LTEuNDEtLjY2dC0uNjYtLjM4LTEuMTUtLjgzbC45NC0xLjU1cS4xOC0uMjguNDMtLjQzdC4yNS0uMTQuNjMtLjE0dC4zNyAwIC43MS4yMXQuMzQuMjIuNzkuNDZ0LjQ0LjI1IDEuMDQuNDZ0LjYxLjIyIDEuNTMuMjJxLjczIDAgMS4yNS0uMTd0LjUyLS4xOC44NS0uNDZ0LjM0LS4yOC41LS42NXQuMTYtLjc3cTAtLjU5LS4zNi0uOTd0LS4zNS0uMzgtLjk0LS42NnQtLjU4LS4yOC0xLjM0LS41MHQtLjc1LS4yMy0xLjUzLS40OXQtMS41My0uNjJ0LS43Ni0uMzUtMS4zNC0uOTB0LS41OS0uNTQtLjk0LTEuMzN0LS4zNi0uODAtLjM2LTEuOTJxMC0xLjA0LjQyLTEuOTh0LjQxLS45NCAxLjIxLTEuNjR0Mi0xLjEyIDEuMTktLjQyIDIuNzYtLjQycTEuNzUgMCAzLjE4LjU3dDEuNDQgLjU4IDIuNDAgMS41Mm0xNC41IDAtLjkyIDEuNDdxLS4xNy4yNi0uMzUuMzd0LS40Ni4xMXEtLjMwIDAtLjY0LS4xN3QtLjM0LS4xNi0uNzgtLjM3dC0uNDUtLjIwLTEuMDItLjM3dC0uNTctLjE2LTEuMzQtLjE2cS0xLjIxIDAtMS44OS41MXQtLjY5LjUxLS42OSAxLjMzZTAgLjU1LjM2LjkydC4zNS4zNy45NC42NXQxLjMzLjUxcS43NC4yMiAxLjUxLjQ4dC43Ny4yNyAxLjUxLjYwdC43NC4zNCAxLjMzLjg2dC41OC41Mi45NCAxLjI1dC4zNS43Mi4zNSAxLjc1cTAgMS4yMi0uNDQgMi4yNXQtLjQzIDEuMDMtMS4yOSAxLjc4dC0yLjEyIDEuMTctMi45MS40MnEtLjg4IDAtMS43MS0uMTV0LS44My0uMTYtMS42LS40NHQtMS40Mi0uNjZ0LTEuMTUtLjgzbC45NC0xLjU1cS4xOC0uMjguNDMtLjQzdC4yNS0uMTQuNjMtLjE0dC4zNyAwIC43Mi4yMXQuMzMuMjIuNzguNDZ0LjQ1LjI1IDEuMDUuNDZ0LjYwLjIyIDEuNTIuMjJxLjczIDAgMS4yNS0uMTd0LjUyLS4xOC44Ni0uNDZ0LjQ5LS4yOC41LS42NXQuMTYtLjc3cTAtLjU5LS4zNi0uOTd0LS4zNS0uMzgtLjk0LS42NnQtLjU4LS4yOC0xLjMzLS41MHQtLjc1LS4yMy0xLjU0LS40OXQtMS41NC0uNjJ0LS43OC0uMzUtMS4zNC0uOTB0LS41OC0uNTQtLjk0LTEuMzN0LS4zNS0uODAtLjM1LTEuOTJxMC0xLjA0LjQxLTEuOTh0MS4yMS0xLjY0dDIuMTItMS4xMiAyLjc2LS40MnExLjc1IDAgMy4xOS41N3QxLjQzLjU4IDIuMzkgMS41MiIvPjwvc3ZnPg==`;
 
 // Helper to convert Drive links to direct preview URLs
-function formatDriveUrl(url: string): string {
+// Helper to convert Drive links to direct preview URLs
+function formatDriveUrl(url: string, size: number = 800): string {
     if (!url) return '';
     // Preserve placeholders so they can trigger 'Awaiting Sync' overlay and onError fallback
     if (url.includes('anyoneWithLink')) return 'https://drive.google.com/uc?id=anyoneWithLink&export=download';
     
-    // Pattern: /file/d/[ID]/view or /file/d/[ID]/edit
-    const fileDMatch = url.match(/\/file\/d\/([^\/?#&]+)/);
-    if (fileDMatch && fileDMatch[1]) return `https://drive.google.com/uc?id=${fileDMatch[1]}&export=download`;
+    // Extract ID using base64url characters (A-Z, a-z, 0-9, -, _)
+    const fileDMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    const id = (fileDMatch && fileDMatch[1]) || (idMatch && idMatch[1]);
     
-    // Pattern: ?id=[ID]
-    const idMatch = url.match(/[?&]id=([^&?#]+)/);
-    if (idMatch && idMatch[1]) return `https://drive.google.com/uc?id=${idMatch[1]}&export=download`;
+    if (id) {
+        // Thumbnail endpoint (?id=ID&sz=wSIZE) is much more robust for embedding in web apps
+        // than the 'uc' download endpoint, which Google often restricts.
+        return `https://drive.google.com/thumbnail?id=${id}&sz=w${size}`;
+    }
     
     return url;
 }
@@ -100,10 +104,19 @@ export default function GridLikeMedia({
         if (json?.success) {
           const remoteList: string[] = json.photosDriveUrls || [];
           setPhotos(currentPhotos => {
-            const localOnly = currentPhotos.filter(u => u.includes('anyoneWithLink'));
-            const finalMerge = Array.from(new Set([...remoteList, ...localOnly]));
+            const remoteIsFinal = remoteList.length > 0 && !remoteList.some(u => typeof u === 'string' && u.includes('anyoneWithLink'));
             
-            if (activityId && onUpdate) {
+            let finalMerge = remoteList;
+            if (remoteIsFinal) {
+              finalMerge = remoteList;
+            } else {
+              const localPlaceholders = currentPhotos.filter(u => typeof u === 'string' && u.includes('anyoneWithLink'));
+              const remoteUrls = new Set(remoteList);
+              const uniqueLocal = localPlaceholders.filter(p => !remoteUrls.has(p));
+              finalMerge = [...remoteList, ...uniqueLocal];
+            }
+            
+            if (activityId && onUpdate && finalMerge.join(',') !== currentPhotos.join(',')) {
               onUpdate(activityId, { 
                 photosDriveUrls: finalMerge, 
                 videoDriveUrl: json.videoDriveUrl || '', 
@@ -179,10 +192,18 @@ export default function GridLikeMedia({
         const json = await parseJsonSafe(res);
         
         if (json?.success && Array.isArray(json.photosDriveUrls)) {
-          const remoteList: string[] = json.photosDriveUrls;
-          const hasRemotePlaceholders = remoteList.some((u: string) => u.includes('anyoneWithLink'));
+          const rawRemoteList: string[] = json.photosDriveUrls;
           
-          if (remoteList.length === 0) {
+          // Filter out literal stub URLs that just mean "not ready yet"
+          const STUB_URL = "https://drive.google.com/uc?id=anyoneWithLink&export=download";
+          const remoteList = rawRemoteList.filter(u => u !== STUB_URL);
+          
+          const hasRemotePlaceholders = remoteList.some((u: string) => u.includes('anyoneWithLink'));
+          const hasRemoteFinal = remoteList.length > 0 && !hasRemotePlaceholders;
+          
+          if (remoteList.length === 0 && rawRemoteList.length > 0) {
+             // If raw has stubs but remote (filtered) is empty, we are still waiting
+          } else if (remoteList.length === 0) {
             consecutiveEmptyCount.current++;
             if (consecutiveEmptyCount.current > 20) {
               console.warn("[Media Sync] Backend consistently empty. Stopping.");
@@ -195,35 +216,26 @@ export default function GridLikeMedia({
           }
 
           setPhotos(prevPhotos => {
-            const hasRemoteFinal = remoteList.length > 0 && !remoteList.some(u => u.includes('anyoneWithLink'));
-            
-            // If the backend has final images, we should discard all local placeholders
-            // because they have been superseded.
-            if (hasRemoteFinal) {
-              return remoteList;
-            }
+            if (hasRemoteFinal) return remoteList;
 
-            const localOnly = prevPhotos.filter(u => u.includes('anyoneWithLink'));
+            const localPlaceholders = prevPhotos.filter(u => typeof u === 'string' && u.includes('anyoneWithLink'));
             
-            // If the backend returned empty but we have local placeholders, keep the placeholders.
-            // This prevents the gallery from "flickering" to empty during the initial sync.
             let nextPhotos = remoteList;
-            if (remoteList.length === 0 && localOnly.length > 0) {
-              nextPhotos = localOnly;
-            } else {
-              // Merge: Trust the remote list but keep local placeholders that haven't appeared yet.
-              // To avoid duplication, we only add local ones that are uniquely identifiable 
-              // (though in this system placeholders are often generic).
-              nextPhotos = Array.from(new Set([...remoteList, ...localOnly]));
+            if (remoteList.length === 0 && localPlaceholders.length > 0) {
+              nextPhotos = localPlaceholders;
+            } else if (remoteList.length > 0) {
+              const remoteUrls = new Set(remoteList);
+              const uniqueLocal = localPlaceholders.filter(p => !remoteUrls.has(p));
+              nextPhotos = [...remoteList, ...uniqueLocal];
             }
 
             if (nextPhotos.join(',') !== prevPhotos.join(',')) {
               if (onUpdate) {
                 onUpdate(activityId, { 
-                  photosDriveUrls: nextPhotos, 
-                  videoDriveUrl: json.videoDriveUrl || '', 
-                  videoUrl: json.videoUrl || '' 
-                });
+                    photosDriveUrls: nextPhotos, 
+                    videoDriveUrl: json.videoDriveUrl || '', 
+                    videoUrl: json.videoUrl || '' 
+                } as any);
               }
               if (nextPhotos.length > 0) setCoverUrl(nextPhotos[0]);
               return nextPhotos;
@@ -231,9 +243,7 @@ export default function GridLikeMedia({
             return prevPhotos;
           });
 
-          // Only stop polling if the backend returned a non-empty list AND no placeholders remain.
-          // This ensures we keep checking if the backend is momentarily empty or still processing stubs.
-          if (remoteList.length > 0 && !hasRemotePlaceholders) {
+          if (hasRemoteFinal) {
             clearInterval(timer);
             pollingActive.current = false;
           }
@@ -536,7 +546,7 @@ export default function GridLikeMedia({
                       <CardMedia
                         component="img"
                         height="120"
-                        image={formatDriveUrl(url)}
+                        image={formatDriveUrl(url, 600)}
                         alt="Experience photo"
                         sx={{ 
                           objectFit: 'cover',
