@@ -195,9 +195,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
           sx={{
             mx: 2,
             mb: 2,
-            bgcolor: '#4A7C8C',
+            bgcolor: '#d35400',
             fontFamily: 'Nunito, sans-serif',
-            '&:hover': { bgcolor: '#3A6370' },
+            '&:hover': { bgcolor: '#e67e22' },
           }}
         >
           NEW CHAT
