@@ -726,16 +726,19 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 start_times: a.startTimes || a.start_times || null,
                 cutoff_hours: a.cutoffHours || a.cutoff_hours || null,
                 pricing_categories: a.pricingCategories || a.pricing_categories || null,
-                base_rate: (a.baseRate && !isNaN(parseFloat(a.baseRate))) ? parseFloat(a.baseRate) : (a.base_rate && !isNaN(parseFloat(a.base_rate)) ? parseFloat(a.base_rate) : null),
+                base_rate: (a.baseRate && !isNaN(parseFloat(String(a.baseRate).replace(/,/g, '')))) ? parseFloat(String(a.baseRate).replace(/,/g, '')) : (a.base_rate && !isNaN(parseFloat(String(a.base_rate).replace(/,/g, ''))) ? parseFloat(String(a.base_rate).replace(/,/g, '')) : null),
                 pricing_rows: (Array.isArray(a.pricingRows) && a.pricingRows.length > 0) ? a.pricingRows : (Array.isArray(a.pricing_rows) && a.pricing_rows.length > 0 ? a.pricing_rows : null)
             };
         });
 
         console.log(`[N8N Proxy] Direct Activity Save: Upserting ${allActivities.length} rows for AppID: ${appId}`);
         if (allActivities.length > 0) {
-            console.log(`[N8N Proxy] Sample row pricing:`, { 
+            console.log(`[N8N Proxy] Sample row details:`, { 
+                id: allActivities[0].id,
+                title: allActivities[0].title,
                 categories: allActivities[0].pricing_categories, 
                 baseRate: allActivities[0].base_rate,
+                currency: allActivities[0].currency,
                 rowsCount: allActivities[0].pricing_rows?.length 
             });
         }

@@ -241,7 +241,7 @@ BEGIN
                     languages, max_participants, min_participants, cancellation_policy, booking_lead_time,
                     time_zone, city, start_times, cutoff_hours, pricing_categories, base_rate, pricing_rows
                 ) VALUES (
-                    v_id, p_application_id, v_rec.title, v_rec.description, v_rec.price, v_rec.currency, 
+                    v_id, p_application_id, v_rec.title, v_rec.description, v_rec.price, COALESCE(v_rec.currency, 'USD'), 
                     v_rec.duration_minutes, v_rec.bokun_product_id, v_rec.category, v_rec.raw_data, v_rec.metadata,
                     v_rec.photos_drive_urls, v_rec.video_drive_url, v_rec.video_url, v_rec.status,
                     v_rec.booking_link, v_rec.itinerary, v_rec.three_words, v_rec.scheduling_mode, v_rec.authentic_echoes, 
