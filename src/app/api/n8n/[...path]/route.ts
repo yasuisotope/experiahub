@@ -244,7 +244,7 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
              if (targetUrl.includes('supplier/activities/save') || targetUrl.includes('supplier/activities/sync')) {
                  const res = await handleDirectSave('activities', body, targetUrl, authHeader);
                  if (!res.success) return NextResponse.json({ success: false, error: res.error, stub: true });
-                 return NextResponse.json({ success: true, stub: true, saved_direct: true });
+                 return NextResponse.json({ success: true, idMappings: (res as any).idMappings || {}, stub: true, saved_direct: true });
              }
              if (targetUrl.includes('supplier/bookings/sync')) {
                  const res = await handleDirectSave('bookings', body, targetUrl, authHeader);
@@ -669,10 +669,17 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         const { data: existingRows } = await client.from('experiences').select('id').eq('application_id', appId);
         const existingIds = new Set((existingRows || []).map((r: any) => r.id));
         const incomingIds = new Set(payload.activities.filter((a: any) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(a.id)).map((a: any) => a.id));
-        const idsToDelete = Array.from(existingIds).filter(id => !incomingIds.has(id));
         
-        if (idsToDelete.length > 0) {
-            await client.from('experiences').delete().in('id', idsToDelete).eq('application_id', appId); 
+        // SAFETY: Only delete if we have at least one valid UUID in the input. 
+        // If all inputs are non-UUIDs (e.g. Integers), it means we are syncing fresh Bokun data and shouldn't wipe the DB based on ID mismatch.
+        if (incomingIds.size > 0) {
+            const idsToDelete = Array.from(existingIds).filter(id => !incomingIds.has(id));
+            if (idsToDelete.length > 0) {
+                console.log(`[N8N Proxy] Pruning ${idsToDelete.length} obsolete experiences for AppID ${appId}`);
+                await client.from('experiences').delete().in('id', idsToDelete).eq('application_id', appId); 
+            }
+        } else {
+            console.log(`[N8N Proxy] Skipping deletion: Incoming activities have no UUIDs (likely raw import). AppID: ${appId}`);
         }
 
         const allActivities = payload.activities.map((a: any) => {
@@ -734,7 +741,10 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 })(),
                 pricing_rows: (Array.isArray(a.pricingRows)) 
                     ? a.pricingRows 
-                    : (Array.isArray(a.pricing_rows) ? a.pricing_rows : null)
+                    : (Array.isArray(a.pricing_rows) ? a.pricing_rows : null),
+                pin_count: a.pinCount ?? a.pin_count ?? 0,
+                last_pinned_at: a.lastPinnedAt ?? a.last_pinned_at ?? null,
+                link_synced_at: a.linkSyncedAt ?? a.link_synced_at ?? null
             };
         });
 
@@ -756,7 +766,10 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         });
 
         if (rpcError) {
-            console.error('[N8N Proxy] RPC Save Error:', rpcError);
+            console.error('[N8N Proxy] RPC Save Error Full Details:', JSON.stringify(rpcError, null, 2));
+            console.error('[N8N Proxy] RPC Save Error Message:', rpcError.message);
+            console.error('[N8N Proxy] RPC Save Error Hint:', rpcError.hint);
+            console.error('[N8N Proxy] RPC Save Error Details:', rpcError.details);
         } else {
             console.log('[N8N Proxy] RPC Save Success:', rpcData);
             if (allActivities.length > 0) {

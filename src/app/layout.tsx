@@ -9,27 +9,15 @@ import { GlobalStyles } from '@mui/material';
 import theme from '@/theme/theme';
 import { initSentry } from '@/monitoring/sentry';
 
-// Prevent hydration mismatch by using a client-only component
-function ClientOnly({ children }: { children: React.ReactNode }) {
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-    try { initSentry(); } catch {}
-  }, []);
-
-  if (!hasMounted) {
-    return null;
-  }
-
-  return children;
-}
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  useEffect(() => {
+    try { initSentry(); } catch {}
+  }, []);
+
   return (
     <html lang="en">
       <head>
@@ -48,8 +36,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.19/main.min.css" />
       </head>
       <body>
-        <ClientOnly>
-          <ThemeProvider theme={theme}>
+        <ThemeProvider theme={theme} id="theme-provider">
             <CssBaseline />
             <GlobalStyles styles={{
               '@font-face': {
@@ -76,13 +63,14 @@ export default function RootLayout({
                 outlineOffset: 2
               }
             }} />
-            <WordPressProvider>
-              <ChatProvider>
-                {children}
-              </ChatProvider>
-            </WordPressProvider>
+            <React.Suspense fallback={null}>
+              <WordPressProvider>
+                <ChatProvider>
+                  {children}
+                </ChatProvider>
+              </WordPressProvider>
+            </React.Suspense>
           </ThemeProvider>
-        </ClientOnly>
       </body>
     </html>
   );

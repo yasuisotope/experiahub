@@ -39,11 +39,11 @@ import Image from 'next/image';
 import SupportDialog from '@/components/support/SupportDialog';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 
-interface MainLayoutProps {
+interface UserLayoutProps {
   children: React.ReactNode;
 }
 
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function UserLayout({ children }: UserLayoutProps) {
   const router = useRouter();
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const { user, isLoggedIn, logout } = useWordPressAuth();

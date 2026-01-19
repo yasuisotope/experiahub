@@ -873,6 +873,7 @@ export default function SupplierPortalPage() {
     videoDriveUrl?: string;
     videoUrl?: string;
     status?: string;
+    pricingRows?: { category: string; amount: string; currency: string }[];
   };
   const [experiences, setExperiences] = React.useState<Experience[]>([]);
   const handleMediaUpdate = React.useCallback((id: string, media: { photosDriveUrls: string[]; videoDriveUrl: string; videoUrl: string }) => {
@@ -1344,10 +1345,11 @@ const PRIMARY_BUTTON_SX = {
 
   React.useEffect(() => {
     const current = experiences.find(e => e.id === selectedExperienceId);
+
     if (current) {
-        // Prevent overwriting form data if we are just dealing with an ID update/sync for the SAME experience
-        // We assume 'details.id' is kept in sync via saveAllExperiences when IDs change.
-        if (details?.id === current.id) return;
+      // NOTE: We REMOVED the check (details?.id === current.id) return;
+      // This is because 'current' might be updated with richer data (like pricingRows) from remote fetch
+      // even if the ID is the same. We want to re-hydrate 'details' when 'experiences' updates.
 
       const next: any = { ...current };
       if ((!next.currency || !String(next.currency).trim()) && defaultCurrency) next.currency = defaultCurrency;
@@ -1439,7 +1441,7 @@ const PRIMARY_BUTTON_SX = {
         console.log('[Supplier] LoadRemote Response:', json);
         if (json?.activities) {
           const count = json.activities.length;
-          setToast(count > 0 ? `Loaded ${count} experiences` : 'No experiences found');
+          if (count === 0) setToast('No experiences found');
           
           const remoteRows = json.activities.map((a: any) => ({
             id: a.id || `row_${Math.random().toString(36).substr(2, 9)}`,
@@ -2173,7 +2175,7 @@ const PRIMARY_BUTTON_SX = {
                label={<Typography variant="caption" sx={{ fontFamily:'Nunito, sans-serif' }}>Translucent UI</Typography>}
                sx={{ mb: 1, ml: 0.5 }}
             />
-             <Typography variant="caption" sx={{ display:'block', textAlign:'center', mt:0, color:'#94a3b8', fontSize:'0.7rem', fontFamily:'monospace' }}>v155</Typography>
+
             <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" fullWidth onClick={() => window.location.reload()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: '#E2E8F0', color: '#64748B', fontWeight: 400, bgcolor: isTransparent?'rgba(255,255,255,0.5)':'#fff', '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', color: '#334155' } }}>Refresh</Button>

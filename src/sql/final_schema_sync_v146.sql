@@ -97,6 +97,41 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='pricing_rows') THEN
         ALTER TABLE public.experiences ADD COLUMN pricing_rows jsonb DEFAULT '[]'::jsonb;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='supplier_id') THEN
+        ALTER TABLE public.experiences ADD COLUMN supplier_id uuid REFERENCES public.suppliers(id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='partner_id') THEN
+        ALTER TABLE public.experiences ADD COLUMN partner_id uuid;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='images') THEN
+        ALTER TABLE public.experiences ADD COLUMN images jsonb DEFAULT '[]'::jsonb;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='pin_count') THEN
+        ALTER TABLE public.experiences ADD COLUMN pin_count integer DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='last_pinned_at') THEN
+        ALTER TABLE public.experiences ADD COLUMN last_pinned_at timestamp with time zone;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='experiences' AND column_name='link_synced_at') THEN
+        ALTER TABLE public.experiences ADD COLUMN link_synced_at timestamp with time zone;
+    END IF;
+
+    -- Backfill: Link existing experiences to suppliers based on matching application_id
+    UPDATE public.experiences e
+    SET supplier_id = s.id
+    FROM public.suppliers s
+    WHERE e.application_id = s.application_id
+    AND e.supplier_id IS NULL;
+
+    -- Backfill: Populate partner_id with supplier_id
+    UPDATE public.experiences
+    SET partner_id = supplier_id
+    WHERE partner_id IS NULL AND supplier_id IS NOT NULL;
+
+    -- Backfill: Sync images from photos_drive_urls
+    UPDATE public.experiences 
+    SET images = to_jsonb(photos_drive_urls)
+    WHERE (images IS NULL OR images = '[]'::jsonb) AND photos_drive_urls IS NOT NULL;
 
 END $$;
 
@@ -113,10 +148,14 @@ AS $$
 DECLARE
     v_id uuid;
     v_new_id uuid;
+    v_supplier_id uuid;
     v_inserted_ids jsonb := '{}';
     v_rec record;
     v_count int := 0;
 BEGIN
+    -- Fetch supplier_id once for this application_id
+    SELECT id INTO v_supplier_id FROM public.suppliers WHERE application_id = p_application_id;
+
     FOR v_rec IN SELECT * FROM jsonb_to_recordset(p_experience_data) AS x(
         id text, 
         title text, 
@@ -159,7 +198,12 @@ BEGIN
         cutoff_hours text,
         pricing_categories text,
         base_rate numeric,
-        pricing_rows jsonb
+        pricing_rows jsonb,
+
+        pin_count integer,
+
+        last_pinned_at timestamp with time zone,
+        link_synced_at timestamp with time zone
     )
     LOOP
         BEGIN
@@ -171,6 +215,8 @@ BEGIN
         IF v_id IS NOT NULL THEN
             UPDATE public.experiences
             SET 
+                supplier_id = v_supplier_id,
+                partner_id = v_supplier_id,
                 title = v_rec.title,
                 description = v_rec.description,
                 price = CASE WHEN v_rec.price IS NULL THEN experiences.price ELSE v_rec.price END,
@@ -187,6 +233,14 @@ BEGIN
                     THEN experiences.photos_drive_urls
                     ELSE v_rec.photos_drive_urls
                 END,
+                images = to_jsonb(CASE 
+                    WHEN v_rec.photos_drive_urls IS NULL OR array_length(v_rec.photos_drive_urls, 1) = 0 THEN experiences.photos_drive_urls
+                    WHEN (SELECT bool_or(x LIKE '%anyoneWithLink%') FROM unnest(v_rec.photos_drive_urls) x) 
+                         AND NOT (SELECT bool_or(x LIKE '%anyoneWithLink%') FROM unnest(experiences.photos_drive_urls) x) 
+                         AND array_length(experiences.photos_drive_urls, 1) > 0
+                    THEN experiences.photos_drive_urls
+                    ELSE v_rec.photos_drive_urls
+                END),
                 video_drive_url = CASE
                     WHEN v_rec.video_drive_url IS NULL OR v_rec.video_drive_url = '' THEN experiences.video_drive_url
                     WHEN v_rec.video_drive_url LIKE '%anyoneWithLink%' AND experiences.video_drive_url NOT LIKE '%anyoneWithLink%' AND experiences.video_drive_url != ''
@@ -227,49 +281,52 @@ BEGIN
                     WHEN v_rec.pricing_rows IS NULL THEN experiences.pricing_rows 
                     ELSE v_rec.pricing_rows 
                 END,
-                updated_at = now()
+                updated_at = now(),
+                pin_count = COALESCE(v_rec.pin_count, experiences.pin_count, 0),
+                last_pinned_at = COALESCE(v_rec.last_pinned_at, experiences.last_pinned_at),
+                link_synced_at = COALESCE(v_rec.link_synced_at, experiences.link_synced_at)
             WHERE id = v_id AND application_id = p_application_id;
             
             IF NOT FOUND THEN
                  INSERT INTO public.experiences (
-                    id, application_id, title, description, price, currency, duration_minutes, 
-                    bokun_product_id, category, raw_data, metadata, photos_drive_urls, video_drive_url, video_url, status,
+                    id, application_id, supplier_id, partner_id, title, description, price, currency, duration_minutes, 
+                    bokun_product_id, category, raw_data, metadata, photos_drive_urls, images, video_drive_url, video_url, status,
                     booking_link, itinerary, three_words, scheduling_mode, authentic_echoes, 
                     unforgettable_feeling, magic_moment, hidden_gem, community_connection, perfect_match,
                     meeting_point, safety_measures, requirements, included, not_included, insurance,
                     languages, max_participants, min_participants, cancellation_policy, booking_lead_time,
-                    time_zone, city, start_times, cutoff_hours, pricing_categories, base_rate, pricing_rows
+                    time_zone, city, start_times, cutoff_hours, pricing_categories, base_rate, pricing_rows, pin_count, last_pinned_at, link_synced_at
                 ) VALUES (
-                    v_id, p_application_id, v_rec.title, v_rec.description, v_rec.price, COALESCE(v_rec.currency, 'USD'), 
+                    v_id, p_application_id, v_supplier_id, v_supplier_id, v_rec.title, v_rec.description, v_rec.price, COALESCE(v_rec.currency, 'USD'), 
                     v_rec.duration_minutes, v_rec.bokun_product_id, v_rec.category, v_rec.raw_data, v_rec.metadata,
-                    v_rec.photos_drive_urls, v_rec.video_drive_url, v_rec.video_url, v_rec.status,
+                    v_rec.photos_drive_urls, to_jsonb(v_rec.photos_drive_urls), v_rec.video_drive_url, v_rec.video_url, v_rec.status,
                     v_rec.booking_link, v_rec.itinerary, v_rec.three_words, v_rec.scheduling_mode, v_rec.authentic_echoes, 
                     v_rec.unforgettable_feeling, v_rec.magic_moment, v_rec.hidden_gem, v_rec.community_connection, v_rec.perfect_match,
                     v_rec.meeting_point, v_rec.safety_measures, v_rec.requirements, v_rec.included, v_rec.not_included, v_rec.insurance,
                     v_rec.languages, v_rec.max_participants, v_rec.min_participants, v_rec.cancellation_policy, v_rec.booking_lead_time,
                     v_rec.time_zone, v_rec.city, v_rec.start_times, v_rec.cutoff_hours, v_rec.pricing_categories, v_rec.base_rate,
-                    COALESCE(v_rec.pricing_rows, '[]'::jsonb)
+                    COALESCE(v_rec.pricing_rows, '[]'::jsonb), COALESCE(v_rec.pin_count, 0), v_rec.last_pinned_at, v_rec.link_synced_at
                 );
             END IF;
         ELSE
             INSERT INTO public.experiences (
-                application_id, title, description, price, currency, duration_minutes, 
-                bokun_product_id, category, raw_data, metadata, photos_drive_urls, video_drive_url, video_url, status,
+                application_id, supplier_id, partner_id, title, description, price, currency, duration_minutes, 
+                bokun_product_id, category, raw_data, metadata, photos_drive_urls, images, video_drive_url, video_url, status,
                 booking_link, itinerary, three_words, scheduling_mode, authentic_echoes, 
                 unforgettable_feeling, magic_moment, hidden_gem, community_connection, perfect_match,
                 meeting_point, safety_measures, requirements, included, not_included, insurance,
                 languages, max_participants, min_participants, cancellation_policy, booking_lead_time,
-                time_zone, city, start_times, cutoff_hours, pricing_categories, base_rate, pricing_rows
+                time_zone, city, start_times, cutoff_hours, pricing_categories, base_rate, pricing_rows, pin_count, last_pinned_at, link_synced_at
             ) VALUES (
-                p_application_id, v_rec.title, v_rec.description, v_rec.price, COALESCE(v_rec.currency, 'USD'), 
+                p_application_id, v_supplier_id, v_supplier_id, v_rec.title, v_rec.description, v_rec.price, COALESCE(v_rec.currency, 'USD'), 
                 v_rec.duration_minutes, v_rec.bokun_product_id, v_rec.category, v_rec.raw_data, v_rec.metadata,
-                v_rec.photos_drive_urls, v_rec.video_drive_url, v_rec.video_url, v_rec.status,
+                v_rec.photos_drive_urls, to_jsonb(v_rec.photos_drive_urls), v_rec.video_drive_url, v_rec.video_url, v_rec.status,
                 v_rec.booking_link, v_rec.itinerary, v_rec.three_words, v_rec.scheduling_mode, v_rec.authentic_echoes, 
                 v_rec.unforgettable_feeling, v_rec.magic_moment, v_rec.hidden_gem, v_rec.community_connection, v_rec.perfect_match,
                 v_rec.meeting_point, v_rec.safety_measures, v_rec.requirements, v_rec.included, v_rec.not_included, v_rec.insurance,
                 v_rec.languages, v_rec.max_participants, v_rec.min_participants, v_rec.cancellation_policy, v_rec.booking_lead_time,
                 v_rec.time_zone, v_rec.city, v_rec.start_times, v_rec.cutoff_hours, v_rec.pricing_categories, v_rec.base_rate,
-                COALESCE(v_rec.pricing_rows, '[]'::jsonb)
+                COALESCE(v_rec.pricing_rows, '[]'::jsonb), COALESCE(v_rec.pin_count, 0), v_rec.last_pinned_at, v_rec.link_synced_at
             )
             RETURNING id INTO v_new_id;
             

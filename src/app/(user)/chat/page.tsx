@@ -23,14 +23,13 @@ import Stack from '@mui/material/Stack';
 import Fab from '@mui/material/Fab';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import BackgroundImage from '@/components/BackgroundImage';
-import { getUserBackground, loadCachedBackground, saveCachedBackground, searchUnsplash, setUserBackground, trackDownload, getCuratedBackgrounds, prefetchBackgroundImage, type PortalBackground } from '@/services/backgroundService';
+import { getUserBackground, loadCachedBackground, saveCachedBackground, searchUnsplash, setUserBackground, trackDownload, getCuratedBackgrounds, prefetchBackgroundImage } from '@/services/backgroundService';
+import type { PortalBackground } from '@/services/backgroundService';
 import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
 import Popover from '@mui/material/Popover';
 import Skeleton from '@mui/material/Skeleton';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
 import ClearIcon from '@mui/icons-material/Clear';
-
-// analytics centralized in services/analytics
 
 // Helper function to parse AI response and extract signup prompt
 const parseAIResponse = (content: string) => {
@@ -68,7 +67,7 @@ const synthesizeExperiences = (text: string) => {
     const textStr = String(text || '');
     const items: any[] = [];
 
-    // Inline enumeration parser: "1. Foo … 2. Bar …"
+    // Inline enumeration parser: "1. Foo ... 2. Bar ..."
     const inlineRe = /(\d{1,2})\.\s*([^]+?)(?=(?:\s+\d{1,2}\.\s*)|$)/g;
     let match: RegExpExecArray | null;
     while ((match = inlineRe.exec(textStr)) && items.length < 5) {
@@ -122,12 +121,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const { sendMessage, loading, currentChat, selectedExperience, setSelectedExperience } = useChatContext();
   const { isLoggedIn, login, isLoading: authLoading } = useWordPressAuth();
-  const [bg, setBg] = useState<PortalBackground | null>({
-    url: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80",
-    lqip: '',
-    authorName: 'Unsplash',
-    authorUrl: 'https://unsplash.com'
-  });
+  const [bg, setBg] = useState<PortalBackground | null>(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -138,7 +132,7 @@ export default function ChatPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const quickReplies = ['Kyoto tea ceremony', 'Paris workshops', 'Family‑friendly', 'Food tours', 'Museums'];
+  const quickReplies = ['Kyoto tea ceremony', 'Paris workshops', 'Family-friendly', 'Food tours', 'Museums'];
   const [listWidgetOpen, setListWidgetOpen] = React.useState(false);
   const [listWidgetProductId, setListWidgetProductId] = React.useState<string | null>(null);
   const showWidgetCta = (process.env.NEXT_PUBLIC_SHOW_WIDGET_CTA ?? process.env.SHOW_WIDGET_CTA ?? 'true') !== 'false';
@@ -174,21 +168,19 @@ export default function ChatPage() {
     })();
   }, [bgAnchorEl, bgSeed, bgSearch]);
 
-  // Detect opening transition (left-only -> left+right) to slow it down explicitly
+  // Detect opening transition and handle query params
   useEffect(() => {
     if (selectedExperience) {
       setIsOpening(true);
       const pid = (selectedExperience as any)?.bokunProductId || (selectedExperience as any)?.productId || (selectedExperience as any)?.id;
       track('details_open', { title: selectedExperience.title, city: (selectedExperience as any)?.city, category: (selectedExperience as any)?.category, productId: pid });
       const t = setTimeout(() => setIsOpening(false), 600);
-      // push exp param for deep-link
       try {
         const title = encodeURIComponent(selectedExperience.title || 'exp');
         router.replace(`${pathname}?exp=${title}`, { scroll: false });
       } catch {}
       return () => clearTimeout(t);
     }
-    // remove exp param when closing
     track('details_close', { reason: 'panel_closed' });
     try {
       if (pathname) router.replace(pathname, { scroll: false });
@@ -216,10 +208,8 @@ export default function ChatPage() {
     try {
       closingRef.current = true;
       if (pathname) router.replace(pathname, { scroll: false });
-      // ensure we drop the panel immediately
       setSelectedExperience(null);
     } finally {
-      // release the flag on next tick to allow future deep-links
       setTimeout(() => { closingRef.current = false; }, 0);
     }
   }, [pathname, router, setSelectedExperience]);
@@ -282,12 +272,11 @@ export default function ChatPage() {
     try {
       console.log('Sending message:', input.trim());
       const message = input.trim();
-      setInput(''); // Clear input immediately for better UX
+      setInput(''); 
       await sendMessage(message);
     } catch (error) {
       console.error('Failed to send message:', error);
-      setInput(input.trim()); // Restore input if send fails
-      // Error will be shown via the Snackbar from ChatContext
+      setInput(input.trim());
     }
   };
 
@@ -306,7 +295,6 @@ export default function ChatPage() {
     }
   };
 
-  // Main Render
   return (
     <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
       <Box sx={{ position: 'relative' }}>
@@ -432,7 +420,6 @@ export default function ChatPage() {
 
         {/* Chat Interface (Logged In) */}
         {isLoggedIn && !authLoading && (
-        <>
         <Box sx={{
           display: { xs: 'block', md: 'grid' },
           gridTemplateColumns: { md: selectedExperience ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr) 0px' },
@@ -671,7 +658,13 @@ export default function ChatPage() {
               <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.2s infinite' }} />
               <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.4s infinite' }} />
             </Box>
-            
+            <style jsx>{`
+              @keyframes blink {
+                0% { opacity: 0.2; transform: translateY(0px); }
+                50% { opacity: 1; transform: translateY(-2px); }
+                100% { opacity: 0.2; transform: translateY(0px); }
+              }
+            `}</style>
           </Paper>
         </Box>
       )}
@@ -757,9 +750,7 @@ export default function ChatPage() {
       <DetailsPanel exp={selectedExperience} onClose={handleCloseDetails} />
     </Box>
     </Box>
-    </>
     )}
-    
     <Dialog
       open={listWidgetOpen}
       onClose={() => setListWidgetOpen(false)}
@@ -939,7 +930,7 @@ export default function ChatPage() {
   >
     <WallpaperIcon />
   </Fab>
-      </Box>
-    </BackgroundImage>
-  );
+  </Box>
+</BackgroundImage>
+);
 }
