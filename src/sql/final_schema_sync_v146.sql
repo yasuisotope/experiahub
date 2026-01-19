@@ -221,8 +221,9 @@ BEGIN
                 city = v_rec.city,
                 start_times = v_rec.start_times,
                 cutoff_hours = v_rec.cutoff_hours,
-                pricing_categories = v_rec.pricing_categories,
-                base_rate = v_rec.base_rate,
+                pricing_categories = CASE WHEN v_rec.pricing_categories IS NULL THEN experiences.pricing_categories ELSE v_rec.pricing_categories END,
+                base_rate = CASE WHEN v_rec.base_rate IS NULL THEN experiences.base_rate ELSE v_rec.base_rate END,
+                currency = CASE WHEN v_rec.currency IS NULL OR v_rec.currency = '' THEN experiences.currency ELSE v_rec.currency END,
                 pricing_rows = CASE 
                     WHEN v_rec.pricing_rows IS NULL THEN experiences.pricing_rows 
                     ELSE v_rec.pricing_rows 

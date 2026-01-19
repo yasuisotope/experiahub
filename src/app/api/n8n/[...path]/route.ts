@@ -726,8 +726,8 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
                 start_times: a.startTimes || a.start_times || null,
                 cutoff_hours: a.cutoffHours || a.cutoff_hours || null,
                 pricing_categories: a.pricingCategories || a.pricing_categories || null,
-                base_rate: a.baseRate ? parseFloat(a.baseRate) : null,
-                pricing_rows: Array.isArray(a.pricingRows) ? a.pricingRows : (Array.isArray(a.pricing_rows) ? a.pricing_rows : [])
+                base_rate: (a.baseRate && !isNaN(parseFloat(a.baseRate))) ? parseFloat(a.baseRate) : (a.base_rate && !isNaN(parseFloat(a.base_rate)) ? parseFloat(a.base_rate) : null),
+                pricing_rows: (Array.isArray(a.pricingRows) && a.pricingRows.length > 0) ? a.pricingRows : (Array.isArray(a.pricing_rows) && a.pricing_rows.length > 0 ? a.pricing_rows : null)
             };
         });
 
@@ -744,6 +744,21 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
             p_application_id: appId,
             p_experience_data: allActivities
         });
+
+        if (rpcError) {
+            console.error('[N8N Proxy] RPC Save Error:', rpcError);
+        } else {
+            console.log('[N8N Proxy] RPC Save Success:', rpcData);
+            // Verify first row actually has data in DB now
+            if (allActivities.length > 0) {
+                const { data: verifyRow } = await client.from('experiences').select('pricing_rows, base_rate').eq('id', allActivities[0].id).maybeSingle();
+                console.log('[N8N Proxy] Post-Save Verification:', {
+                    id: allActivities[0].id,
+                    dbPricingRows: verifyRow?.pricing_rows?.length,
+                    dbBaseRate: verifyRow?.base_rate
+                });
+            }
+        }
 
         if (rpcError) return { success: false, error: rpcError.message };
         return { success: true, idMappings: rpcData?.idMappings || {} } as any; 
@@ -890,8 +905,8 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
                     title: expRow.title || raw?.title || '',
                     summary: expRow.description || raw?.summary || raw?.description || '',
                     description: expRow.description || raw?.description || '',
-                    city: expRow.city || raw?.city || '',
-                    price: expRow.price || raw?.price || '',
+                    category: expRow.category || raw?.category,
+                    price: (expRow.price !== null && expRow.price !== undefined) ? expRow.price : (raw?.price || ''),
                     currency: expRow.currency || raw?.currency || 'JPY',
                     durationMinutes: expRow.duration_minutes || raw?.durationMinutes || '',
                     itinerary: expRow.itinerary || raw?.itinerary || '',
@@ -914,9 +929,10 @@ async function handleDirectGet(type: 'billing'|'legal'|'locations'|'user_profile
                     communityConnection: expRow.community_connection || raw?.communityConnection || '',
                     perfectMatch: expRow.perfect_match || raw?.perfectMatch || '',
                     schedulingMode: expRow.scheduling_mode || raw?.schedulingMode || '',
-                    pricingCategories: expRow.pricing_categories || raw?.pricingCategories || '',
-                    baseRate: expRow.base_rate || raw?.baseRate || '',
-                    pricingRows: expRow.pricing_rows || raw?.pricingRows || [],
+                    pricingCategories: expRow.pricing_categories || raw?.pricingCategories || raw?.pricing_categories || '',
+                    baseRate: (expRow.base_rate !== null && expRow.base_rate !== undefined) ? expRow.base_rate : (raw?.baseRate || raw?.base_rate || ''),
+                    pricingRows: (expRow.pricing_rows && Array.isArray(expRow.pricing_rows) && expRow.pricing_rows.length > 0) ? expRow.pricing_rows : 
+                                 (raw?.pricingRows && Array.isArray(raw.pricingRows) && raw.pricingRows.length > 0 ? raw.pricingRows : []),
                     bokunProductId: expRow.bokun_product_id || raw?.bokunProductId || ''
                 };
             }
@@ -1021,8 +1037,9 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
                 startTimes: row.start_times || raw?.startTimes || raw?.start_times || '',
                 cutoffHours: row.cutoff_hours || raw?.cutoffHours || raw?.cutoff_hours || '',
                 pricingCategories: row.pricing_categories || raw?.pricingCategories || raw?.pricing_categories || '',
-                baseRate: row.base_rate || raw?.baseRate || raw?.base_rate || '',
-                pricingRows: (row.pricing_rows && Array.isArray(row.pricing_rows)) ? row.pricing_rows : (raw?.pricingRows || []),
+                baseRate: (row.base_rate !== null && row.base_rate !== undefined) ? row.base_rate : (raw?.baseRate || raw?.base_rate || ''),
+                pricingRows: (row.pricing_rows && Array.isArray(row.pricing_rows) && row.pricing_rows.length > 0) ? row.pricing_rows : 
+                             (raw?.pricingRows && Array.isArray(raw.pricingRows) && raw.pricingRows.length > 0 ? raw.pricingRows : []),
                 bookingLink: row.booking_link || raw?.bookingLink || raw?.booking_link || '',
 
                 // Narrative & Restoration

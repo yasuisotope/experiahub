@@ -1570,6 +1570,13 @@ const PRIMARY_BUTTON_SX = {
       // Sync legacy price field with baseRate
       if (merged.baseRate) merged.price = merged.baseRate;
 
+      console.log(`[SupplierPortal] Saving Experience ${selectedExperienceId}:`, {
+          title: merged.title,
+          pricingRows: merged.pricingRows?.length,
+          baseRate: merged.baseRate,
+          currency: merged.currency
+      });
+
       // Update local details state if overrides exist
       if (overrides) {
           setDetails(prev => ({ ...prev, ...overrides }));
