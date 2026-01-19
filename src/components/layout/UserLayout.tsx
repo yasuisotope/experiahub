@@ -165,10 +165,10 @@ export default function UserLayout({ children }: UserLayoutProps) {
       <Box
         sx={{
           width: 280,
-          bgcolor: 'rgba(255,255,255,0.8)',
+          bgcolor: 'rgba(1, 0, 87, 0.65)', // Dark Navy Glass
           backdropFilter: 'blur(12px)',
           borderRight: '1px solid',
-          borderColor: 'divider',
+          borderColor: 'rgba(255,255,255,0.1)',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
@@ -182,7 +182,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
             alt="ExperiaHub"
             width={240}
             height={60}
-            style={{ height: 'auto' }}
+            style={{ height: 'auto', filter: 'brightness(0) invert(1)' }} // Make white
             priority
           />
         </Box>
@@ -196,8 +196,11 @@ export default function UserLayout({ children }: UserLayoutProps) {
             mx: 2,
             mb: 2,
             bgcolor: '#4A7C8C',
+            color: '#fff',
             fontFamily: 'Nunito, sans-serif',
-            '&:hover': { bgcolor: '#3A6370' },
+            justifyContent: 'flex-start',
+            pl: 3,
+            '&:hover': { bgcolor: '#5B8D9D' },
           }}
         >
           NEW CHAT
@@ -210,16 +213,17 @@ export default function UserLayout({ children }: UserLayoutProps) {
               onClick={() => router.push('/chat')} 
               selected={pathname === '/chat'}
               sx={{
-                '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
-                '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+                '&.Mui-selected': { bgcolor: 'rgba(255, 255, 255, 0.12)' },
+                '&.Mui-selected:hover': { bgcolor: 'rgba(255, 255, 255, 0.18)' },
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
               }}
             >
-              <ListItemIcon sx={{ color: pathname === '/chat' ? '#4A7C8C' : '#333' }}>
+              <ListItemIcon sx={{ color: pathname === '/chat' ? '#fff' : 'rgba(255,255,255,0.7)' }}>
                 <ChatIcon />
               </ListItemIcon>
               <ListItemText 
                 primary="Chat" 
-                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname === '/chat' ? '#4A7C8C' : '#333' }}
+                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname === '/chat' ? '#fff' : 'rgba(255,255,255,0.7)' }}
               />
             </ListItemButton>
           </ListItem>
@@ -230,16 +234,17 @@ export default function UserLayout({ children }: UserLayoutProps) {
                   onClick={() => router.push('/bookings')} 
                   selected={pathname.startsWith('/bookings')}
                   sx={{
-                    '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
-                    '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+                    '&.Mui-selected': { bgcolor: 'rgba(255, 255, 255, 0.12)' },
+                    '&.Mui-selected:hover': { bgcolor: 'rgba(255, 255, 255, 0.18)' },
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
                   }}
                 >
-                  <ListItemIcon sx={{ color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}>
+                  <ListItemIcon sx={{ color: pathname.startsWith('/bookings') ? '#fff' : 'rgba(255,255,255,0.7)' }}>
                     <BookingIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary="Bookings"
-                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname.startsWith('/bookings') ? '#fff' : 'rgba(255,255,255,0.7)' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -248,45 +253,46 @@ export default function UserLayout({ children }: UserLayoutProps) {
                   onClick={() => router.push('/schedule')} 
                   selected={pathname.startsWith('/schedule')}
                   sx={{
-                    '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
-                    '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+                    '&.Mui-selected': { bgcolor: 'rgba(255, 255, 255, 0.12)' },
+                    '&.Mui-selected:hover': { bgcolor: 'rgba(255, 255, 255, 0.18)' },
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
                   }}
                 >
-                  <ListItemIcon sx={{ color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}>
+                  <ListItemIcon sx={{ color: pathname.startsWith('/schedule') ? '#fff' : 'rgba(255,255,255,0.7)' }}>
                     <CalendarIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary="Schedule"
-                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname.startsWith('/schedule') ? '#fff' : 'rgba(255,255,255,0.7)' }}
                   />
                 </ListItemButton>
               </ListItem>
             </>
           )}
           <ListItem disablePadding>
-            <ListItemButton onClick={() => setSupportOpen(true)}>
-              <ListItemIcon sx={{ color: '#333' }}>
+            <ListItemButton onClick={() => setSupportOpen(true)} sx={{ '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
+              <ListItemIcon sx={{ color: 'rgba(255,255,255,0.7)' }}>
                 <SupportAgentIcon />
               </ListItemIcon>
               <ListItemText 
                 primary="Contact Support" 
-                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: '#333' }}
+                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)' }}
               />
             </ListItemButton>
           </ListItem>
         </List>
 
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.1)' }} />
 
         {/* Recent Chats - Always show */}
         <>
-          <Typography variant="overline" sx={{ px: 2, color: 'text.secondary', fontFamily: 'Nunito, sans-serif' }}>
+          <Typography variant="overline" sx={{ px: 2, color: 'rgba(255,255,255,0.5)', fontFamily: 'Nunito, sans-serif' }}>
             RECENT
           </Typography>
           <List sx={{ flexGrow: 1, overflow: 'auto' }}>
             {chats.length === 0 ? (
               <ListItem>
-                <ListItemText primary="No recent conversations" primaryTypographyProps={{ fontSize: '0.85rem', color: 'text.secondary', fontFamily: 'Nunito, sans-serif' }} />
+                <ListItemText primary="No recent conversations" primaryTypographyProps={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'Nunito, sans-serif' }} />
               </ListItem>
             ) : (
               chats.slice(0, 10).map((chat) => (
@@ -294,7 +300,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
                   key={chat.id}
                   disablePadding
                   secondaryAction={
-                    <IconButton edge="end" onClick={(e) => handleChatMenuOpen(e, chat.id)}>
+                    <IconButton edge="end" onClick={(e) => handleChatMenuOpen(e, chat.id)} sx={{ color: 'rgba(255,255,255,0.7)' }}>
                       <MoreVertIcon />
                     </IconButton>
                   }
@@ -306,11 +312,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
                       mx: 1,
                       mb: 0.5,
                       transition: 'background-color 120ms ease',
-                      ...(currentChat?.id === chat.id
-                        ? { backgroundColor: 'rgba(74, 124, 140, 0.12)' }
-                        : {}),
+                      bgcolor: currentChat?.id === chat.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                       '&:hover': {
-                        backgroundColor: 'rgba(74, 124, 140, 0.08)'
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)'
                       }
                     }}
                   >
@@ -319,7 +323,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
                       primaryTypographyProps={{
                         fontSize: '0.95rem',
                         fontWeight: currentChat?.id === chat.id ? 600 : 500,
-                        color: currentChat?.id === chat.id ? '#4A7C8C' : '#2F2F2F',
+                        color: currentChat?.id === chat.id ? '#fff' : 'rgba(255,255,255,0.85)',
                         noWrap: true,
                         fontFamily: 'Nunito, sans-serif',
                       }}
@@ -340,13 +344,15 @@ export default function UserLayout({ children }: UserLayoutProps) {
                 onClick={handleUserMenuOpen}
                 sx={{ 
                   cursor: 'pointer',
-                  bgcolor: 'rgba(74, 124, 140, 0.9)',
+                  bgcolor: '#4A7C8C',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.2)'
                 }}
               >
                 {user?.display_name?.[0] || user?.email?.[0]}
               </Avatar>
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="subtitle2" noWrap>
+              <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+                <Typography variant="subtitle2" noWrap sx={{ color: '#fff', fontFamily: 'Nunito, sans-serif' }}>
                   {user?.display_name || user?.email}
                 </Typography>
               </Box>
@@ -357,8 +363,10 @@ export default function UserLayout({ children }: UserLayoutProps) {
               variant="contained"
               onClick={() => router.push('/login')}
               sx={{
-                bgcolor: 'rgba(74, 124, 140, 0.9)',
-                '&:hover': { bgcolor: 'rgba(74, 124, 140, 1)' },
+                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                color: '#fff',
+                backdropFilter: 'blur(4px)',
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.2)' },
               }}
             >
               LOGIN
@@ -366,8 +374,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
           )}
         </Box>
       </Box>
-
-
+      
       {/* Main Content (no reserved right column; Chat page manages its own details grid) */}
       <Box sx={{ flexGrow: 1, bgcolor: 'transparent', height: '100dvh', overflow: 'hidden', position: 'relative', zIndex: 2 }}>
         <Box sx={{ overflow: 'hidden' }}>{children}</Box>
@@ -385,6 +392,19 @@ export default function UserLayout({ children }: UserLayoutProps) {
         transformOrigin={{
           vertical: 'bottom',
           horizontal: 'right',
+        }}
+        PaperProps={{
+          sx: {
+            bgcolor: 'rgba(1, 0, 87, 0.9)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            color: '#fff',
+            '& .MuiMenuItem-root': {
+               fontFamily: 'Nunito, sans-serif',
+               '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+            },
+            '& .MuiListItemIcon-root': { color: 'rgba(255,255,255,0.7)' }
+          }
         }}
       >
         <MenuItem onClick={handleProfile}>
