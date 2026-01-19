@@ -1356,14 +1356,25 @@ const PRIMARY_BUTTON_SX = {
       // Initialize pricing rows from details
       let initialRows = [];
       try {
-        if (next.pricingRows && Array.isArray(next.pricingRows) && next.pricingRows.length > 0) {
+        // Trust pricingRows if it is an array (even if empty), UNLESS we know it's a legacy item with no rows column yet.
+        // If it's explicitly null/undefined, we fall back to legacy.
+        if (Array.isArray(next.pricingRows)) {
           initialRows = next.pricingRows;
+          // But if it's empty AND legacy fields have data, maybe it's an old item being converted?
+          // For safety, if empty AND categories exist, we still do the fallback ONCE.
+          if (initialRows.length === 0 && (next.pricingCategories || next.baseRate)) {
+            const cats = String(next.pricingCategories || '').split(',').map((s: string)=>s.trim()).filter(Boolean);
+            const base = String(next.baseRate ?? next.price ?? '');
+            const curr = String(next.currency || defaultCurrency || 'USD');
+            if (cats.length > 0) initialRows = cats.map((c: string) => ({ category: c, amount: base, currency: curr }));
+            else if (base !== '' || curr) initialRows = [{ category: '', amount: base, currency: curr }];
+          }
         } else {
           const cats = String(next.pricingCategories || '').split(',').map((s: string)=>s.trim()).filter(Boolean);
-          const base = String(next.baseRate || next.price || '');
-          const curr = String(next.currency || defaultCurrency || 'JPY');
+          const base = String(next.baseRate ?? next.price ?? '');
+          const curr = String(next.currency || defaultCurrency || 'USD');
           if (cats.length > 0) initialRows = cats.map((c: string) => ({ category: c, amount: base, currency: curr }));
-          else if (base || curr) initialRows = [{ category: '', amount: base, currency: curr }];
+          else if (base !== '' || curr) initialRows = [{ category: '', amount: base, currency: curr }];
         }
       } catch (e) { console.error('Pricing Init Error:', e); }
 
@@ -1564,13 +1575,17 @@ const PRIMARY_BUTTON_SX = {
           // Sync CSV and baseRate too
           if (pricingRows.length > 0) {
               merged.pricingCategories = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
-              merged.baseRate = pricingRows[0]?.amount || merged.baseRate;
+              merged.baseRate = pricingRows[0]?.amount ?? merged.baseRate;
               merged.currency = pricingRows[0]?.currency || merged.currency;
+          } else {
+              merged.pricingCategories = '';
+              merged.baseRate = '';
+              merged.price = '';
           }
       }
 
       // Sync legacy price field with baseRate
-      if (merged.baseRate) merged.price = merged.baseRate;
+      if (merged.baseRate !== undefined && merged.baseRate !== null) merged.price = merged.baseRate;
 
       console.log(`[SupplierPortal] Saving Experience ${selectedExperienceId}:`, {
           title: merged.title,
@@ -1617,12 +1632,16 @@ const PRIMARY_BUTTON_SX = {
             merged.pricingRows = pricingRows;
             if (pricingRows.length > 0) {
                 const catsCsv = pricingRows.map(r=>r.category).filter(Boolean).join(', ');
-                const base = pricingRows[0]?.amount || merged.baseRate || '';
-                const curr = pricingRows[0]?.currency || merged.currency || defaultCurrency || 'JPY';
+                const base = pricingRows[0]?.amount ?? merged.baseRate ?? '';
+                const curr = pricingRows[0]?.currency || merged.currency || defaultCurrency || 'USD';
                 merged.pricingCategories = catsCsv;
                 merged.baseRate = base;
                 merged.currency = curr;
                 merged.price = base; 
+            } else {
+                merged.pricingCategories = '';
+                merged.baseRate = '';
+                merged.price = '';
             }
         }
         // Detect changes on key fields to avoid unnecessary saves

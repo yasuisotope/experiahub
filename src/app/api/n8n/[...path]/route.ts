@@ -1048,10 +1048,10 @@ async function handleDirectListActivities(applicationId: string, authHeader: str
                 timeZone: row.time_zone || raw?.timeZone || row.time_zone || 'Asia/Tokyo',
                 startTimes: row.start_times || raw?.startTimes || raw?.start_times || '',
                 cutoffHours: row.cutoff_hours || raw?.cutoffHours || raw?.cutoff_hours || '',
-                pricingCategories: row.pricing_categories || raw?.pricingCategories || raw?.pricing_categories || '',
+                pricingCategories: (row.pricing_categories !== null) ? row.pricing_categories : (raw?.pricingCategories || raw?.pricing_categories || ''),
                 baseRate: (row.base_rate !== null && row.base_rate !== undefined) ? row.base_rate : (raw?.baseRate || raw?.base_rate || ''),
-                pricingRows: (row.pricing_rows && Array.isArray(row.pricing_rows) && row.pricing_rows.length > 0) ? row.pricing_rows : 
-                             (raw?.pricingRows && Array.isArray(raw.pricingRows) && raw.pricingRows.length > 0 ? raw.pricingRows : []),
+                pricingRows: Array.isArray(row.pricing_rows) ? row.pricing_rows : 
+                             (raw?.pricingRows && Array.isArray(raw.pricingRows) ? raw.pricingRows : []),
                 bookingLink: row.booking_link || raw?.bookingLink || raw?.booking_link || '',
 
                 // Narrative & Restoration
