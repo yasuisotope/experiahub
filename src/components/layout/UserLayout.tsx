@@ -20,6 +20,8 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import {
   Chat as ChatIcon,
@@ -169,8 +171,10 @@ export default function UserLayout({ children }: UserLayoutProps) {
       <Box
         sx={{
           width: 280,
-          bgcolor: isTransparent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
-          backdropFilter: isTransparent ? 'blur(12px)' : 'none',
+          transition: 'all .3s ease',
+          bgcolor: isTransparent ? 'rgba(255,255,255,0.4)' : '#fff',
+          backdropFilter: isTransparent ? 'blur(16px)' : 'none',
+          color: '#010057',
           borderRight: '1px solid rgba(1, 0, 87, 0.08)',
           display: 'flex',
           flexDirection: 'column',
@@ -275,17 +279,6 @@ export default function UserLayout({ children }: UserLayoutProps) {
               </ListItem>
             </>
           )}
-          <ListItem disablePadding>
-            <ListItemButton onClick={() => setSupportOpen(true)}>
-              <ListItemIcon sx={{ color: '#010057' }}>
-                <SupportAgentIcon />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Contact Support" 
-                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: '#010057' }}
-              />
-            </ListItemButton>
-          </ListItem>
         </List>
 
         <Divider sx={{ my: 2 }} />
@@ -345,24 +338,48 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
         {/* Bottom actions */}
         <Box sx={{ p: 2, mt: 'auto' }}>
-          {/* Transparency Toggle */}
-          <Box sx={{ px: 1, mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B' }}>
-              Translucent UI
-            </Typography>
-            <IconButton 
-              size="small" 
-              onClick={() => {
-                const newVal = !isTransparent;
-                setIsTransparent(newVal);
-                // Dispatch event for chat bubbles
-                window.dispatchEvent(new CustomEvent('ui:transparency', { detail: { isTransparent: newVal } }));
-              }}
-              sx={{ color: isTransparent ? '#010057' : '#ccc' }}
-            >
-              <WallpaperIcon fontSize="small" />
-            </IconButton>
-          </Box>
+          <FormControlLabel
+            control={
+              <Switch 
+                size="small" 
+                checked={isTransparent} 
+                onChange={(e) => {
+                  const newVal = e.target.checked;
+                  setIsTransparent(newVal);
+                  window.dispatchEvent(new CustomEvent('ui:transparency', { detail: { isTransparent: newVal } }));
+                }} 
+              />
+            }
+            label={
+              <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#010057' }}>
+                Translucent UI
+              </Typography>
+            }
+            sx={{ ml: 0.5, mb: 1 }}
+          />
+
+          <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
+          
+          <ListItemButton 
+            onClick={() => setSupportOpen(true)}
+            sx={{ 
+              borderRadius: '12px',
+              mb: 1,
+              color: '#010057',
+              '&:hover': { bgcolor: 'rgba(1,0,87,0.05)' }
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
+              <SupportAgentIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Contact Support" 
+              primaryTypographyProps={{ 
+                fontFamily: 'Nunito, sans-serif',
+                fontSize: '0.85rem'
+              }} 
+            />
+          </ListItemButton>
 
           {/* Login/Profile Button */}
           {isLoggedIn ? (

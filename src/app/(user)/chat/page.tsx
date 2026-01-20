@@ -123,7 +123,7 @@ export default function ChatPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { currentChat, sendMessage, loading } = useChatContext();
-  const { user, isLoggedIn, login, authLoading } = useWordPressAuth();
+  const { user, isLoggedIn, login, isLoading: authLoading } = useWordPressAuth();
   
   const [input, setInput] = useState('');
   const [username, setUsername] = useState('');
@@ -260,14 +260,29 @@ export default function ChatPage() {
     const loadBg = async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-        const cached = loadCachedBackground('user');
+        const cached = loadCachedBackground('user' as any);
         if (cached) setBg(cached);
         const server = await getUserBackground(token);
-        if (server) { setBg(server); saveCachedBackground(server, 'user'); }
+        if (server) { setBg(server); saveCachedBackground(server, 'user' as any); }
       } catch {}
     };
     loadBg();
-  }, []);
+  }, [isLoggedIn]);
+
+  const handleUpdateBackground = async (p: PortalBackground) => {
+    try {
+      setBg(p);
+      setBgAnchorEl(null);
+      saveCachedBackground(p, 'user');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+      if (token) {
+        await setUserBackground(token, p);
+      }
+      trackBackgroundChange(p.url || '');
+    } catch (e) {
+      console.error('BG Change Error:', e);
+    }
+  };
 
   // Auto-scroll to bottom when messages or loading state change
   useEffect(() => {
@@ -508,18 +523,19 @@ export default function ChatPage() {
                     sx={{
                       p: 2,
                       backgroundColor: message.isUser 
-                        ? (isTranslucent ? 'rgba(1, 0, 87, 0.85)' : '#010057') 
-                        : (isTranslucent ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.95)'),
-                      backdropFilter: isTranslucent ? 'blur(8px)' : 'none',
+                        ? (isTranslucent ? 'rgba(1, 0, 87, 0.4)' : '#010057') 
+                        : (isTranslucent ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.95)'),
+                      backdropFilter: isTranslucent ? 'blur(20px)' : 'none',
                       color: message.isUser ? '#ffffff' : '#010057',
                       borderRadius: '16px',
+                      border: isTranslucent ? '1px solid rgba(255,255,255,0.1)' : 'none',
                       ...(message.isUser ? { borderBottomRightRadius: '4px' } : { borderBottomLeftRadius: '4px' }),
                       fontFamily: 'Inter',
                       fontSize: '1rem',
                       lineHeight: 1.6,
                     }}
                   >
-                    {((Array.isArray(experienceList) && experienceList.length > 0 && !message.isUser) || displayContent.includes('Here are a few options:'))
+                    {((Array.isArray(experienceList) && experienceList.length > 0 && !message.isUser) || displayContent.toLowerCase().includes('here are a few options'))
                       ? stripEnumerationsFromText(displayContent)
                       : displayContent}
                   </Paper>
@@ -559,17 +575,23 @@ export default function ChatPage() {
                 sx={{
                   p: 1.5,
                   px: 2,
-                  backgroundColor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#E9F0F3',
-                  backdropFilter: isTranslucent ? 'blur(8px)' : 'none',
+                  backgroundColor: isTranslucent ? 'rgba(255, 255, 255, 0.3)' : '#E9F0F3',
+                  backdropFilter: isTranslucent ? 'blur(20px)' : 'none',
+                  border: isTranslucent ? '1px solid rgba(255,255,255,0.1)' : 'none',
                   color: '#010057',
                   borderRadius: '16px',
                   borderBottomLeftRadius: '4px',
                 }}
               >
-                <Box sx={{ display: 'inline-flex', gap: 0.6 }}>
-                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s infinite' }} />
-                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.2s infinite' }} />
-                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.4s infinite' }} />
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Box sx={{ display: 'inline-flex', gap: 0.6 }}>
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s infinite' }} />
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.2s infinite' }} />
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.4s infinite' }} />
+                  </Box>
+                  <Typography variant="body2" sx={{ fontFamily: 'Inter', color: '#010057', fontStyle: 'italic', ml: 1 }}>
+                    ExperiaHub is thinking...
+                  </Typography>
                 </Box>
                 <style jsx>{`
                   @keyframes blink {
@@ -579,12 +601,6 @@ export default function ChatPage() {
                   }
                 `}</style>
               </Paper>
-              <Box sx={{ display: 'flex', gap: 1, px: 2, alignItems: 'center' }}>
-                <CircularProgress size={16} sx={{ color: '#010057' }} />
-                <Typography variant="caption" sx={{ fontFamily: 'Inter', color: '#64748B', fontStyle: 'italic' }}>
-                  ExperiaHub is thinking...
-                </Typography>
-              </Box>
             </Box>
           )}
         </Box>
@@ -651,7 +667,7 @@ export default function ChatPage() {
         <Typography variant="subtitle2" sx={{ mb: 1 }}>Choose Background</Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
           {curatedList.map((p, i) => (
-            <Box key={i} sx={{ cursor: 'pointer' }} onClick={() => { setBg({ url: p.url, thumbUrl: p.thumbUrl }); setBgAnchorEl(null); }}>
+            <Box key={i} sx={{ cursor: 'pointer', borderRadius: 1, overflow: 'hidden' }} onClick={() => handleUpdateBackground(p)}>
               <img src={p.thumbUrl} style={{ width: '100%', height: 60, objectFit: 'cover' }} />
             </Box>
           ))}
