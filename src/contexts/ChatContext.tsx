@@ -113,27 +113,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   };
 
   const sendMessage = async (message: string) => {
-    // Allow both logged-in and anonymous users to chat
-    // if (!isLoggedIn) {
-    //   setError('Please log in to send messages');
-    //   return;
-    // }
-
-    if (!currentChat) {
-      // Create a new chat if none exists
-      try {
-        const newChat = await chatHistoryService.createChat();
-        setChats(prev => [newChat, ...prev]);
-        setCurrentChat(newChat);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create new chat');
-        return;
-      }
-    }
-
     try {
       setLoading(true);
-      setError(null); // Clear any previous errors
+      setError(null);
+      
+      let chatToUse = currentChat;
+      if (!chatToUse) {
+        // Create a new chat if none exists
+        chatToUse = await chatHistoryService.createChat();
+        setChats(prev => [chatToUse!, ...prev]);
+        setCurrentChat(chatToUse);
+      }
       
       // Add user message immediately
       const newUserMessage: Message = {

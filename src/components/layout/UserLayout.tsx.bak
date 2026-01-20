@@ -20,8 +20,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControlLabel,
-  Switch,
 } from '@mui/material';
 import {
   Chat as ChatIcon,
@@ -33,15 +31,12 @@ import {
   Person as PersonIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Wallpaper as WallpaperIcon,
-  CreditCard as CreditCardIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useWordPressAuth } from '@/contexts/WordPressContext';
 import { useChatContext } from '@/contexts/ChatContext';
 import Image from 'next/image';
 import SupportDialog from '@/components/support/SupportDialog';
-import Fab from '@mui/material/Fab';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import Logo from '@/ui-component/Logo';
 
@@ -165,35 +160,25 @@ export default function UserLayout({ children }: UserLayoutProps) {
     handleUserMenuClose();
   };
 
-  const [isTransparent, setIsTransparent] = React.useState(true);
-
   return (
     <Box sx={{ display: 'flex', minHeight: '100dvh', height: '100dvh', position: 'relative', zIndex: 5 }}>
       {/* Left Sidebar */}
       <Box
         sx={{
           width: 280,
-          transition: 'all .3s ease',
-          bgcolor: isTransparent ? 'rgba(255,255,255,0.4)' : '#fff',
-          backdropFilter: isTransparent ? 'blur(20px)' : 'none',
-          color: '#010057',
+          bgcolor: 'rgba(255, 255, 255, 0.7)',
+          backdropFilter: 'blur(16px)',
           borderRight: '1px solid rgba(1, 0, 87, 0.08)',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
           zIndex: 10,
-          // Curved corners and spacing as requested
-          m: '30px', 
-          mr: 0,
-          borderRadius: '16px',
-          height: 'calc(100dvh - 60px)',
-          boxShadow: isTransparent ? '0 8px 32px rgba(1, 0, 87, 0.05)' : 'none',
         }}
       >
         {/* Logo */}
         <Box sx={{ p: 4, pt: '35px', pb: '35px', textAlign: 'center' }}>
           <Image
-            src="/images/logo.png"
+            src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png"
             alt="ExperiaHub"
             width={200}
             height={50}
@@ -215,7 +200,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
             fontWeight: 400,
             textTransform: 'none',
             fontFamily: 'Nunito, sans-serif',
-            '&:hover': { bgcolor: '#4A7C8C' },
+            '&:hover': { bgcolor: '#020080' },
           }}
         >
           NEW CHAT
@@ -281,6 +266,17 @@ export default function UserLayout({ children }: UserLayoutProps) {
               </ListItem>
             </>
           )}
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => setSupportOpen(true)}>
+              <ListItemIcon sx={{ color: '#333' }}>
+                <SupportAgentIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Contact Support" 
+                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: '#333' }}
+              />
+            </ListItemButton>
+          </ListItem>
         </List>
 
         <Divider sx={{ my: 2 }} />
@@ -340,45 +336,20 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
         {/* Bottom actions */}
         <Box sx={{ p: 2, mt: 'auto' }}>
-          <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
-          
-          <FormControlLabel
-            control={
-              <Switch 
-                size="small" 
-                checked={isTransparent} 
-                onChange={(e) => {
-                  const newVal = e.target.checked;
-                  setIsTransparent(newVal);
-                  window.dispatchEvent(new CustomEvent('ui:transparency', { detail: { isTransparent: newVal } }));
-                }} 
-              />
-            }
-            label={
-              <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#010057' }}>
-                Translucent UI
-              </Typography>
-            }
-            sx={{ ml: 0.5, mb: 1, width: '100%' }}
-          />
-
           {/* Login/Profile Button */}
           {isLoggedIn ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Avatar
                 onClick={handleUserMenuOpen}
                 sx={{ 
                   cursor: 'pointer',
-                  bgcolor: '#010057',
-                  width: 32,
-                  height: 32,
-                  fontSize: '0.875rem'
+                  bgcolor: 'rgba(74, 124, 140, 0.9)',
                 }}
               >
                 {user?.display_name?.[0] || user?.email?.[0]}
               </Avatar>
               <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="subtitle2" noWrap sx={{ fontFamily: 'Nunito, sans-serif', color: '#010057', fontSize: '0.85rem' }}>
+                <Typography variant="subtitle2" noWrap>
                   {user?.display_name || user?.email}
                 </Typography>
               </Box>
@@ -389,9 +360,8 @@ export default function UserLayout({ children }: UserLayoutProps) {
               variant="contained"
               onClick={() => router.push('/login')}
               sx={{
-                bgcolor: '#010057',
-                fontFamily: 'Nunito, sans-serif',
-                '&:hover': { bgcolor: '#4A7C8C' },
+                bgcolor: 'rgba(74, 124, 140, 0.9)',
+                '&:hover': { bgcolor: 'rgba(74, 124, 140, 1)' },
               }}
             >
               LOGIN
@@ -411,28 +381,20 @@ export default function UserLayout({ children }: UserLayoutProps) {
         anchorEl={userMenuAnchor}
         open={Boolean(userMenuAnchor)}
         onClose={handleUserMenuClose}
-        disableScrollLock={true}
-        disablePortal={false}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
         anchorOrigin={{
           vertical: 'top',
-          horizontal: 'left',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
         }}
       >
-        <MenuItem onClick={() => { handleUserMenuClose(); router.push('/profile'); }}>
+        <MenuItem onClick={handleProfile}>
           <ListItemIcon>
             <PersonIcon fontSize="small" />
           </ListItemIcon>
-          Account Settings
-        </MenuItem>
-        <MenuItem onClick={() => { handleUserMenuClose(); router.push('/payments'); }}>
-          <ListItemIcon>
-            <CreditCardIcon fontSize="small" />
-          </ListItemIcon>
-          Payment Methods
+          Edit Profile
         </MenuItem>
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>

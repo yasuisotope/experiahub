@@ -58,10 +58,12 @@ export async function POST(request: NextRequest) {
       // Standard format: { success: true, response: "..." }
       return NextResponse.json(data);
     } else if (data.output) {
-      // Direct output format: { output: "..." }
+      // Direct output format: { output: "...", experiences: [], cta: {} }
       return NextResponse.json({
         success: true,
-        response: data.output
+        response: data.output,
+        experiences: data.experiences || [],
+        cta: data.cta || null
       });
     } else if (typeof data === 'string') {
       // Plain string response

@@ -22,14 +22,15 @@ import Stack from '@mui/material/Stack';
 // header removed (was AppBar) to avoid layout conflicts with MainLayout sidebars
 import Fab from '@mui/material/Fab';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import BackgroundImage from '@/components/BackgroundImage';
-import { getUserBackground, loadCachedBackground, saveCachedBackground, searchUnsplash, setUserBackground, trackDownload, getCuratedBackgrounds, prefetchBackgroundImage } from '@/services/backgroundService';
-import type { PortalBackground } from '@/services/backgroundService';
-import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
-import Popover from '@mui/material/Popover';
-import Skeleton from '@mui/material/Skeleton';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
 import ClearIcon from '@mui/icons-material/Clear';
+import Logo from '@/ui-component/Logo';
+import BackgroundImage from '@/components/BackgroundImage';
+import { getUserBackground, loadCachedBackground, saveCachedBackground, searchUnsplash, setUserBackground, trackDownload, getCuratedBackgrounds, prefetchBackgroundImage } from '@/services/backgroundService';
+import Skeleton from '@mui/material/Skeleton';
+import Popover from '@mui/material/Popover';
+import type { PortalBackground } from '@/services/backgroundService';
+import { trackBackgroundChange, trackBackgroundRemove } from '@/services/analytics';
 
 // Helper function to parse AI response and extract signup prompt
 const parseAIResponse = (content: string) => {
@@ -67,12 +68,15 @@ const synthesizeExperiences = (text: string) => {
     const textStr = String(text || '');
     const items: any[] = [];
 
-    // Inline enumeration parser: "1. Foo ... 2. Bar ..."
-    const inlineRe = /(\d{1,2})\.\s*([^]+?)(?=(?:\s+\d{1,2}\.\s*)|$)/g;
+    // Even more robust regex: match a number followed by a period and optional space, 
+    // and then everything until the next item or end of string.
+    // We use [\s\S]+? to capture newlines.
+    const re = /(?:^|\n|\s)(\d{1,2})\.\s*([\s\S]+?)(?=(?:\n\s*\d{1,2}\.\s*)|$)/g;
     let match: RegExpExecArray | null;
-    while ((match = inlineRe.exec(textStr)) && items.length < 5) {
+    while ((match = re.exec(textStr)) && items.length < 5) {
       const part = match[2].trim();
-      const title = part.split(/\(|•|–|\u2013/)[0].trim() || 'Experience';
+      const firstLine = part.split('\n')[0].trim();
+      const title = firstLine || part || 'Experience';
       const cityMatch = part.match(/\(([^)]+)\)/);
       const city = cityMatch?.[1]?.trim();
       const durMatch = part.match(/(\d+(?:\.\d+)?)\s*hours?/i);
@@ -108,7 +112,8 @@ const synthesizeExperiences = (text: string) => {
 };
 
 const stripEnumerationsFromText = (text: string) => {
-  return text.replace(/^\d{1,2}\.[\s\S]*?(?=(\n\d{1,2}\.)|$)/gm, '').trim();
+  // Use the same regex logic to remove the blocks from the text
+  return text.replace(/(?:^|\n|\s)\d{1,2}\.\s*[\s\S]+?(?=(?:\s+\d{1,2}\.\s*)|$)/g, '').trim();
 };
 
 const quickReplies = [
@@ -155,6 +160,7 @@ export default function ChatPage() {
   }, [bgSearch, bgSeed]);
 
   const [isTranslucent, setIsTranslucent] = useState(true);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -260,10 +266,10 @@ export default function ChatPage() {
     const loadBg = async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-        const cached = loadCachedBackground('user' as any);
+        const cached = loadCachedBackground('chat' as any);
         if (cached) setBg(cached);
         const server = await getUserBackground(token);
-        if (server) { setBg(server); saveCachedBackground(server, 'user' as any); }
+        if (server) { setBg(server); saveCachedBackground(server, 'chat' as any); }
       } catch {}
     };
     loadBg();
@@ -273,7 +279,7 @@ export default function ChatPage() {
     try {
       setBg(p);
       setBgAnchorEl(null);
-      saveCachedBackground(p, 'user');
+      saveCachedBackground(p, 'chat' as any);
       const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
       if (token) {
         await setUserBackground(token, p);
@@ -298,15 +304,18 @@ export default function ChatPage() {
   }, [currentChat?.messages?.length, loading]);
 
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || isSending) return;
     
     try {
       const message = input.trim();
       setInput(''); 
+      setIsSending(true);
       await sendMessage(message);
     } catch (error) {
       console.error('Failed to send message:', error);
       setInput(input.trim());
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -450,6 +459,7 @@ export default function ChatPage() {
           </Box>
         )}
 
+
         {/* Chat Interface (Logged In) */}
         {isLoggedIn && !authLoading && (
         <Box sx={{
@@ -535,7 +545,7 @@ export default function ChatPage() {
                       lineHeight: 1.6,
                     }}
                   >
-                    {((Array.isArray(experienceList) && experienceList.length > 0 && !message.isUser) || displayContent.toLowerCase().includes('here are a few options'))
+                    {((Array.isArray(experienceList) && experienceList.length > 0 && !message.isUser))
                       ? stripEnumerationsFromText(displayContent)
                       : displayContent}
                   </Paper>
@@ -568,7 +578,7 @@ export default function ChatPage() {
               </Box>
             );
           })}
-          {loading && (
+          {(loading || isSending) && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1, flexDirection: 'column', gap: 1 }}>
               <Paper
                 elevation={0}
