@@ -160,25 +160,33 @@ export default function UserLayout({ children }: UserLayoutProps) {
     handleUserMenuClose();
   };
 
+  const [isTransparent, setIsTransparent] = React.useState(true);
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100dvh', height: '100dvh', position: 'relative', zIndex: 5 }}>
       {/* Left Sidebar */}
       <Box
         sx={{
           width: 280,
-          bgcolor: 'rgba(255, 255, 255, 0.7)',
-          backdropFilter: 'blur(16px)',
+          bgcolor: isTransparent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
+          backdropFilter: isTransparent ? 'blur(12px)' : 'none',
           borderRight: '1px solid rgba(1, 0, 87, 0.08)',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
           zIndex: 10,
+          // Curved corners and spacing as requested
+          m: '30px', 
+          mr: 0,
+          borderRadius: '16px',
+          height: 'calc(100dvh - 60px)',
+          boxShadow: isTransparent ? '0 8px 32px rgba(1, 0, 87, 0.05)' : 'none',
         }}
       >
         {/* Logo */}
         <Box sx={{ p: 4, pt: '35px', pb: '35px', textAlign: 'center' }}>
           <Image
-            src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png"
+            src="/images/logo.png"
             alt="ExperiaHub"
             width={200}
             height={50}
@@ -200,7 +208,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
             fontWeight: 400,
             textTransform: 'none',
             fontFamily: 'Nunito, sans-serif',
-            '&:hover': { bgcolor: '#020080' },
+            '&:hover': { bgcolor: '#4A7C8C' },
           }}
         >
           NEW CHAT
@@ -268,12 +276,12 @@ export default function UserLayout({ children }: UserLayoutProps) {
           )}
           <ListItem disablePadding>
             <ListItemButton onClick={() => setSupportOpen(true)}>
-              <ListItemIcon sx={{ color: '#333' }}>
+              <ListItemIcon sx={{ color: '#010057' }}>
                 <SupportAgentIcon />
               </ListItemIcon>
               <ListItemText 
                 primary="Contact Support" 
-                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: '#333' }}
+                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: '#010057' }}
               />
             </ListItemButton>
           </ListItem>
@@ -336,6 +344,25 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
         {/* Bottom actions */}
         <Box sx={{ p: 2, mt: 'auto' }}>
+          {/* Transparency Toggle */}
+          <Box sx={{ px: 1, mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B' }}>
+              Translucent UI
+            </Typography>
+            <IconButton 
+              size="small" 
+              onClick={() => {
+                const newVal = !isTransparent;
+                setIsTransparent(newVal);
+                // Dispatch event for chat bubbles
+                window.dispatchEvent(new CustomEvent('ui:transparency', { detail: { isTransparent: newVal } }));
+              }}
+              sx={{ color: isTransparent ? '#010057' : '#ccc' }}
+            >
+              <WallpaperIcon fontSize="small" />
+            </IconButton>
+          </Box>
+
           {/* Login/Profile Button */}
           {isLoggedIn ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -343,13 +370,16 @@ export default function UserLayout({ children }: UserLayoutProps) {
                 onClick={handleUserMenuOpen}
                 sx={{ 
                   cursor: 'pointer',
-                  bgcolor: 'rgba(74, 124, 140, 0.9)',
+                  bgcolor: '#010057',
+                  width: 32,
+                  height: 32,
+                  fontSize: '0.875rem'
                 }}
               >
                 {user?.display_name?.[0] || user?.email?.[0]}
               </Avatar>
               <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="subtitle2" noWrap>
+                <Typography variant="subtitle2" noWrap sx={{ fontFamily: 'Nunito, sans-serif', color: '#010057', fontSize: '0.85rem' }}>
                   {user?.display_name || user?.email}
                 </Typography>
               </Box>
@@ -360,8 +390,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
               variant="contained"
               onClick={() => router.push('/login')}
               sx={{
-                bgcolor: 'rgba(74, 124, 140, 0.9)',
-                '&:hover': { bgcolor: 'rgba(74, 124, 140, 1)' },
+                bgcolor: '#010057',
+                fontFamily: 'Nunito, sans-serif',
+                '&:hover': { bgcolor: '#4A7C8C' },
               }}
             >
               LOGIN

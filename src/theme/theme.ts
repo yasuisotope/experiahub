@@ -22,10 +22,13 @@ declare module '@mui/material/Typography' {
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#010057', // Deep Blue
+      main: '#010057', // Deep Blue (Color #1)
     },
     secondary: {
-      main: '#ffbf00', // Gold
+      main: '#ffbf00', // Gold (Color #2)
+    },
+    info: {
+      main: '#4A7C8C', // Muted Blue (Color #3)
     },
     background: {
       default: '#f8f9fa',

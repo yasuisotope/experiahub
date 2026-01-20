@@ -197,7 +197,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
                 setOpenWidget(true);
               }}
               aria-label={`Book now for ${exp.title}`}
-              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' }, fontFamily: 'Inter', textTransform: 'none' }}
+              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#4A7C8C' }, fontFamily: 'Inter', textTransform: 'none' }}
             >
               Book Now
             </Button>
@@ -214,7 +214,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
                 setOpenWidget(true);
               }}
               aria-label={`Check availability for ${exp.title}`}
-              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#020080' }, fontFamily: 'Inter', textTransform: 'none' }}
+              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#4A7C8C' }, fontFamily: 'Inter', textTransform: 'none' }}
             >
               Check availability
             </Button>
