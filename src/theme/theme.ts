@@ -22,95 +22,86 @@ declare module '@mui/material/Typography' {
 const theme = createTheme({
   palette: {
     primary: {
-      main: 'rgba(74, 124, 140, 0.9)',
+      main: '#010057', // Deep Blue
     },
     secondary: {
-      main: 'rgba(255, 183, 107, 0.9)',
+      main: '#ffbf00', // Gold
     },
     background: {
-      default: '#f5f5f5',
+      default: '#f8f9fa',
       paper: '#ffffff',
     },
     text: {
-      primary: '#4A4A4A',
-      secondary: '#666666',
+      primary: '#010057',
+      secondary: '#4A7C8C',
     },
   },
   typography: {
-    fontFamily: 'Nunito, Urbanist, sans-serif',
+    fontFamily: '"Inter", "Nunito", "Urbanist", sans-serif',
     h1: {
-      fontFamily: 'Agrandir, Cormorant Garamond, serif',
-      color: '#4A4A4A',
-      fontWeight: 700,
+      fontFamily: '"Playfair Display", "Agrandir", serif',
+      color: '#010057',
+      fontWeight: 600,
     },
     h2: {
-      fontFamily: 'Agrandir, Cormorant Garamond, serif',
-      color: '#4A4A4A',
-      fontWeight: 700,
+      fontFamily: '"Playfair Display", "Agrandir", serif',
+      color: '#010057',
+      fontWeight: 600,
     },
     h3: {
-      fontFamily: 'Agrandir, Cormorant Garamond, serif',
-      color: '#4A4A4A',
+      fontFamily: '"Playfair Display", "Agrandir", serif',
+      color: '#010057',
       fontWeight: 600,
     },
     h4: {
-      fontFamily: 'Agrandir, Cormorant Garamond, serif',
-      color: '#4A4A4A',
+      fontFamily: '"Playfair Display", "Agrandir", serif',
+      color: '#010057',
       fontWeight: 600,
     },
     h5: {
-      fontFamily: 'Agrandir, Cormorant Garamond, serif',
-      color: '#4A4A4A',
-      fontWeight: 600,
+      fontFamily: '"Playfair Display", "Agrandir", serif',
+      color: '#010057',
+      fontWeight: 500,
     },
     h6: {
-      fontFamily: 'Agrandir, Cormorant Garamond, serif',
-      color: '#4A4A4A',
-      fontWeight: 600,
+      fontFamily: '"Playfair Display", "Agrandir", serif',
+      color: '#010057',
+      fontWeight: 500,
     },
     body1: {
-      fontFamily: 'Nunito, Urbanist, sans-serif',
-      color: '#666666',
+      fontFamily: '"Inter", "Nunito", sans-serif',
+      color: '#010057',
     },
     body2: {
-      fontFamily: 'Nunito, Urbanist, sans-serif',
-      color: '#666666',
-    },
-    subtitle1: {
-      fontFamily: 'Nunito, Urbanist, sans-serif',
-      color: '#666666',
-    },
-    subtitle2: {
-      fontFamily: 'Nunito, Urbanist, sans-serif',
+      fontFamily: '"Inter", "Nunito", sans-serif',
       color: '#666666',
     },
     button: {
-      fontFamily: 'Nunito, Urbanist, sans-serif',
+      fontFamily: '"Inter", "Nunito", sans-serif',
       textTransform: 'none',
+      fontWeight: 500,
     },
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#f5f5f5',
-          fontFamily: 'Nunito, Urbanist, sans-serif',
-        },
-      },
-    },
-    MuiListItemText: {
-      styleOverrides: {
-        primary: {
-          color: '#666666',
-          fontFamily: 'Nunito, Urbanist, sans-serif',
+          backgroundColor: '#010057', // Force Navy BG for Premium look
+          fontFamily: '"Inter", sans-serif',
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          fontFamily: 'Nunito, Urbanist, sans-serif',
+          borderRadius: '8px',
           textTransform: 'none',
+        },
+        containedPrimary: {
+          backgroundColor: '#010057',
+          '&:hover': {
+            backgroundColor: '#020080',
+          },
         },
       },
     },

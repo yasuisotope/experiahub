@@ -507,8 +507,8 @@ export default function ChatPage() {
                 elevation={0}
                 sx={{
                   p: 2,
-                      backgroundColor: message.isUser ? 'rgba(74, 124, 140, 0.2)' : '#E9F0F3',
-                      color: message.isUser ? '#333333' : '#333333',
+                      backgroundColor: message.isUser ? 'rgba(255, 191, 0, 0.9)' : 'rgba(255, 255, 255, 0.85)',
+                      color: message.isUser ? '#010057' : '#010057',
                   borderRadius: '16px',
                   ...(message.isUser ? {
                     borderBottomRightRadius: '4px',
@@ -528,7 +528,7 @@ export default function ChatPage() {
               {!message.isUser && Array.isArray(experienceList) && experienceList.length > 0 && (
                 <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
                   {experienceList.slice(0,5).map((exp: any, i: number) => (
-                    <Paper key={i} elevation={0} sx={{ p: 1.5, backgroundColor: 'rgba(255,255,255,0.9)', border: '1px solid rgba(74,124,140,0.12)', borderRadius: '10px' }}>
+                    <Paper key={i} elevation={0} sx={{ p: 1.5, backgroundColor: 'rgba(255,255,255,0.9)', border: '1px solid rgba(1, 0, 87, 0.1)', borderRadius: '10px' }}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                         <Box sx={{ fontFamily: 'Inter', color: '#2F2F2F', fontSize: '0.95rem' }}>
                           {`${i+1}. ${exp?.title || 'Experience'}`}
@@ -549,7 +549,7 @@ export default function ChatPage() {
                                 setListWidgetProductId(String(pid));
                                 setListWidgetOpen(true);
                               }}
-                              sx={{ textTransform: 'none', bgcolor: 'rgba(74, 124, 140, 0.9)' }}
+                              sx={{ textTransform: 'none', bgcolor: 'secondary.main', color: 'primary.main', fontWeight: 600, '&:hover': { bgcolor: '#e6ac00' } }}
                             >
                               Check availability
                             </Button>

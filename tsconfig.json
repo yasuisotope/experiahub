@@ -32,7 +32,7 @@
       "api/*": ["./src/api/*"],
       "store": ["./src/store/index"],
       "store/*": ["./src/store/*"],
-      "config": ["./src/config/index"],
+      "config": ["./src/config"],
       "config/*": ["./src/config/*"]
     }
   },

@@ -38,6 +38,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 import Image from 'next/image';
 import SupportDialog from '@/components/support/SupportDialog';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import Logo from '@/ui-component/Logo';
 
 interface UserLayoutProps {
   children: React.ReactNode;
@@ -172,19 +173,11 @@ export default function UserLayout({ children }: UserLayoutProps) {
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
-          zIndex: 10,
         }}
       >
         {/* Logo */}
-        <Box sx={{ p: 2, pt: '35px', pb: '35px', textAlign: 'center' }}>
-          <Image
-            src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png"
-            alt="ExperiaHub"
-            width={240}
-            height={60}
-            style={{ height: 'auto' }}
-            priority
-          />
+        <Box sx={{ p: 2, pt: '25px', pb: '25px', display: 'flex', justifyContent: 'center' }}>
+          <Logo />
         </Box>
 
         {/* New Chat Button */}
@@ -195,9 +188,11 @@ export default function UserLayout({ children }: UserLayoutProps) {
           sx={{
             mx: 2,
             mb: 2,
-            bgcolor: '#d35400',
-            fontFamily: 'Nunito, sans-serif',
-            '&:hover': { bgcolor: '#e67e22' },
+            bgcolor: 'secondary.main',
+            color: 'primary.main',
+            fontWeight: 600,
+            fontFamily: 'Inter, sans-serif',
+            '&:hover': { bgcolor: '#e6ac00' },
           }}
         >
           NEW CHAT
@@ -210,16 +205,16 @@ export default function UserLayout({ children }: UserLayoutProps) {
               onClick={() => router.push('/chat')} 
               selected={pathname === '/chat'}
               sx={{
-                '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
-                '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+                '&.Mui-selected': { bgcolor: 'rgba(255, 191, 0, 0.12)' },
+                '&.Mui-selected:hover': { bgcolor: 'rgba(255, 191, 0, 0.18)' },
               }}
             >
-              <ListItemIcon sx={{ color: pathname === '/chat' ? '#4A7C8C' : '#333' }}>
+              <ListItemIcon sx={{ color: pathname === '/chat' ? 'secondary.main' : 'text.primary' }}>
                 <ChatIcon />
               </ListItemIcon>
               <ListItemText 
                 primary="Chat" 
-                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname === '/chat' ? '#4A7C8C' : '#333' }}
+                primaryTypographyProps={{ fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', fontWeight: pathname === '/chat' ? 600 : 400, color: pathname === '/chat' ? 'secondary.main' : 'text.primary' }}
               />
             </ListItemButton>
           </ListItem>
@@ -307,10 +302,10 @@ export default function UserLayout({ children }: UserLayoutProps) {
                       mb: 0.5,
                       transition: 'background-color 120ms ease',
                       ...(currentChat?.id === chat.id
-                        ? { backgroundColor: 'rgba(74, 124, 140, 0.12)' }
+                        ? { backgroundColor: 'rgba(255, 191, 0, 0.12)' }
                         : {}),
                       '&:hover': {
-                        backgroundColor: 'rgba(74, 124, 140, 0.08)'
+                        backgroundColor: 'rgba(255, 191, 0, 0.08)'
                       }
                     }}
                   >
@@ -319,9 +314,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
                       primaryTypographyProps={{
                         fontSize: '0.95rem',
                         fontWeight: currentChat?.id === chat.id ? 600 : 500,
-                        color: currentChat?.id === chat.id ? '#4A7C8C' : '#2F2F2F',
+                        color: currentChat?.id === chat.id ? 'secondary.main' : 'text.primary',
                         noWrap: true,
-                        fontFamily: 'Nunito, sans-serif',
+                        fontFamily: 'Inter, sans-serif',
                       }}
                     />
                   </ListItemButton>

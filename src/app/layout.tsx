@@ -9,15 +9,27 @@ import { GlobalStyles } from '@mui/material';
 import theme from '@/theme/theme';
 import { initSentry } from '@/monitoring/sentry';
 
+// Prevent hydration mismatch by using a client-only component
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+    try { initSentry(); } catch {}
+  }, []);
+
+  if (!hasMounted) {
+    return null;
+  }
+
+  return children;
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  useEffect(() => {
-    try { initSentry(); } catch {}
-  }, []);
-
   return (
     <html lang="en">
       <head>
@@ -27,7 +39,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="https://res.cloudinary.com/dasahamyc/image/upload/v1764230943/ExperiaHub_Logo_512x512_mlgydt.png" type="image/png" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Urbanist:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/common@6.1.19/main.min.css" />
@@ -36,7 +48,8 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.19/main.min.css" />
       </head>
       <body>
-        <ThemeProvider theme={theme}>
+        <ClientOnly>
+          <ThemeProvider theme={theme}>
             <CssBaseline />
             <GlobalStyles styles={{
               '@font-face': {
@@ -63,14 +76,13 @@ export default function RootLayout({
                 outlineOffset: 2
               }
             }} />
-            <React.Suspense fallback={null}>
-              <WordPressProvider>
-                <ChatProvider>
-                  {children}
-                </ChatProvider>
-              </WordPressProvider>
-            </React.Suspense>
+            <WordPressProvider>
+              <ChatProvider>
+                {children}
+              </ChatProvider>
+            </WordPressProvider>
           </ThemeProvider>
+        </ClientOnly>
       </body>
     </html>
   );
