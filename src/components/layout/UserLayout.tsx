@@ -173,7 +173,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
           width: 280,
           transition: 'all .3s ease',
           bgcolor: isTransparent ? 'rgba(255,255,255,0.4)' : '#fff',
-          backdropFilter: isTransparent ? 'blur(16px)' : 'none',
+          backdropFilter: isTransparent ? 'blur(20px)' : 'none',
           color: '#010057',
           borderRight: '1px solid rgba(1, 0, 87, 0.08)',
           display: 'flex',
@@ -338,6 +338,8 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
         {/* Bottom actions */}
         <Box sx={{ p: 2, mt: 'auto' }}>
+          <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
+          
           <FormControlLabel
             control={
               <Switch 
@@ -355,35 +357,12 @@ export default function UserLayout({ children }: UserLayoutProps) {
                 Translucent UI
               </Typography>
             }
-            sx={{ ml: 0.5, mb: 1 }}
+            sx={{ ml: 0.5, mb: 1, width: '100%' }}
           />
-
-          <Divider sx={{ mb: 2, borderColor: 'rgba(1,0,87,0.1)' }} />
-          
-          <ListItemButton 
-            onClick={() => setSupportOpen(true)}
-            sx={{ 
-              borderRadius: '12px',
-              mb: 1,
-              color: '#010057',
-              '&:hover': { bgcolor: 'rgba(1,0,87,0.05)' }
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
-              <SupportAgentIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText 
-              primary="Contact Support" 
-              primaryTypographyProps={{ 
-                fontFamily: 'Nunito, sans-serif',
-                fontSize: '0.85rem'
-              }} 
-            />
-          </ListItemButton>
 
           {/* Login/Profile Button */}
           {isLoggedIn ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
               <Avatar
                 onClick={handleUserMenuOpen}
                 sx={{ 

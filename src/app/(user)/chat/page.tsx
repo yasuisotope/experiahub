@@ -646,6 +646,25 @@ export default function ChatPage() {
       >
         <DetailsPanel exp={selectedExperience} onClose={handleCloseDetails} />
       </Box>
+
+      {/* Background Picker Button (Added back per request) */}
+      <Fab
+        color="default"
+        size="small"
+        onClick={(e) => { setBgSeed((s)=>s+1); setBgAnchorEl(e.currentTarget); }}
+        sx={{ 
+          position: 'fixed', 
+          right: 20, 
+          bottom: 24, 
+          zIndex: 2000, 
+          bgcolor: 'rgba(255,255,255,0.9)', 
+          color: '#4a7c8c',
+          backdropFilter: 'blur(8px)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+        }}
+      >
+        <WallpaperIcon fontSize="small" />
+      </Fab>
     </Box>
     )}
 
@@ -659,27 +678,96 @@ export default function ChatPage() {
     <Popover
       open={Boolean(bgAnchorEl)}
       anchorEl={bgAnchorEl}
-      onClose={()=>setBgAnchorEl(null)}
+      onClose={() => { setBgAnchorEl(null); setBgSeed(0); }}
       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
     >
-      <Paper sx={{ p: 2, width: 360 }}>
-        {/* Simplified Background Picker content for briefness */}
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>Choose Background</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
-          {curatedList.map((p, i) => (
-            <Box key={i} sx={{ cursor: 'pointer', borderRadius: 1, overflow: 'hidden' }} onClick={() => handleUpdateBackground(p)}>
-              <img src={p.thumbUrl} style={{ width: '100%', height: 60, objectFit: 'cover' }} />
-            </Box>
-          ))}
-        </Box>
+      <Paper
+        sx={{ p: 2, width: 360, maxHeight: 420, overflowY: 'auto', borderRadius: 3 }}
+        onScroll={async (e:any)=>{
+          try {
+            if (!bgSearch.trim() || bgLoadingMore) return;
+            const el = e.currentTarget as HTMLElement;
+            const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 48;
+            if (!nearBottom) return;
+            setBgLoadingMore(true);
+            const next = bgPage + 1;
+            const more = await searchUnsplash(bgSearch.trim(), next, 30);
+            const existing = new Set((bgResults||[]).map((x:any)=>x?.id));
+            const merged = [...bgResults, ...more.filter((x:any)=> !existing.has(x?.id))];
+            setBgResults(merged);
+            setBgPage(next);
+          } finally { setBgLoadingMore(false); }
+        }}
+      >
+        <Stack spacing={1}>
+          <Stack direction="row" spacing={1}>
+            <TextField
+              size="small"
+              label="Search photos"
+              value={bgSearch}
+              onChange={(e) => {
+                const v = e.target.value;
+                setBgSearch(v);
+                if (!v.trim()) { setBgResults([]); setBgPage(1); setBgSeed(s => s + 1); }
+              }}
+              fullWidth
+              InputProps={{
+                endAdornment: bgSearch ? (
+                  <IconButton size="small" aria-label="Clear" onClick={() => { setBgSearch(''); setBgResults([]); setBgPage(1); setBgSeed(s => s + 1); }}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                ) : null
+              }}
+            />
+            <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 400, borderRadius: 3 }} onClick={async ()=>{
+              try {
+                setBgLoading(true);
+                const results = await searchUnsplash(bgSearch.trim(), 1, 30);
+                setBgResults(Array.isArray(results)?results:[]);
+                setBgPage(1);
+              } finally { setBgLoading(false); }
+            }}>Go</Button>
+          </Stack>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
+            {(!bgSearch.trim() && bgResults.length === 0 ? curatedList : []).map((p, idx)=> (
+              <Box
+                key={`cur_${idx}`}
+                role="button"
+                tabIndex={0}
+                sx={{ cursor: 'pointer', borderRadius: 2, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
+                onClick={() => handleUpdateBackground(p)}
+              >
+                <img src={p.thumbUrl || p.url} alt="" loading="lazy" style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }} />
+              </Box>
+            ))}
+            {bgResults.map((p:any)=>{
+              const id = p?.id; const url = p?.urls?.full || p?.urls?.regular || ''; const thumb = p?.urls?.small || p?.urls?.thumb || '';
+              const authorName = p?.user?.name || ''; const authorUrl = p?.user?.links?.html || p?.user?.portfolio_url || '';
+              return (
+                <Box
+                  key={id}
+                  role="button"
+                  tabIndex={0}
+                  sx={{ cursor: 'pointer', borderRadius: 2, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.08)' }}
+                  onClick={() => handleUpdateBackground({ id, url, thumbUrl: thumb, authorName, authorUrl })}
+                >
+                  <img src={thumb} alt={authorName} style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }} />
+                </Box>
+              );
+            })}
+          </Box>
+          {(bgLoading || bgLoadingMore) && (<Skeleton variant="rectangular" height={60} />)}
+          <Button size="small" color="error" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2 }} onClick={async ()=>{
+            const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+            setBg(null); saveCachedBackground(null, 'user' as any);
+            try { await setUserBackground(token, null as any); } catch {}
+          }}>Remove Background</Button>
+        </Stack>
       </Paper>
     </Popover>
-
-    <Fab onClick={()=>setSupportOpen(true)} sx={{ position: 'fixed', right: 20, bottom: 24, bgcolor: '#fff', color: '#010057' }}>
+    <Fab onClick={()=>setSupportOpen(true)} sx={{ position: 'fixed', right: 20, bottom: 92, bgcolor: '#fff', color: '#010057' }}>
       <SupportAgentIcon />
-    </Fab>
-    <Fab onClick={(e)=>setBgAnchorEl(e.currentTarget as any)} sx={{ position: 'fixed', right: 20, bottom: 92, bgcolor: '#fff', color: '#010057' }}>
-      <WallpaperIcon />
     </Fab>
 
     </Box>
