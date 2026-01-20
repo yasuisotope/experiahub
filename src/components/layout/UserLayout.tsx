@@ -166,18 +166,25 @@ export default function UserLayout({ children }: UserLayoutProps) {
       <Box
         sx={{
           width: 280,
-          bgcolor: 'rgba(255,255,255,0.8)',
-          backdropFilter: 'blur(12px)',
-          borderRight: '1px solid',
-          borderColor: 'divider',
+          bgcolor: 'rgba(255, 255, 255, 0.7)',
+          backdropFilter: 'blur(16px)',
+          borderRight: '1px solid rgba(1, 0, 87, 0.08)',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
+          zIndex: 10,
         }}
       >
         {/* Logo */}
-        <Box sx={{ p: 2, pt: '25px', pb: '25px', display: 'flex', justifyContent: 'center' }}>
-          <Logo />
+        <Box sx={{ p: 4, pt: '35px', pb: '35px', textAlign: 'center' }}>
+          <Image
+            src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png"
+            alt="ExperiaHub"
+            width={200}
+            height={50}
+            style={{ height: 'auto', width: '100%', maxWidth: '200px' }}
+            priority
+          />
         </Box>
 
         {/* New Chat Button */}
@@ -188,11 +195,12 @@ export default function UserLayout({ children }: UserLayoutProps) {
           sx={{
             mx: 2,
             mb: 2,
-            bgcolor: 'secondary.main',
-            color: 'primary.main',
-            fontWeight: 600,
-            fontFamily: 'Inter, sans-serif',
-            '&:hover': { bgcolor: '#e6ac00' },
+            bgcolor: '#010057',
+            color: '#fff',
+            fontWeight: 400,
+            textTransform: 'none',
+            fontFamily: 'Nunito, sans-serif',
+            '&:hover': { bgcolor: '#020080' },
           }}
         >
           NEW CHAT
@@ -205,16 +213,16 @@ export default function UserLayout({ children }: UserLayoutProps) {
               onClick={() => router.push('/chat')} 
               selected={pathname === '/chat'}
               sx={{
-                '&.Mui-selected': { bgcolor: 'rgba(255, 191, 0, 0.12)' },
-                '&.Mui-selected:hover': { bgcolor: 'rgba(255, 191, 0, 0.18)' },
+                '&.Mui-selected': { bgcolor: 'rgba(1, 0, 87, 0.08)' },
+                '&.Mui-selected:hover': { bgcolor: 'rgba(1, 0, 87, 0.12)' },
               }}
             >
-              <ListItemIcon sx={{ color: pathname === '/chat' ? 'secondary.main' : 'text.primary' }}>
+              <ListItemIcon sx={{ color: pathname === '/chat' ? '#010057' : '#64748B' }}>
                 <ChatIcon />
               </ListItemIcon>
               <ListItemText 
                 primary="Chat" 
-                primaryTypographyProps={{ fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', fontWeight: pathname === '/chat' ? 600 : 400, color: pathname === '/chat' ? 'secondary.main' : 'text.primary' }}
+                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', fontWeight: pathname === '/chat' ? 500 : 400, color: pathname === '/chat' ? '#010057' : '#64748B' }}
               />
             </ListItemButton>
           </ListItem>
@@ -225,16 +233,16 @@ export default function UserLayout({ children }: UserLayoutProps) {
                   onClick={() => router.push('/bookings')} 
                   selected={pathname.startsWith('/bookings')}
                   sx={{
-                    '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
-                    '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+                    '&.Mui-selected': { bgcolor: 'rgba(1, 0, 87, 0.08)' },
+                    '&.Mui-selected:hover': { bgcolor: 'rgba(1, 0, 87, 0.12)' },
                   }}
                 >
-                  <ListItemIcon sx={{ color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}>
+                  <ListItemIcon sx={{ color: pathname.startsWith('/bookings') ? '#010057' : '#64748B' }}>
                     <BookingIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary="Bookings"
-                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/bookings') ? 500 : 400, color: pathname.startsWith('/bookings') ? '#010057' : '#64748B' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -243,16 +251,16 @@ export default function UserLayout({ children }: UserLayoutProps) {
                   onClick={() => router.push('/schedule')} 
                   selected={pathname.startsWith('/schedule')}
                   sx={{
-                    '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
-                    '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+                    '&.Mui-selected': { bgcolor: 'rgba(1, 0, 87, 0.08)' },
+                    '&.Mui-selected:hover': { bgcolor: 'rgba(1, 0, 87, 0.12)' },
                   }}
                 >
-                  <ListItemIcon sx={{ color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}>
+                  <ListItemIcon sx={{ color: pathname.startsWith('/schedule') ? '#010057' : '#64748B' }}>
                     <CalendarIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary="Schedule"
-                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/schedule') ? 500 : 400, color: pathname.startsWith('/schedule') ? '#010057' : '#64748B' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -302,21 +310,21 @@ export default function UserLayout({ children }: UserLayoutProps) {
                       mb: 0.5,
                       transition: 'background-color 120ms ease',
                       ...(currentChat?.id === chat.id
-                        ? { backgroundColor: 'rgba(255, 191, 0, 0.12)' }
+                        ? { backgroundColor: 'rgba(1, 0, 87, 0.08)' }
                         : {}),
                       '&:hover': {
-                        backgroundColor: 'rgba(255, 191, 0, 0.08)'
+                        backgroundColor: 'rgba(1, 0, 87, 0.04)'
                       }
                     }}
                   >
                     <ListItemText 
                       primary={chat.title || 'New Chat'}
                       primaryTypographyProps={{
-                        fontSize: '0.95rem',
-                        fontWeight: currentChat?.id === chat.id ? 600 : 500,
-                        color: currentChat?.id === chat.id ? 'secondary.main' : 'text.primary',
+                        fontSize: '0.9rem',
+                        fontWeight: currentChat?.id === chat.id ? 500 : 400,
+                        color: currentChat?.id === chat.id ? '#010057' : '#475569',
                         noWrap: true,
-                        fontFamily: 'Inter, sans-serif',
+                        fontFamily: 'Nunito, sans-serif',
                       }}
                     />
                   </ListItemButton>

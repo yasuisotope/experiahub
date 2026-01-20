@@ -507,8 +507,8 @@ export default function ChatPage() {
                 elevation={0}
                 sx={{
                   p: 2,
-                      backgroundColor: message.isUser ? 'rgba(255, 191, 0, 0.9)' : 'rgba(255, 255, 255, 0.85)',
-                      color: message.isUser ? '#010057' : '#010057',
+                      backgroundColor: message.isUser ? '#010057' : 'rgba(255, 255, 255, 0.9)',
+                      color: message.isUser ? '#ffffff' : '#010057',
                   borderRadius: '16px',
                   ...(message.isUser ? {
                     borderBottomRightRadius: '4px',
@@ -549,7 +549,7 @@ export default function ChatPage() {
                                 setListWidgetProductId(String(pid));
                                 setListWidgetOpen(true);
                               }}
-                              sx={{ textTransform: 'none', bgcolor: 'secondary.main', color: 'primary.main', fontWeight: 600, '&:hover': { bgcolor: '#e6ac00' } }}
+                              sx={{ textTransform: 'none', bgcolor: '#010057', color: '#fff', fontWeight: 400, '&:hover': { bgcolor: '#020080' } }}
                             >
                               Check availability
                             </Button>

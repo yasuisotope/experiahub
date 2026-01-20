@@ -58,7 +58,7 @@ export default function RootLayout({
                 fontDisplay: 'swap',
               },
               'body': {
-                backgroundColor: '#010057 !important', // Force Navy BG globally to prevent white flash
+                backgroundColor: 'transparent', 
               },
               '.fc .fc-event': {
                 borderRadius: 8,

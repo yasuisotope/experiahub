@@ -86,7 +86,7 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#010057', // Force Navy BG for Premium look
+          backgroundColor: 'transparent',
           fontFamily: '"Inter", sans-serif',
         },
       },
