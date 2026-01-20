@@ -31,6 +31,7 @@ import {
   Person as PersonIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Wallpaper as WallpaperIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useWordPressAuth } from '@/contexts/WordPressContext';
