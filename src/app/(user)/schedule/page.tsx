@@ -396,7 +396,7 @@ export default function SchedulePage() {
     if (!ym || loadingMonthsRef.current.has(ym) || monthStoreRef.current.has(ym)) return;
     loadingMonthsRef.current.add(ym);
     try {
-      const base = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
+      const base = '/api'; // Use local proxy
       const token = typeof window !== 'undefined' ? window.localStorage.getItem('wp_token') : null;
       const from = monthStart(ym).toISOString().slice(0,10);
       const to = monthEndExclusive(ym).toISOString().slice(0,10);
@@ -523,7 +523,7 @@ export default function SchedulePage() {
         <Typography
           variant="h4"
           sx={{
-            mb: 4,
+            mb: 3,
             fontSize: '2rem',
             color: '#010057',
             fontFamily: 'Agrandir, serif',
@@ -533,7 +533,7 @@ export default function SchedulePage() {
           Schedule
         </Typography>
 
-        <Stack spacing={1} sx={{ mb: 2, position: 'sticky', top: 0, zIndex: 5, bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(74,124,140,0.08)', py: 1.25, px: 0.5 }}>
+        <Stack spacing={1} sx={{ mb: 2, position: 'sticky', top: 0, zIndex: 5, bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(1,0,87,0.08)', py: 1.25, px: 0.5 }}>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
             <FormControl size="small" sx={{ minWidth: 160 }}>
               <InputLabel id="month-filter-label">Month filter</InputLabel>
@@ -567,7 +567,7 @@ export default function SchedulePage() {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon sx={{ fontSize: 18, color: 'rgba(74, 124, 140, 0.9)' }} />
+                    <SearchIcon sx={{ fontSize: 18, color: 'rgba(1, 0, 87, 0.9)' }} />
                   </InputAdornment>
                 )
               }}
@@ -591,7 +591,7 @@ export default function SchedulePage() {
             </Tooltip>
           </Box>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Box sx={{ display: 'inline-flex', p: 0.5, borderRadius: '999px', bgcolor: 'rgba(74,124,140,0.06)', border: '1px solid rgba(74,124,140,0.18)' }}>
+            <Box sx={{ display: 'inline-flex', p: 0.5, borderRadius: '999px', bgcolor: 'rgba(1,0,87,0.06)', border: '1px solid rgba(1,0,87,0.18)' }}>
               <ToggleButtonGroup
                 size="small"
                 exclusive

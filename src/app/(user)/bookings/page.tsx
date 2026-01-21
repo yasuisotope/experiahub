@@ -443,9 +443,9 @@ export default function BookingsPage() {
         <Typography
           variant="h4"
           sx={{
-            mb: 1,
+            mb: 3,
             fontSize: '2rem',
-            color: '#4A4A4A',
+            color: '#010057',
             fontFamily: 'Agrandir, serif',
             fontWeight: 400,
           }}

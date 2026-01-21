@@ -91,17 +91,33 @@ const synthesizeExperiences = (text: string) => {
       const lines = textStr.split('\n');
       for (let i = 0; i < lines.length && items.length < 5; i++) {
         const line = lines[i];
+        let title = '';
+        let city = '';
+        let duration = '';
+        let summary: string | undefined;
+
         const m = line.match(/^(?:(\d{1,2})\.|[-•])[\s-]*(.*)$/);
+        const fallback = !m && line.match(/^([A-Za-z][^:]+?)(\([^)]+\)).*?(\d+(?:\.\d+)?)\s*hours?/i);
+
         if (m) {
           const titlePart = m[2] || '';
-          const title = titlePart.split(/\(|•|–|\u2013/)[0].trim() || 'Experience';
+          title = titlePart.split(/\(|•|–|\u2013/)[0].trim() || 'Experience';
           const cityMatch = titlePart.match(/\(([^)]+)\)/);
-          const city = cityMatch?.[1]?.trim();
+          city = cityMatch?.[1]?.trim() || '';
           const durMatch = titlePart.match(/(\d+(?:\.\d+)?)\s*hours?/i);
-          const duration = durMatch?.[0];
+          duration = durMatch?.[0] || '';
           const next = (lines[i + 1] || '').trim();
-          const summary = next ? next.replace(/^[–•]\s*/, '').slice(0, 220) : undefined;
-          items.push({ title, city, duration, summary });
+          summary = next ? next.replace(/^[–•]\s*/, '').slice(0, 220) : undefined;
+        } else if (fallback) {
+           title = fallback[1].trim();
+           city = fallback[2].replace(/[()]/g, '').trim();
+           duration = fallback[3] + ' hours'; // approximate reconstruction
+           const next = (lines[i + 1] || '').trim();
+           summary = next ? next.slice(0, 220) : undefined;
+        }
+
+        if (title && (city || duration)) {
+             items.push({ title, city, duration, summary });
         }
       }
     }
@@ -470,7 +486,7 @@ export default function ChatPage() {
         display: { xs: 'block', md: 'grid' }, 
         gridTemplateColumns: { md: selectedExperience ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr) 0px' },
         transition: 'grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        height: '100%', // Changed from 100dvh to fit in layout
+        height: '100dvh', // Force full viewport height
         position: 'relative' // Ensure positioning context
       }}>
         {/* Left column: messages + input */}
@@ -479,7 +495,7 @@ export default function ChatPage() {
           gridTemplateRows: '1fr auto',
           minWidth: 0,
           minHeight: 0,
-          height: '100%', // Changed from 100dvh to fit in layout
+          height: '100dvh', // Force full viewport height
           overflow: 'hidden',
           width: '100%',
           maxWidth: { md: selectedExperience ? '100%' : 760 },
@@ -623,7 +639,7 @@ export default function ChatPage() {
           )}
         </Box>
 
-        <Box sx={{ px: 1, pt: 1, pb: { xs: '30px', md: '30px' }, background: 'transparent' }}>
+        <Box sx={{ px: 1, pt: 1, pb: { xs: '30px', md: '30px' }, background: 'transparent', flexShrink: 0 }}>
           <TextField
             fullWidth
             placeholder="How can I help you today?"

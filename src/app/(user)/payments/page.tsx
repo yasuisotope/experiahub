@@ -114,19 +114,19 @@ export default function PaymentsPage() {
             borderRadius: '16px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
             overflowY: 'auto',
-            alignItems: 'center', // Center content
+            // Removed duplicate overflowY
           }}
         >
           {/* Header */}
-          <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', mb: 4, position: 'relative' }}>
-            <Button 
+          <Box sx={{ width: '100%', mb: 4 }}>
+            <Button
               onClick={() => router.back()}
               startIcon={<ArrowBackIcon />}
-              sx={{ position: 'absolute', left: 0, color: '#010057', fontSize: '0.9rem', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
+              sx={{ color: '#010057', fontSize: '0.9rem', textTransform: 'none', fontFamily: 'Nunito, sans-serif', mb: 1, pl: 0 }}
             >
               Back
             </Button>
-            <Typography variant="h4" sx={{ width: '100%', textAlign: 'center', color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400 }}>
+            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400 }}>
               Payment Details
             </Typography>
           </Box>

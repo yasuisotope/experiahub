@@ -54,21 +54,25 @@ export default function UserProfile() {
       <Divider sx={{ my: 3 }} />
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <MuiLink
-          component={Link}
+        <Button
+          variant="outlined"
           href={wpProfileUrl}
+          component={Link}
           target="_blank"
           rel="noopener noreferrer"
           sx={{
-            textDecoration: 'none',
             color: '#010057',
+            borderColor: 'rgba(1,0,87,0.5)',
+            textTransform: 'none',
+            borderRadius: '12px',
             '&:hover': {
-              textDecoration: 'underline',
-            },
+              borderColor: '#010057',
+              bgcolor: 'rgba(1,0,87,0.05)'
+            }
           }}
         >
           Edit Profile
-        </MuiLink>
+        </Button>
 
         <Button
           variant="outlined"

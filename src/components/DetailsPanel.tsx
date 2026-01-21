@@ -119,7 +119,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
         <Typography
           id="details-title"
           sx={{
-            fontFamily: 'Playfair Display',
+            fontFamily: 'Agrandir, serif',
             fontSize: { xs: '1.35rem', sm: '1.6rem' },
             fontWeight: 700,
             lineHeight: 1.2,
@@ -133,14 +133,14 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
             {exp.price}{exp.currency ? ` ${exp.currency}` : ''}
           </Typography>
         )}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, color: '#666', fontFamily: 'Inter' }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, color: '#666', fontFamily: 'Nunito' }}>
           <Typography sx={{ fontSize: '0.8rem', lineHeight: 1.4 }}>Verified provider</Typography>
           <Typography sx={{ fontSize: '0.8rem', lineHeight: 1.4 }}>Secure checkout (Bokun/Stripe)</Typography>
           {(exp as any)?.metadata?.cancellation && (
             <Typography sx={{ fontSize: '0.8rem', lineHeight: 1.4 }}>{(exp as any).metadata.cancellation}</Typography>
           )}
         </Box>
-        <Typography sx={{ fontFamily: 'Inter', color: '#666', fontSize: '0.85rem' }}>{[exp.city, exp.category, exp.duration].filter(Boolean).join(' • ')}</Typography>
+        <Typography sx={{ fontFamily: 'Nunito', color: '#666', fontSize: '0.85rem' }}>{[exp.city, exp.category, exp.duration].filter(Boolean).join(' • ')}</Typography>
         {exp.summary && (
           <Typography sx={{ fontFamily: 'Nunito', color: '#444', fontSize: '1rem', lineHeight: 1.6, fontWeight: 400 }}>{exp.summary}</Typography>
         )}
@@ -154,7 +154,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
             </Box>
           )
         ) : (
-          <Typography sx={{ fontFamily: 'Inter', color: '#666' }}>
+          <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>
             Log in to view photos and videos. You can still book via the widget below.
           </Typography>
         )}
@@ -170,14 +170,14 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
 
         {/* Price */}
         {(exp.price || exp.currency) && (
-          <Typography sx={{ fontFamily: 'Inter', color: '#010057' }}>
+          <Typography sx={{ fontFamily: 'Nunito', color: '#010057' }}>
             {exp.price}{exp.currency ? ` ${exp.currency}` : ''}
           </Typography>
         )}
 
         {/* Schedule */}
         {exp.schedule && (
-          <Box sx={{ fontFamily: 'Inter', color: '#444' }}>
+          <Box sx={{ fontFamily: 'Nunito', color: '#444' }}>
             {Array.isArray(exp.schedule)
               ? exp.schedule.slice(0, 6).map((s: any, i: number) => (
                   <Typography key={i} sx={{ fontSize: '0.95rem' }}>
@@ -191,7 +191,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
 
         {/* Availability (live fetch) */}
         {Array.isArray(slots) && slots.length > 0 && (
-          <Box sx={{ fontFamily: 'Inter', color: '#010057' }}>
+          <Box sx={{ fontFamily: 'Nunito', color: '#010057' }}>
             <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Upcoming times</Typography>
             <Stack spacing={0.5}>
               {slots.slice(0, 8).map((s, i) => (
@@ -200,15 +200,15 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
             </Stack>
           </Box>
         )}
-        <Typography sx={{ fontFamily: 'Inter', color: '#666', mt: 0.5, fontSize: '0.85rem' }}>
+        <Typography sx={{ fontFamily: 'Nunito', color: '#666', mt: 0.5, fontSize: '0.85rem' }}>
           Times shown are indicative. <strong>View live availability</strong> in the booking widget.
         </Typography>
-        {loadingAvail && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><CircularProgress size={16} /><Typography sx={{ fontFamily: 'Inter', color: '#666' }}>Checking availability…</Typography></Box>}
-        {availError && <Alert severity="warning" sx={{ fontFamily: 'Inter' }}>{availError}</Alert>}
+        {loadingAvail && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><CircularProgress size={16} /><Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Checking availability…</Typography></Box>}
+        {availError && <Alert severity="warning" sx={{ fontFamily: 'Nunito' }}>{availError}</Alert>}
 
         {/* Provider Info */}
         {(exp.source || (exp as any)?.metadata?.source) && (
-          <Typography sx={{ fontFamily: 'Inter', color: '#666' }}>
+          <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>
             Provider: {exp.source || (exp as any)?.metadata?.source}
           </Typography>
         )}
@@ -229,7 +229,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
                 track('checkout_click', { productId: pid, title: exp.title, city: exp.city, category: exp.category, source: 'panel' });
               }}
               aria-label={`Book now for ${exp.title}`}
-              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#4A7C8C' }, fontFamily: 'Inter', textTransform: 'none' }}
+              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: 'rgba(1,0,87,0.8)' }, fontFamily: 'Nunito', textTransform: 'none' }}
             >
               Book Now
             </Button>
@@ -246,7 +246,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
                 track('widget_open', { source: 'panel', title: exp.title, city: exp.city, category: exp.category, productId: pid });
               }}
               aria-label={`Check availability for ${exp.title}`}
-              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#4A7C8C' }, fontFamily: 'Inter', textTransform: 'none' }}
+              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: 'rgba(1,0,87,0.8)' }, fontFamily: 'Nunito', textTransform: 'none' }}
             >
               Check availability
             </Button>
@@ -254,7 +254,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
         </Stack>
         {/* Secondary actions */}
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-start', flexWrap: 'wrap' }}>
-          <Button variant="outlined" size="small" aria-label="Bookmark experience" onClick={handleBookmark} sx={{ fontFamily: 'Inter', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>Bookmark</Button>
+          <Button variant="outlined" size="small" aria-label="Bookmark experience" onClick={handleBookmark} sx={{ fontFamily: 'Nunito', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>Bookmark</Button>
           {onClose && (
             <Button
               size="small"
@@ -268,7 +268,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
                 }
               }}
               aria-label="Close details"
-              sx={{ fontFamily: 'Inter', textTransform: 'none', color: '#666' }}
+              sx={{ fontFamily: 'Nunito', textTransform: 'none', color: '#666' }}
             >
               Close
             </Button>
