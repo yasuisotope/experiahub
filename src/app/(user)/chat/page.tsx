@@ -69,10 +69,9 @@ const synthesizeExperiences = (text: string) => {
     const textStr = String(text || '');
     const items: any[] = [];
 
-    // Even more robust regex: match a number followed by a period and optional space, 
-    // and then everything until the next item or end of string.
+    // Robust regex: match a number OR bullet followed by optional dot/space
     // We use [\s\S]+? to capture newlines.
-    const re = /(?:^|\n|\s)(\d{1,2})\.\s*([\s\S]+?)(?=(?:\n\s*\d{1,2}\.\s*)|$)/g;
+    const re = /(?:^|\n|\s)(?:(\d{1,2})\.|[-•])\s*([\s\S]+?)(?=(?:\n\s*(?:\d{1,2}\.|[-•])\s*)|$)/g;
     let match: RegExpExecArray | null;
     while ((match = re.exec(textStr)) && items.length < 5) {
       const part = match[2].trim();
@@ -92,7 +91,7 @@ const synthesizeExperiences = (text: string) => {
       const lines = textStr.split('\n');
       for (let i = 0; i < lines.length && items.length < 5; i++) {
         const line = lines[i];
-        const m = line.match(/^(\d{1,2})\.[\s-]*(.*)$/);
+        const m = line.match(/^(?:(\d{1,2})\.|[-•])[\s-]*(.*)$/);
         if (m) {
           const titlePart = m[2] || '';
           const title = titlePart.split(/\(|•|–|\u2013/)[0].trim() || 'Experience';
@@ -114,7 +113,7 @@ const synthesizeExperiences = (text: string) => {
 
 const stripEnumerationsFromText = (text: string) => {
   // Use the same regex logic to remove the blocks from the text
-  return text.replace(/(?:^|\n|\s)\d{1,2}\.\s*[\s\S]+?(?=(?:\s+\d{1,2}\.\s*)|$)/g, '').trim();
+  return text.replace(/(?:^|\n|\s)(?:\d{1,2}\.|[-•])\s*[\s\S]+?(?=(?:\s+(?:\d{1,2}\.|[-•])\s*)|$)/g, '').trim();
 };
 
 const quickReplies = [
@@ -556,15 +555,17 @@ export default function ChatPage() {
                       {experienceList.slice(0,5).map((exp: any, i: number) => (
                         <Paper key={i} elevation={0} sx={{ p: 1.5, backgroundColor: isTranslucent ? 'rgba(255,255,255,0.7)' : '#fff', backdropFilter: isTranslucent ? 'blur(8px)' : 'none', border: '1px solid rgba(1, 0, 87, 0.1)', borderRadius: '10px' }}>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                            <Box sx={{ fontFamily: 'Inter', color: '#010057', fontSize: '0.95rem', fontWeight: 600 }}>
+                            <Box sx={{ fontFamily: 'Urbanist', color: '#010057', fontSize: '0.95rem', fontWeight: 600 }}>
                               {`${i+1}. ${exp?.title || 'Experience'}`}
                             </Box>
-                            <Box sx={{ fontFamily: 'Inter', color: '#64748B', fontSize: '0.85rem' }}>
+                            <Box sx={{ fontFamily: 'Urbanist', color: '#64748B', fontSize: '0.85rem' }}>
                               {[exp?.city, exp?.category, exp?.duration].filter(Boolean).join(' • ')}
                             </Box>
                             <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                              <Button size="small" variant="outlined" onClick={() => setSelectedExperience(exp)} sx={{ textTransform: 'none', color: '#010057', borderColor: '#010057' }}>Details</Button>
-                              <Button size="small" variant="contained" onClick={() => { setBookingExperience(exp); setListWidgetOpen(true); }} sx={{ textTransform: 'none', bgcolor: '#010057', '&:hover': { bgcolor: '#4A7C8C' } }}>Check availability</Button>
+                              <Button size="small" variant="outlined" onClick={() => setSelectedExperience(exp)} sx={{ textTransform: 'none', color: '#010057', borderColor: '#010057', fontFamily: 'Urbanist' }}>Details</Button>
+                              {(exp?.bokunProductId || (exp?.id && !String(exp.id).startsWith('temp_'))) && (
+                                <Button size="small" variant="contained" onClick={() => { setBookingExperience(exp); setListWidgetOpen(true); }} sx={{ textTransform: 'none', bgcolor: '#010057', fontFamily: 'Urbanist', '&:hover': { bgcolor: '#4A7C8C' } }}>Check availability</Button>
+                              )}
                             </Box>
                           </Box>
                         </Paper>
@@ -737,6 +738,19 @@ export default function ChatPage() {
                 if (!v.trim()) { setBgResults([]); setBgPage(1); setBgSeed(s => s + 1); }
               }}
               fullWidth
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && bgSearch.trim()) {
+                  e.preventDefault();
+                  (async () => {
+                    try {
+                      setBgLoading(true);
+                      const results = await searchUnsplash(bgSearch.trim(), 1, 30);
+                      setBgResults(Array.isArray(results) ? results : []);
+                      setBgPage(1);
+                    } finally { setBgLoading(false); }
+                  })();
+                }
+              }}
               InputProps={{
                 endAdornment: bgSearch ? (
                   <IconButton size="small" aria-label="Clear" onClick={() => { setBgSearch(''); setBgResults([]); setBgPage(1); setBgSeed(s => s + 1); }}>

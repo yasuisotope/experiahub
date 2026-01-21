@@ -42,11 +42,11 @@ export const APP_AUTH: AuthProvider = AuthProvider.JWT;
 const config: ConfigProps = {
   menuOrientation: MenuOrientation.VERTICAL,
   miniDrawer: false,
-  fontFamily: roboto.style.fontFamily,
+  fontFamily: `'Urbanist', ${roboto.style.fontFamily}`,
   borderRadius: 8,
   outlinedFilled: true,
   mode: ThemeMode.LIGHT,
-  presetColor: 'default',
+  presetColor: 'theme1',
   i18n: 'en',
   themeDirection: ThemeDirection.LTR,
   container: true

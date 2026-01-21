@@ -8,6 +8,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useWordPressAuth } from '@/contexts/WordPressContext';
 import BackgroundImage from '@/components/BackgroundImage';
 import { loadCachedBackground, getUserBackground, type PortalBackground } from '@/services/backgroundService';
+import SupportDialog from '@/components/support/SupportDialog';
 
 export default function PaymentsPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function PaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<any>(null);
   const [processing, setProcessing] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -29,12 +31,14 @@ export default function PaymentsPage() {
         if (server) setBg(server);
 
         // 2. Load Payment Status
-        const res = await fetch('/api/payments', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setStatus(data);
+        if (user?.email) {
+          const res = await fetch(`/api/payments?email=${encodeURIComponent(user.email)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setStatus(data);
+          }
         }
       } catch (err) {
         console.error('Failed to load payment info:', err);
@@ -43,7 +47,7 @@ export default function PaymentsPage() {
       }
     };
     loadData();
-  }, []);
+  }, [user?.email]);
 
   const handleManage = async () => {
     setProcessing(true);
@@ -56,7 +60,7 @@ export default function PaymentsPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
-          action: 'manage',
+          action: status?.status === 'active' ? 'portal' : 'checkout',
           email: user?.email,
           name: user?.display_name 
         })
@@ -85,98 +89,120 @@ export default function PaymentsPage() {
             p: 4,
             maxWidth: 900,
             mx: 'auto',
-            bgcolor: 'rgba(255, 255, 255, 0.25)',
+            bgcolor: 'rgba(255, 255, 255, 0.4)', // Slightly more opaque for better contrast
             backdropFilter: 'blur(20px)',
             borderRadius: '24px',
             m: '16px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
             overflowY: 'auto',
+            alignItems: 'center', // Center content
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+          {/* Header */}
+          <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', mb: 4, position: 'relative' }}>
             <Button 
               onClick={() => router.back()}
               startIcon={<ArrowBackIcon />}
-              sx={{ mr: 2, color: '#010057', fontSize: '0.9rem', textTransform: 'none' }}
+              sx={{ position: 'absolute', left: 0, color: '#010057', fontSize: '0.9rem', textTransform: 'none', fontFamily: 'Urbanist' }}
             >
               Back
             </Button>
-            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 700 }}>
+            <Typography variant="h4" sx={{ width: '100%', textAlign: 'center', color: '#010057', fontFamily: 'Playfair Display', fontWeight: 700 }}>
               Payment Details
             </Typography>
           </Box>
 
-          <Stack spacing={3}>
-            {/* Subscription Summary */}
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', border: '1px solid rgba(1,0,87,0.1)', bgcolor: 'rgba(255,255,255,0.5)' }}>
-              <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontWeight: 600 }}>Current Plan</Typography>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{status?.plan || 'ExperiaHub Premium'}</Typography>
-                  <Typography variant="body2" color="text.secondary">Status: {status?.status || 'Active'}</Typography>
+          <Stack spacing={4} sx={{ width: '100%', maxWidth: 600 }}> {/* Constrain width for centering */}
+            {/* Membership Summary */}
+            <Paper elevation={0} sx={{ p: 4, borderRadius: '20px', border: '1px solid rgba(1,0,87,0.1)', bgcolor: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' }}>
+              <Stack alignItems="center" spacing={1}>
+                <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.85rem' }}>Membership Status</Typography>
+                <Typography variant="h3" sx={{ color: '#010057', fontFamily: 'Playfair Display', fontWeight: 700, my: 1 }}>
+                  {status?.plan === 'Premium' ? 'ExperiaHub Premium' : 'Free Member'}
+                </Typography>
+                <Box sx={{ 
+                  bgcolor: status?.status === 'active' ? 'rgba(46, 125, 50, 0.1)' : 'rgba(0,0,0,0.05)', 
+                  color: status?.status === 'active' ? '#2e7d32' : '#666',
+                  px: 2, py: 0.5, borderRadius: '12px',
+                  fontFamily: 'Urbanist', fontWeight: 600, fontSize: '0.85rem'
+                }}>
+                  {status?.status === 'active' ? 'ACTIVE' : 'INACTIVE'}
                 </Box>
-                <Box sx={{ textAlign: 'right' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#010057' }}>{status?.price || '$29.00 / mo'}</Typography>
-                  {status?.next_billing && (
-                    <Typography variant="caption" color="text.secondary">
-                      Next billing: {new Date(status.next_billing).toLocaleDateString()}
-                    </Typography>
-                  )}
-                </Box>
+                {status?.status === 'active' && (
+                  <Typography variant="body2" sx={{ color: '#666', fontFamily: 'Urbanist', mt: 1 }}>
+                    Next billing: {new Date(status.next_billing).toLocaleDateString()} • {status?.price}
+                  </Typography>
+                )}
               </Stack>
-              <Divider sx={{ my: 2 }} />
-              <Button 
-                variant="contained" 
-                onClick={handleManage}
-                disabled={processing}
-                sx={{ bgcolor: '#010057', textTransform: 'none', borderRadius: '8px' }}
-              >
-                {processing ? 'Connecting...' : 'Manage Subscription'}
-              </Button>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <Button 
+                  variant="contained" 
+                  onClick={handleManage}
+                  disabled={processing}
+                  sx={{ 
+                    bgcolor: '#010057', 
+                    color: '#fff',
+                    px: 6,
+                    py: 1.5,
+                    fontFamily: 'Urbanist',
+                    textTransform: 'none', 
+                    borderRadius: '50px',
+                    fontSize: '1rem',
+                    boxShadow: '0 4px 14px 0 rgba(1,0,87,0.39)',
+                    '&:hover': { bgcolor: '#000030', transform: 'translateY(-1px)', boxShadow: '0 6px 20px rgba(1,0,87,0.23)' },
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {processing ? 'Processing...' : (status?.status === 'active' ? 'Manage Subscription' : 'Upgrade to Premium')}
+                </Button>
+              </Box>
             </Paper>
 
             {/* Payment Methods */}
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', border: '1px solid rgba(1,0,87,0.1)', bgcolor: 'rgba(255,255,255,0.5)' }}>
-              <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontWeight: 600 }}>Default Payment Method</Typography>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: '20px', border: '1px solid rgba(1,0,87,0.08)', bgcolor: 'rgba(255,255,255,0.6)' }}>
+              <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontFamily: 'Urbanist', fontWeight: 600 }}>Payment Method</Typography>
               <Stack direction="row" spacing={2} alignItems="center">
-                <Box sx={{ p: 1, bgcolor: 'rgba(1,0,87,0.05)', borderRadius: '8px' }}>
+                <Box sx={{ p: 1.5, bgcolor: '#fff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                   <CreditCardIcon sx={{ color: '#010057' }} />
                 </Box>
                 <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="subtitle2">{status?.card_brand || 'Visa'} ending in {status?.card_last4 || '4242'}</Typography>
-                  <Typography variant="caption" color="text.secondary">Securely managed via Stripe</Typography>
+                  <Typography variant="subtitle1" sx={{ fontFamily: 'Urbanist', fontWeight: 600, color: '#010057' }}>{status?.card_brand || 'No card linked'}</Typography>
+                  <Typography variant="caption" sx={{ fontFamily: 'Urbanist', color: '#666' }}>
+                    {status?.card_last4 ? `Ending in ${status.card_last4}` : 'Secure payment processing by Stripe'}
+                  </Typography>
                 </Box>
-                <Button variant="outlined" size="small" onClick={handleManage} sx={{ textTransform: 'none', color: '#010057', borderColor: 'rgba(1,0,87,0.3)' }}>Edit</Button>
+                <Button variant="text" size="small" onClick={handleManage} sx={{ textTransform: 'none', color: '#010057', fontFamily: 'Urbanist', fontWeight: 600 }}>Update</Button>
               </Stack>
             </Paper>
 
             {/* Billing History */}
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', border: '1px solid rgba(1,0,87,0.1)', bgcolor: 'rgba(255,255,255,0.5)' }}>
-              <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontWeight: 600 }}>Billing History</Typography>
-              <Stack spacing={1}>
-                {status?.invoices?.length > 0 ? status.invoices.map((inv: any) => (
-                  <Stack key={inv.id} direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 1.5, borderRadius: '8px', '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <ReceiptIcon sx={{ color: '#64748B', fontSize: 20 }} />
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Invoice #{inv.number}</Typography>
-                        <Typography variant="caption" color="text.secondary">{new Date(inv.date).toLocaleDateString()}</Typography>
-                      </Box>
+            {status?.invoices?.length > 0 && (
+              <Paper elevation={0} sx={{ p: 3, borderRadius: '20px', border: '1px solid rgba(1,0,87,0.08)', bgcolor: 'rgba(255,255,255,0.6)' }}>
+                <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontFamily: 'Urbanist', fontWeight: 600 }}>Billing History</Typography>
+                <Stack spacing={1}>
+                  {status.invoices.map((inv: any) => (
+                    <Stack key={inv.id} direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 1.5, borderRadius: '12px', '&:hover': { bgcolor: 'rgba(255,255,255,0.8)' }, transition: 'background-color 0.2s' }}>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <ReceiptIcon sx={{ color: '#64748B', fontSize: 20 }} />
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'Urbanist', color: '#010057' }}>Invoice #{inv.number}</Typography>
+                          <Typography variant="caption" sx={{ color: '#666', fontFamily: 'Urbanist' }}>{new Date(inv.date).toLocaleDateString()}</Typography>
+                        </Box>
+                      </Stack>
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'Urbanist', color: '#010057' }}>{inv.total}</Typography>
                     </Stack>
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{inv.total}</Typography>
-                  </Stack>
-                )) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
-                    No recent invoices.
-                  </Typography>
-                )}
-              </Stack>
-              <Button fullWidth variant="outlined" onClick={handleManage} sx={{ mt: 2, textTransform: 'none', color: '#010057', borderColor: 'rgba(1,0,87,0.3)' }}>
-                View All Invoices
-              </Button>
-            </Paper>
+                  ))}
+                </Stack>
+              </Paper>
+            )}
+            
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+                <Button size="small" sx={{ color: '#999', fontFamily: 'Urbanist', textTransform: 'none' }} onClick={() => setSupportOpen(true)}>Need help with billing?</Button>
+            </Box>
           </Stack>
         </Box>
+        <SupportDialog open={supportOpen} onClose={() => setSupportOpen(false)} defaultRole="user" />
       </BackgroundImage>
     </ProtectedRoute>
   );

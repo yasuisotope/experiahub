@@ -8,24 +8,66 @@ const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID_PREMIUM || 'price_1SrqXqAiEV
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email');
+
+    if (!email) {
+       // If no email, return default state (Guest)
+       return NextResponse.json({
+         status: 'none',
+         plan: 'Free',
+         price: '$0.00/mo'
+       });
     }
 
-    // In a production env, we would verify the JWT here to get the email
-    // For now, we'll try to find the customer by email if provided in headers or query, 
-    // or return a neutral state if we can't identify the Stripe customer yet.
-    // Ideally, the user's email is stored in the JWT payload.
+    if (!process.env.STRIPE_SECRET_KEY) {
+       // If no key, fallback to mock for dev
+       return NextResponse.json({ status: 'active', plan: 'Premium (Dev)', price: '$29.00/mo' });
+    }
+
+    const customers = await stripe.customers.list({ email: email, limit: 1 });
+    if (customers.data.length === 0) {
+      return NextResponse.json({
+         status: 'none',
+         plan: 'Free',
+         price: '$0.00/mo'
+      });
+    }
+
+    const customerId = customers.data[0].id;
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: 'all',
+      limit: 10
+    });
+
+    const activeSub = subscriptions.data.find(s => s.status === 'active' || s.status === 'trialing');
     
-    // Mocking "Active" if we can't verify for the sake of the UI demo, 
-    // but in reality we should query Stripe.
-    
+    if (activeSub) {
+      const price = activeSub.items.data[0]?.price;
+      const unitAmount = price?.unit_amount || 0;
+      const amountStr = new Intl.NumberFormat('en-US', { style: 'currency', currency: price?.currency || 'usd' }).format(unitAmount / 100);
+      
+      return NextResponse.json({
+        status: 'active',
+        plan: 'Premium Member',
+        next_billing: new Date(activeSub.current_period_end * 1000).toISOString(),
+        price: `${amountStr}/${activeSub.items.data[0]?.price?.recurring?.interval || 'mo'}`
+      });
+    }
+
+    // Check for one-time payments if needed (e.g. PaymentIntents), but for "Membership" we assume Subscription.
+    // If just One-Time "Lifetime" payment, we might need to check Checkout Sessions or Payment Intents.
+    // user said "one-time vs recurring". If user bought one-time, they might not have a subscription object.
+    // But usually "Membership" implies recurring.
+    // The previous code in POST used mode: 'payment' for default.
+    // If they paid once, they might not have a subscription.
+    // Use ListCheckoutSessions to see if they paid for the specific price?
+
     return NextResponse.json({
-      status: 'active', // Placeholder until we have the user's stripe_customer_id in Supabase
-      plan: 'Premium',
-      next_billing: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      price: '$29.00/mo'
+      status: 'inactive',
+      plan: 'Free',
+      price: '$0.00/mo'
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -39,50 +81,61 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { email, name } = await request.json();
+    const { email, name, action } = await request.json();
 
     if (!process.env.STRIPE_SECRET_KEY) {
        throw new Error('Missing STRIPE_SECRET_KEY');
     }
 
-    // 1. Find or Create Customer
-    let customerId;
-    if (email) {
-      const customers = await stripe.customers.list({ email: email, limit: 1 });
-      if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
-      } else {
-        const newCustomer = await stripe.customers.create({
-          email,
-          name: name || 'ExperiaHub Member',
-        });
-        customerId = newCustomer.id;
-      }
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // 2. Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: 'payment', // Changed to payment for one-time price, use 'subscription' if recurring
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: STRIPE_PRICE_ID,
-          quantity: 1,
-        },
-      ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payments?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payments`,
-      metadata: {
-        source: 'experiahub_app'
+    // 1. Find or Create Customer
+    let customerId;
+    const customers = await stripe.customers.list({ email: email, limit: 1 });
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+    } else {
+      if (action === 'portal') {
+         return NextResponse.json({ error: 'No customer found for this email' }, { status: 404 });
       }
-    });
+      const newCustomer = await stripe.customers.create({
+        email,
+        name: name || 'ExperiaHub Member',
+      });
+      customerId = newCustomer.id;
+    }
 
-    return NextResponse.json({
-      url: session.url
-    });
+    // 2. Handle Actions
+    if (action === 'portal') {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/payments`,
+      });
+      return NextResponse.json({ url: session.url });
+    } else {
+      // Default: Create Checkout Session
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: 'payment', // Use 'subscription' if price is recurring, 'payment' if one-time
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: STRIPE_PRICE_ID,
+            quantity: 1,
+          },
+        ],
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payments?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payments`,
+        metadata: {
+          source: 'experiahub_app'
+        }
+      });
+      return NextResponse.json({ url: session.url });
+    }
   } catch (error: any) {
-    console.error('Stripe Checkout Error:', error);
+    console.error('Stripe API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
