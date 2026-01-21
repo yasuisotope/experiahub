@@ -54,7 +54,7 @@ export default function HomePage() {
             <Typography variant="h2" component="h1" sx={{ color: '#FFFFFF', fontFamily: 'Cormorant Garamond, serif', fontWeight: 600, letterSpacing: '-0.02em', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
               Experia
             </Typography>
-            <Typography variant="h5" sx={{ color: '#F0F0F0', fontFamily: 'Urbanist, sans-serif', fontWeight: 300, letterSpacing: '0.05em' }}>
+            <Typography variant="h5" sx={{ color: '#F0F0F0', fontFamily: 'Nunito, sans-serif', fontWeight: 300, letterSpacing: '0.05em' }}>
               Your Personal Travel Assistant
             </Typography>
             
@@ -68,7 +68,7 @@ export default function HomePage() {
                   px: 4,
                   py: 1.8,
                   borderRadius: '12px',
-                  fontFamily: 'Urbanist, sans-serif',
+                  fontFamily: 'Nunito, sans-serif',
                   fontWeight: 600,
                   fontSize: '1.1rem',
                   textTransform: 'none',

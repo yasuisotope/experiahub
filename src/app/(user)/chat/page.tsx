@@ -165,13 +165,16 @@ export default function ChatPage() {
 
   useEffect(() => {
     const handler = (e: any) => {
-      if (typeof e.detail?.isTransparent === 'boolean') {
-        setIsTranslucent(e.detail.isTransparent);
+      const val = typeof e.detail === 'object' ? e.detail.isTransparent : e.detail;
+      if (typeof val === 'boolean') {
+        setIsTranslucent(val);
       }
     };
     window.addEventListener('ui:transparency', handler as EventListener);
     return () => window.removeEventListener('ui:transparency', handler as EventListener);
   }, []);
+
+
 
   // When opening the background picker with no query, fetch fresh random results
   useEffect(() => {
@@ -490,7 +493,8 @@ export default function ChatPage() {
             p: { xs: 1, sm: 2 },
           display: 'flex',
           flexDirection: 'column',
-            gap: { xs: 1, sm: 2 }
+            gap: { xs: 1, sm: 2 },
+            minHeight: 0
           }}>
           {(!currentChat?.messages || currentChat.messages.length === 0) && (
             <Box sx={{ p: { xs: 1, sm: 2 }, display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
@@ -630,7 +634,7 @@ export default function ChatPage() {
             sx={{
               '& .MuiOutlinedInput-root': {
                 height: '44px',
-                borderRadius: '22px',
+                borderRadius: '12px',
                 backgroundColor: 'rgba(255, 255, 255, 0.98)',
                 '& fieldset': { borderColor: 'rgba(1, 0, 87, 0.15)' },
                 '&:hover fieldset': { borderColor: '#010057 !important' },

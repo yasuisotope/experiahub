@@ -42,7 +42,7 @@ export const APP_AUTH: AuthProvider = AuthProvider.JWT;
 const config: ConfigProps = {
   menuOrientation: MenuOrientation.VERTICAL,
   miniDrawer: false,
-  fontFamily: `'Urbanist', ${roboto.style.fontFamily}`,
+  fontFamily: `'Nunito', ${roboto.style.fontFamily}`,
   borderRadius: 8,
   outlinedFilled: true,
   mode: ThemeMode.LIGHT,

@@ -432,7 +432,7 @@ export default function BookingsPage() {
           display: 'flex',
           flexDirection: 'column',
           p: 3,
-          maxWidth: 900,
+          maxWidth: 1000,
           mx: 'auto',
           bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
           backdropFilter: isTranslucent ? 'blur(12px)' : 'none',

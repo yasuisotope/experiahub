@@ -82,7 +82,7 @@ export default function BookingOverlay({
             {experienceTitle && (
               <Typography
                 sx={{
-                  fontFamily: 'Urbanist',
+                  fontFamily: 'Nunito',
                   fontSize: '0.9rem',
                   color: '#666',
                   fontWeight: 500,
@@ -128,7 +128,7 @@ export default function BookingOverlay({
           ) : (
             <Box sx={{ p: 4, textAlign: 'center' }}>
               <CircularProgress size={30} sx={{ color: '#010057' }} />
-              <Typography sx={{ mt: 2, fontFamily: 'Urbanist', color: '#666' }}>
+              <Typography sx={{ mt: 2, fontFamily: 'Nunito', color: '#666' }}>
                 Preparing checkout...
               </Typography>
             </Box>
@@ -146,7 +146,7 @@ export default function BookingOverlay({
         >
           <Typography
             sx={{
-              fontFamily: 'Urbanist',
+              fontFamily: 'Nunito',
               fontSize: '0.75rem',
               color: '#999',
               display: 'flex',

@@ -92,34 +92,34 @@ export default function BookingDetailsPage() {
         {loading ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CircularProgress size={20} />
-            <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Loading booking...</Typography>
+            <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Loading booking...</Typography>
           </Box>
         ) : error ? (
           <Alert severity="error">{error}</Alert>
         ) : (
           <Paper variant="outlined" sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.9)' }}>
             <Stack spacing={1.5}>
-              <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Booking ID</Typography>
-              <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{details?.id}</Typography>
+              <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Booking ID</Typography>
+              <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>{details?.id}</Typography>
               {details?.title && (
                 <>
                   <Divider sx={{ my: 1.5 }} />
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Title</Typography>
-                  <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{details.title}</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Title</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>{details.title}</Typography>
                 </>
               )}
               {details?.status && (
                 <>
                   <Divider sx={{ my: 1.5 }} />
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Status</Typography>
-                  <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{details.status}</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Status</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>{details.status}</Typography>
                 </>
               )}
               {(details?.date || details?.time || details?.startISO) && (
                 <>
                   <Divider sx={{ my: 1.5 }} />
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>When</Typography>
-                  <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>
+                  <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>When</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>
                     {details?.date || (details?.startISO ? new Date(details.startISO).toLocaleDateString() : '')}
                     {` `}
                     {details?.time || (details?.startISO ? new Date(details.startISO).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}
@@ -131,49 +131,49 @@ export default function BookingDetailsPage() {
               {(details?.location || details?.meetingPoint || details?.address) && (
                 <>
                   <Divider sx={{ my: 1.5 }} />
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Location</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Location</Typography>
                   {details?.location && (
-                    <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{details.location}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>{details.location}</Typography>
                   )}
                   {details?.meetingPoint && (
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Meeting point</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Meeting point</Typography>
                   )}
                   {details?.meetingPoint && (
-                    <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{details.meetingPoint}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>{details.meetingPoint}</Typography>
                   )}
                   {details?.address && (
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Address</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Address</Typography>
                   )}
                   {details?.address && (
-                    <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{details.address}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>{details.address}</Typography>
                   )}
                 </>
               )}
               {(details?.participants || details?.participantsByCategory || details?.price || details?.total) && (
                 <>
                   <Divider sx={{ my: 1.5 }} />
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Summary</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Summary</Typography>
                   {details?.participants && (
-                    <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>
+                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>
                       {details.participants} {details.participants === 1 ? 'person' : 'people'}
                     </Typography>
                   )}
                   {details?.participantsByCategory && (
                     <Stack>
                       {Object.entries(details.participantsByCategory).map(([k, v]) => (
-                        <Typography key={k} sx={{ fontFamily: 'Urbanist', color: '#666' }}>{k}: {v}</Typography>
+                        <Typography key={k} sx={{ fontFamily: 'Nunito', color: '#666' }}>{k}: {v}</Typography>
                       ))}
                     </Stack>
                   )}
                   {(details?.total || details?.price) && (
-                    <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>
+                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>
                       {typeof details.total !== 'undefined' ? `${details.total}${details.currency ? ' ' + details.currency : ''}` : (details.price || '')}
                     </Typography>
                   )}
                   {details?.lineItems?.length ? (
                     <Stack>
                       {details.lineItems.map((li, idx) => (
-                        <Typography key={idx} sx={{ fontFamily: 'Urbanist', color: '#666' }}>
+                        <Typography key={idx} sx={{ fontFamily: 'Nunito', color: '#666' }}>
                           {li.label}: {li.amount}{li.currency ? ` ${li.currency}` : ''}
                         </Typography>
                       ))}
@@ -184,47 +184,47 @@ export default function BookingDetailsPage() {
               {details?.customer && (details.customer.name || details.customer.email || details.customer.phone) && (
                 <>
                   <Divider sx={{ my: 1.5 }} />
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Customer</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Customer</Typography>
                   {details.customer.name && (
-                    <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{details.customer.name}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>{details.customer.name}</Typography>
                   )}
                   {details.customer.email && (
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>{details.customer.email}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>{details.customer.email}</Typography>
                   )}
                   {details.customer.phone && (
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>{details.customer.phone}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>{details.customer.phone}</Typography>
                   )}
                 </>
               )}
               {details?.cancellation && (details.cancellation.status || details.cancellation.policy || details.cancellation.refundableUntilISO) && (
                 <>
                   <Divider sx={{ my: 1.5 }} />
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Cancellation</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Cancellation</Typography>
                   {details.cancellation.status && (
-                    <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{details.cancellation.status}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>{details.cancellation.status}</Typography>
                   )}
                   {details.cancellation.refundableUntilISO && (
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>
+                    <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>
                       Refundable until {new Date(details.cancellation.refundableUntilISO).toLocaleString()}
                     </Typography>
                   )}
                   {details.cancellation.policy && (
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>{details.cancellation.policy}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>{details.cancellation.policy}</Typography>
                   )}
                 </>
               )}
               {(details?.provider || details?.product) && (
                 <>
                   <Divider sx={{ my: 1.5 }} />
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Provider</Typography>
-                  <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>
+                  <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>Provider</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito', fontWeight: 600 }}>
                     {details?.product?.title || details?.title || ''}
                   </Typography>
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>
+                  <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>
                     Provider: {details?.product?.provider || details?.provider || 'Bókun'}
                   </Typography>
                   {(details?.product?.bokunProductId || details?.product?.experienceId) && (
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>
+                    <Typography sx={{ fontFamily: 'Nunito', color: '#666' }}>
                       Product ID: {details?.product?.bokunProductId || details?.product?.experienceId}
                     </Typography>
                   )}

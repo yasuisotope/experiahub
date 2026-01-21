@@ -40,47 +40,47 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Inter", "Nunito", "Urbanist", sans-serif',
+    fontFamily: '"Nunito", sans-serif',
     h1: {
-      fontFamily: '"Playfair Display", "Agrandir", serif',
+      fontFamily: '"Agrandir", serif',
       color: '#010057',
       fontWeight: 600,
     },
     h2: {
-      fontFamily: '"Playfair Display", "Agrandir", serif',
+      fontFamily: '"Agrandir", serif',
       color: '#010057',
       fontWeight: 600,
     },
     h3: {
-      fontFamily: '"Playfair Display", "Agrandir", serif',
+      fontFamily: '"Agrandir", serif',
       color: '#010057',
       fontWeight: 600,
     },
     h4: {
-      fontFamily: '"Playfair Display", "Agrandir", serif',
+      fontFamily: '"Agrandir", serif',
       color: '#010057',
       fontWeight: 600,
     },
     h5: {
-      fontFamily: '"Playfair Display", "Agrandir", serif',
+      fontFamily: '"Agrandir", serif',
       color: '#010057',
       fontWeight: 500,
     },
     h6: {
-      fontFamily: '"Playfair Display", "Agrandir", serif',
+      fontFamily: '"Agrandir", serif',
       color: '#010057',
       fontWeight: 500,
     },
     body1: {
-      fontFamily: '"Inter", "Nunito", sans-serif',
+      fontFamily: '"Nunito", sans-serif',
       color: '#010057',
     },
     body2: {
-      fontFamily: '"Inter", "Nunito", sans-serif',
+      fontFamily: '"Nunito", sans-serif',
       color: '#666666',
     },
     button: {
-      fontFamily: '"Inter", "Nunito", sans-serif',
+      fontFamily: '"Nunito", sans-serif',
       textTransform: 'none',
       fontWeight: 500,
     },
@@ -90,14 +90,14 @@ const theme = createTheme({
       styleOverrides: {
         body: {
           backgroundColor: 'transparent',
-          fontFamily: '"Inter", sans-serif',
+          fontFamily: '"Nunito", sans-serif',
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: '8px',
+          borderRadius: '12px',
           textTransform: 'none',
         },
         containedPrimary: {

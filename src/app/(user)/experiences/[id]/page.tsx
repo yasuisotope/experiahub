@@ -152,7 +152,7 @@ export default function ExperiencePage() {
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, mb: 4, pt: 4 }}>
         {/* Experience Details */}
         <Paper sx={{ p: 3, height: 'fit-content', borderRadius: '16px' }}>
-          <Typography variant="h4" sx={{ mb: 2, fontFamily: 'Urbanist', color: '#010057', fontWeight: 500 }}>
+          <Typography variant="h4" sx={{ mb: 2, fontFamily: 'Nunito', color: '#010057', fontWeight: 500 }}>
             {experience.title}
           </Typography>
           
@@ -171,7 +171,7 @@ export default function ExperiencePage() {
             </Box>
           )}
 
-          <Typography variant="body1" sx={{ mb: 3, color: '#666', lineHeight: 1.6, fontFamily: 'Urbanist' }}>
+          <Typography variant="body1" sx={{ mb: 3, color: '#666', lineHeight: 1.6, fontFamily: 'Nunito' }}>
             {experience.summary}
           </Typography>
 
@@ -180,41 +180,41 @@ export default function ExperiencePage() {
               <Chip 
                 label={experience.city} 
                 variant="outlined" 
-                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Urbanist' }}
+                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Nunito' }}
               />
             )}
             {experience.category && (
               <Chip 
                 label={experience.category} 
                 variant="outlined"
-                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Urbanist' }}
+                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Nunito' }}
               />
             )}
             {experience.duration && (
               <Chip 
                 label={`${experience.duration}h`} 
                 variant="outlined"
-                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Urbanist' }}
+                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Nunito' }}
               />
             )}
           </Box>
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 500 }}>
+            <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Nunito', fontWeight: 500 }}>
               {experience.price ? `${experience.currency} ${experience.price}` : 'Price TBA'}
             </Typography>
             <Chip 
               label={experience.status} 
               color={experience.status === 'Active' ? 'success' : 'warning'}
               size="small"
-              sx={{ fontFamily: 'Urbanist' }}
+              sx={{ fontFamily: 'Nunito' }}
             />
           </Box>
         </Paper>
 
         {/* Booking Widget */}
         <Paper sx={{ p: 3, borderRadius: '16px' }}>
-          <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Urbanist', fontWeight: 500, color: '#010057' }}>
+          <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Nunito', fontWeight: 500, color: '#010057' }}>
             Book This Experience
           </Typography>
           

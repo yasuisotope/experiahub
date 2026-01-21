@@ -129,7 +129,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
           {exp.title}
         </Typography>
         {(exp.price || exp.currency) && (
-          <Typography sx={{ fontFamily: 'Urbanist', color: '#010057', fontWeight: 600, fontSize: '1.1rem' }}>
+          <Typography sx={{ fontFamily: 'Nunito', color: '#010057', fontWeight: 600, fontSize: '1.1rem' }}>
             {exp.price}{exp.currency ? ` ${exp.currency}` : ''}
           </Typography>
         )}
@@ -142,7 +142,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
         </Box>
         <Typography sx={{ fontFamily: 'Inter', color: '#666', fontSize: '0.85rem' }}>{[exp.city, exp.category, exp.duration].filter(Boolean).join(' • ')}</Typography>
         {exp.summary && (
-          <Typography sx={{ fontFamily: 'Urbanist', color: '#444', fontSize: '1rem', lineHeight: 1.6, fontWeight: 400 }}>{exp.summary}</Typography>
+          <Typography sx={{ fontFamily: 'Nunito', color: '#444', fontSize: '1rem', lineHeight: 1.6, fontWeight: 400 }}>{exp.summary}</Typography>
         )}
         {/* Photos (gated) */}
         {isLoggedIn ? (
@@ -275,7 +275,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
           )}
         </Stack>
         {bookmarkMessage && (
-          <Alert severity="info" sx={{ mt: 1, fontFamily: 'Urbanist' }}>{bookmarkMessage}</Alert>
+          <Alert severity="info" sx={{ mt: 1, fontFamily: 'Nunito' }}>{bookmarkMessage}</Alert>
         )}
       </Stack>
     </Paper>

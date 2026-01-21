@@ -46,7 +46,7 @@ export default function NotFound() {
           sx={{
             mb: 4,
             color: '#666666',
-            fontFamily: 'Urbanist',
+            fontFamily: 'Nunito',
           }}
         >
           The page you are looking for does not exist or has been moved.
@@ -57,7 +57,7 @@ export default function NotFound() {
           sx={{
             bgcolor: 'rgba(74, 124, 140, 0.9)',
             '&:hover': { bgcolor: 'rgba(74, 124, 140, 1)' },
-            fontFamily: 'Urbanist',
+            fontFamily: 'Nunito',
           }}
         >
           Return Home

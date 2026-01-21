@@ -21,7 +21,10 @@ export default function PaymentsPage() {
   const [isTranslucent, setIsTranslucent] = useState(true);
 
   useEffect(() => {
-    const handler = (e: CustomEvent) => setIsTranslucent(e.detail.isTransparent);
+    const handler = (e: CustomEvent) => {
+      const val = typeof e.detail === 'object' ? e.detail.isTransparent : e.detail;
+      setIsTranslucent(val);
+    };
     window.addEventListener('ui:transparency', handler as any);
     return () => window.removeEventListener('ui:transparency', handler as any);
   }, []);
@@ -78,8 +81,9 @@ export default function PaymentsPage() {
       } else if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Management failed:', err);
+      alert('Failed to manage payment methods. Please try again or contact support. ' + (err.message || ''));
     } finally {
       setProcessing(false);
     }
@@ -103,7 +107,7 @@ export default function PaymentsPage() {
             display: 'flex',
             flexDirection: 'column',
             p: 4,
-            maxWidth: 900,
+            maxWidth: 1000,
             mx: 'auto',
             bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#f8fafc',
             backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
@@ -132,7 +136,7 @@ export default function PaymentsPage() {
             <Paper elevation={0} sx={paperStyle}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                  <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 400 }}>Payment Methods</Typography>
-                 <Button variant="contained" onClick={handleManage} disabled={processing} sx={{ bgcolor: '#010057', textTransform: 'none', borderRadius: '50px', fontFamily: 'Nunito, sans-serif' }}>
+                 <Button variant="contained" onClick={handleManage} disabled={processing} sx={{ bgcolor: '#010057', textTransform: 'none', borderRadius: '12px', fontFamily: 'Nunito, sans-serif' }}>
                    Manage
                  </Button>
               </Stack>

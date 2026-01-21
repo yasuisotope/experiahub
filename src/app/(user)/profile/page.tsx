@@ -154,7 +154,7 @@ export default function ProfilePage() {
             display: 'flex',
             flexDirection: 'column',
             p: 2,
-            maxWidth: 800,
+            maxWidth: 1000,
             mx: 'auto',
             bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
             backdropFilter: isTranslucent ? 'blur(12px)' : 'none',

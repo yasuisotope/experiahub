@@ -44,7 +44,7 @@ export default function Error({
         sx={{
           bgcolor: 'rgba(74, 124, 140, 0.9)',
           '&:hover': { bgcolor: 'rgba(74, 124, 140, 1)' },
-          fontFamily: 'Urbanist',
+          fontFamily: 'Nunito',
           mt: 2,
         }}
       >

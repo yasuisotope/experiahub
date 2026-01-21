@@ -240,7 +240,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
               </ListItemIcon>
               <ListItemText 
                 primary="Chat" 
-                primaryTypographyProps={{ fontFamily: 'Urbanist, sans-serif', fontSize: '0.95rem', fontWeight: pathname === '/chat' ? 600 : 400, color: pathname === '/chat' ? '#010057' : '#333' }}
+                primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', fontWeight: pathname === '/chat' ? 600 : 400, color: pathname === '/chat' ? '#010057' : '#333' }}
               />
             </ListItemButton>
           </ListItem>
@@ -260,7 +260,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
                   </ListItemIcon>
                   <ListItemText
                     primary="Bookings"
-                    primaryTypographyProps={{ fontFamily: 'Urbanist, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/bookings') ? 600 : 400, color: pathname.startsWith('/bookings') ? '#010057' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/bookings') ? 600 : 400, color: pathname.startsWith('/bookings') ? '#010057' : '#333' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -278,7 +278,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
                   </ListItemIcon>
                   <ListItemText
                     primary="Schedule"
-                    primaryTypographyProps={{ fontFamily: 'Urbanist, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/schedule') ? 600 : 400, color: pathname.startsWith('/schedule') ? '#010057' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Nunito, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/schedule') ? 600 : 400, color: pathname.startsWith('/schedule') ? '#010057' : '#333' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -290,13 +290,13 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
         {/* Recent Chats - Always show */}
         <>
-          <Typography variant="overline" sx={{ px: 2, color: 'text.secondary', fontFamily: 'Urbanist, sans-serif' }}>
+          <Typography variant="overline" sx={{ px: 2, color: 'text.secondary', fontFamily: 'Nunito, sans-serif' }}>
             RECENT
           </Typography>
           <List sx={{ flexGrow: 1, overflow: 'auto' }}>
             {chats.length === 0 ? (
               <ListItem>
-                <ListItemText primary="No recent conversations" primaryTypographyProps={{ fontSize: '0.85rem', color: 'text.secondary', fontFamily: 'Urbanist, sans-serif' }} />
+                <ListItemText primary="No recent conversations" primaryTypographyProps={{ fontSize: '0.85rem', color: 'text.secondary', fontFamily: 'Nunito, sans-serif' }} />
               </ListItem>
             ) : (
               chats.slice(0, 10).map((chat) => (
@@ -358,7 +358,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
               />
             }
             label={
-              <Typography variant="caption" sx={{ fontFamily: 'Urbanist, sans-serif', color: '#010057' }}>
+              <Typography variant="caption" sx={{ fontFamily: 'Nunito, sans-serif', color: '#010057' }}>
                 Translucent UI
               </Typography>
             }
@@ -381,7 +381,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
                 {user?.display_name?.[0] || user?.email?.[0]}
               </Avatar>
               <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="subtitle2" noWrap sx={{ fontFamily: 'Urbanist, sans-serif', color: '#010057', fontSize: '0.85rem' }}>
+                <Typography variant="subtitle2" noWrap sx={{ fontFamily: 'Nunito, sans-serif', color: '#010057', fontSize: '0.85rem' }}>
                   {user?.display_name || user?.email}
                 </Typography>
               </Box>
