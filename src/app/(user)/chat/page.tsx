@@ -463,20 +463,20 @@ export default function ChatPage() {
 
         {/* Chat Interface (Logged In) */}
         {isLoggedIn && !authLoading && (
-        <Box sx={{
-          display: { xs: 'block', md: 'grid' },
-          gridTemplateColumns: { md: selectedExperience ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr) 0px' },
-          gap: { md: 2 },
-          alignItems: 'start',
-          height: '100dvh'
-        }}>
+        <Box sx={{ 
+        display: { xs: 'block', md: 'grid' }, 
+        gridTemplateColumns: { md: selectedExperience ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr) 0px' },
+        transition: 'grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        height: '100%', // Changed from 100dvh to fit in layout
+        position: 'relative' // Ensure positioning context
+      }}>
         {/* Left column: messages + input */}
         <Box sx={{ 
           display: 'grid',
           gridTemplateRows: '1fr auto',
           minWidth: 0,
           minHeight: 0,
-          height: '100dvh',
+          height: '100%', // Changed from 100dvh to fit in layout
           overflow: 'hidden',
           width: '100%',
           maxWidth: { md: selectedExperience ? '100%' : 760 },
