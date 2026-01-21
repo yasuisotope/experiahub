@@ -108,7 +108,7 @@ export default function PaymentsPage() {
             bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#f8fafc',
             backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
             borderRadius: '16px',
-            m: '16px',
+            m: '30px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
             overflowY: 'auto',
             alignItems: 'center', // Center content

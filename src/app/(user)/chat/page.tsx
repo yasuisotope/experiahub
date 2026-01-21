@@ -478,9 +478,10 @@ export default function ChatPage() {
           minHeight: 0,
           height: '100dvh',
           overflow: 'hidden',
-          width: '100%',
+          width: 'calc(100% - 60px)', // Account for theoretical margins if strictly enforced, but here we control via margin prop
           maxWidth: { md: selectedExperience ? '100%' : 760 },
-          mx: 'auto',
+          m: { xs: 2, md: '30px' }, // 30px margin
+          mr: { xs: 2, md: 0 }, // Right panel handles its own spacing or we want equal
           transition: `${isOpening ? '520ms' : '420ms'} cubic-bezier(.22,.61,.36,1)`,
           transitionProperty: 'max-width'
         }}>
@@ -507,6 +508,7 @@ export default function ChatPage() {
                     color: '#333',
                     border: '1px solid rgba(255,255,255,0.8)',
                     borderRadius: '12px',
+                    fontFamily: 'Urbanist',
                     px: 2,
                     '&:hover': { bgcolor: 'rgba(255,255,255,0.9)', borderColor: '#fff' }
                   }}
@@ -535,13 +537,13 @@ export default function ChatPage() {
                       p: 2,
                       backgroundColor: message.isUser 
                         ? (isTranslucent ? 'rgba(1, 0, 87, 0.4)' : '#010057') 
-                        : (isTranslucent ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.95)'),
-                      backdropFilter: isTranslucent ? 'blur(20px)' : 'none',
+                        : (isTranslucent ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.95)'),
+                      backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
                       color: message.isUser ? '#ffffff' : '#010057',
                       borderRadius: '16px',
                       border: isTranslucent ? '1px solid rgba(255,255,255,0.1)' : 'none',
                       ...(message.isUser ? { borderBottomRightRadius: '4px' } : { borderBottomLeftRadius: '4px' }),
-                      fontFamily: 'Inter',
+                      fontFamily: 'Urbanist',
                       fontSize: '1rem',
                       lineHeight: 1.6,
                     }}
@@ -588,8 +590,8 @@ export default function ChatPage() {
                 sx={{
                   p: 1.5,
                   px: 2,
-                  backgroundColor: isTranslucent ? 'rgba(255, 255, 255, 0.3)' : '#E9F0F3',
-                  backdropFilter: isTranslucent ? 'blur(20px)' : 'none',
+                  backgroundColor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#E9F0F3',
+                  backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
                   border: isTranslucent ? '1px solid rgba(255,255,255,0.1)' : 'none',
                   color: '#010057',
                   borderRadius: '16px',
@@ -602,7 +604,7 @@ export default function ChatPage() {
                     <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.2s infinite' }} />
                     <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.4s infinite' }} />
                   </Box>
-                  <Typography variant="body2" sx={{ fontFamily: 'Inter', color: '#010057', fontStyle: 'italic', ml: 1 }}>
+                  <Typography variant="body2" sx={{ fontFamily: 'Urbanist', color: '#010057', fontStyle: 'italic', ml: 1 }}>
                     ExperiaHub is thinking...
                   </Typography>
                 </Box>
@@ -759,7 +761,7 @@ export default function ChatPage() {
                 ) : null
               }}
             />
-            <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 400, borderRadius: 3 }} onClick={async ()=>{
+            <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Urbanist', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 600, borderRadius: 3 }} onClick={async ()=>{
               try {
                 setBgLoading(true);
                 const results = await searchUnsplash(bgSearch.trim(), 1, 30);

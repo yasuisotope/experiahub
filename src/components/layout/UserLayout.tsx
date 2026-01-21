@@ -192,14 +192,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
       >
         {/* Logo */}
         <Box sx={{ p: 4, pt: '35px', pb: '35px', textAlign: 'center' }}>
-          <Image
-            src="https://res.cloudinary.com/dasahamyc/image/upload/v1764230944/ExperiaHub_Logo_mqqw7z.png"
-            alt="ExperiaHub"
-            width={200}
-            height={50}
-            style={{ height: 'auto', width: '100%', maxWidth: '200px' }}
-            priority
-          />
+          <Logo />
         </Box>
 
         {/* New Chat Button */}

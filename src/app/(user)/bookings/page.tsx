@@ -404,6 +404,13 @@ export default function BookingsPage() {
     return () => { if (typeof window !== 'undefined') window.removeEventListener('bookmarks:updated', handler as EventListener); };
   }, [fetchLists]);
 
+  const [isTranslucent, setIsTranslucent] = React.useState(true);
+  React.useEffect(() => {
+    const handler = (e: CustomEvent) => setIsTranslucent(e.detail.isTransparent);
+    window.addEventListener('ui:transparency', handler as any);
+    return () => window.removeEventListener('ui:transparency', handler as any);
+  }, []);
+
   React.useEffect(() => {
     (async () => {
       try {
@@ -425,10 +432,12 @@ export default function BookingsPage() {
           display: 'flex',
           flexDirection: 'column',
           p: 3,
-          maxWidth: 800,
+          maxWidth: 900,
           mx: 'auto',
-          bgcolor: 'rgba(255,255,255,0.8)',
-          backdropFilter: 'blur(12px)',
+          m: '30px',
+          bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
+          backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
+          borderRadius: '16px',
           overflowY: 'auto',
         }}
       >
@@ -438,7 +447,7 @@ export default function BookingsPage() {
             mb: 1,
             fontSize: '2rem',
             color: '#4A4A4A',
-            fontFamily: 'Cormorant Garamond',
+            fontFamily: 'Urbanist',
             fontWeight: 500,
           }}
         >
