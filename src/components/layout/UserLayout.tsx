@@ -396,8 +396,8 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
 
       {/* Main Content (no reserved right column; Chat page manages its own details grid) */}
-      <Box sx={{ flexGrow: 1, bgcolor: 'transparent', height: '100dvh', overflow: 'hidden', position: 'relative', zIndex: 2 }}>
-        <Box sx={{ overflow: 'hidden' }}>{children}</Box>
+      <Box sx={{ flexGrow: 1, bgcolor: 'transparent', height: '100dvh', overflow: 'hidden', position: 'relative', zIndex: 2, p: '30px' }}>
+        <Box sx={{ height: '100%', overflow: 'hidden', borderRadius: '16px' }}>{children}</Box>
       </Box>
 
       {/* User Menu */}

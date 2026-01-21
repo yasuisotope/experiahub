@@ -55,7 +55,7 @@ type Booking = {
   time: string;
   location: string;
   participants: number;
-  status: 'confirmed' | 'pending' | 'completed';
+  status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
   price: string;
 };
 
@@ -428,13 +428,12 @@ export default function BookingsPage() {
       <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
       <Box
         sx={{
-          height: '100dvh',
+          height: '100%',
           display: 'flex',
           flexDirection: 'column',
           p: 3,
           maxWidth: 900,
           mx: 'auto',
-          m: '30px',
           bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
           backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
           borderRadius: '16px',
@@ -646,7 +645,7 @@ export default function BookingsPage() {
               sx={{
                 fontSize: '1.2rem',
                 color: '#4A4A4A',
-                fontFamily: 'Cormorant Garamond',
+                fontFamily: 'Urbanist',
                 fontWeight: 600,
               }}
             >
