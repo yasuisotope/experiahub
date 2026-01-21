@@ -478,10 +478,9 @@ export default function ChatPage() {
           minHeight: 0,
           height: '100dvh',
           overflow: 'hidden',
-          width: 'calc(100% - 60px)', // Account for theoretical margins if strictly enforced, but here we control via margin prop
+          width: '100%',
           maxWidth: { md: selectedExperience ? '100%' : 760 },
-          m: { xs: 2, md: '30px' }, // 30px margin
-          mr: { xs: 2, md: 0 }, // Right panel handles its own spacing or we want equal
+          mx: 'auto',
           transition: `${isOpening ? '520ms' : '420ms'} cubic-bezier(.22,.61,.36,1)`,
           transitionProperty: 'max-width'
         }}>
@@ -557,7 +556,7 @@ export default function ChatPage() {
                       {experienceList.slice(0,5).map((exp: any, i: number) => (
                         <Paper key={i} elevation={0} sx={{ p: 1.5, backgroundColor: isTranslucent ? 'rgba(255,255,255,0.7)' : '#fff', backdropFilter: isTranslucent ? 'blur(8px)' : 'none', border: '1px solid rgba(1, 0, 87, 0.1)', borderRadius: '10px' }}>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                            <Box sx={{ fontFamily: 'Urbanist', color: '#010057', fontSize: '0.95rem', fontWeight: 600 }}>
+                            <Box sx={{ fontFamily: 'Urbanist', color: '#010057', fontSize: '0.95rem', fontWeight: 500 }}>
                               {`${i+1}. ${exp?.title || 'Experience'}`}
                             </Box>
                             <Box sx={{ fontFamily: 'Urbanist', color: '#64748B', fontSize: '0.85rem' }}>
@@ -761,7 +760,7 @@ export default function ChatPage() {
                 ) : null
               }}
             />
-            <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Urbanist', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 600, borderRadius: 3 }} onClick={async ()=>{
+            <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Urbanist', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 500, borderRadius: 3 }} onClick={async ()=>{
               try {
                 setBgLoading(true);
                 const results = await searchUnsplash(bgSearch.trim(), 1, 30);

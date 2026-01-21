@@ -122,7 +122,7 @@ export default function PaymentsPage() {
             >
               Back
             </Button>
-            <Typography variant="h4" sx={{ width: '100%', textAlign: 'center', color: '#010057', fontFamily: 'Urbanist', fontWeight: 600 }}>
+            <Typography variant="h4" sx={{ width: '100%', textAlign: 'center', color: '#010057', fontFamily: 'Urbanist', fontWeight: 500 }}>
               Payment Details
             </Typography>
           </Box>
@@ -131,7 +131,7 @@ export default function PaymentsPage() {
             {/* Payment Methods - Primary Action */}
             <Paper elevation={0} sx={paperStyle}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                 <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 600 }}>Payment Methods</Typography>
+                 <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 500 }}>Payment Methods</Typography>
                  <Button variant="contained" onClick={handleManage} disabled={processing} sx={{ bgcolor: '#010057', textTransform: 'none', borderRadius: '50px', fontFamily: 'Urbanist' }}>
                    Manage
                  </Button>
@@ -141,7 +141,7 @@ export default function PaymentsPage() {
                   <CreditCardIcon sx={{ color: '#010057' }} />
                 </Box>
                 <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="subtitle1" sx={{ fontFamily: 'Urbanist', fontWeight: 600, color: '#010057' }}>{status?.card_brand || 'No card linked'}</Typography>
+                  <Typography variant="subtitle1" sx={{ fontFamily: 'Urbanist', fontWeight: 500, color: '#010057' }}>{status?.card_brand || 'No card linked'}</Typography>
                   <Typography variant="caption" sx={{ fontFamily: 'Urbanist', color: '#666' }}>
                     {status?.card_last4 ? `Ending in ${status.card_last4}` : 'add a method for faster checkout'}
                   </Typography>
@@ -154,18 +154,18 @@ export default function PaymentsPage() {
             {/* Billing History */}
             {status?.invoices?.length > 0 && (
               <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', border: '1px solid rgba(1,0,87,0.08)', bgcolor: 'rgba(255,255,255,0.6)' }}>
-                <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontFamily: 'Urbanist', fontWeight: 600 }}>Billing History</Typography>
+                <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontFamily: 'Urbanist', fontWeight: 500 }}>Billing History</Typography>
                 <Stack spacing={1}>
                   {status.invoices.map((inv: any) => (
                     <Stack key={inv.id} direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 1.5, borderRadius: '12px', '&:hover': { bgcolor: 'rgba(255,255,255,0.8)' }, transition: 'background-color 0.2s' }}>
                       <Stack direction="row" spacing={2} alignItems="center">
                         <ReceiptIcon sx={{ color: '#64748B', fontSize: 20 }} />
                         <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'Urbanist', color: '#010057' }}>Invoice #{inv.number}</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 500, fontFamily: 'Urbanist', color: '#010057' }}>Invoice #{inv.number}</Typography>
                           <Typography variant="caption" sx={{ color: '#666', fontFamily: 'Urbanist' }}>{new Date(inv.date).toLocaleDateString()}</Typography>
                         </Box>
                       </Stack>
-                      <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'Urbanist', color: '#010057' }}>{inv.total}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500, fontFamily: 'Urbanist', color: '#010057' }}>{inv.total}</Typography>
                     </Stack>
                   ))}
                 </Stack>
