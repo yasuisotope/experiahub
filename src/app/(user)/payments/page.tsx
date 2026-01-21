@@ -96,8 +96,7 @@ export default function PaymentsPage() {
   return (
     <ProtectedRoute>
       <BackgroundImage imageUrl={bg?.url} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0.1}>
-    <ProtectedRoute>
-      <BackgroundImage imageUrl={bg?.url} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0.1}>
+
         <Box
           sx={{
             height: 'calc(100vh - 32px)',
