@@ -56,7 +56,7 @@ export function BookingButton({
     try {
       const token = typeof getToken === 'function' ? await getToken() : getToken;
       const date = getDate();
-      const { success, checkoutUrl, error: e } = await startCheckout({
+      const res = await startCheckout({
         token,
         experienceId,
         date,
@@ -64,8 +64,14 @@ export function BookingButton({
         pax: defaultPax,
         customer
       });
-      if (!success || !checkoutUrl) return fail(e || 'Checkout unavailable');
-      window.location.href = checkoutUrl;
+      if (!res.success) return fail(res.error || 'Checkout unavailable');
+      
+      if (res.checkoutUrl) {
+        window.location.href = res.checkoutUrl;
+      } else {
+        // Direct success (e.g. free or confirmed by backend)
+        window.location.href = '/bookings?success=true';
+      }
     } catch (e: any) {
       fail(e?.message || 'Failed to start checkout');
     } finally {

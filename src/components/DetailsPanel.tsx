@@ -9,7 +9,7 @@ import { track } from '@/services/analytics';
 
 // analytics centralized in services/analytics
 
-export default function DetailsPanel({ exp, onClose }: { exp: Experience | null; onClose?: () => void }) {
+export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience | null; onClose?: () => void; onBook?: (exp: Experience) => void }) {
   const [loadingAvail, setLoadingAvail] = useState(false);
   const [availError, setAvailError] = useState<string | null>(null);
   const [slots, setSlots] = useState<Array<{ time: string; capacity?: number }>>([]);
@@ -17,7 +17,6 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
   const { isLoggedIn } = useWordPressAuth();
   const [openWidget, setOpenWidget] = useState(false);
   const showWidgetCta = (process.env.NEXT_PUBLIC_SHOW_WIDGET_CTA ?? process.env.SHOW_WIDGET_CTA ?? 'true') !== 'false';
-  const N8N_BASE = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
   const [bookmarkMessage, setBookmarkMessage] = useState<string | null>(null);
   const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
     if (e.key === 'Escape') {
@@ -49,6 +48,39 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
     if (exp && panelRef.current) {
       panelRef.current.focus();
     }
+    
+    const fetchAvail = async () => {
+      const pid = (exp as any)?.bokunProductId || (exp as any)?.id;
+      if (!pid || pid.startsWith('temp_')) return;
+      
+      setLoadingAvail(true);
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : '';
+        // Use local date to ensure we see 'today' in the user's timezone
+        const now = new Date();
+        const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        
+        const res = await fetch(`/api/bokun/availability/${pid}?date=${date}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const avail = data.availability;
+          if (avail && Array.isArray(avail.times)) {
+            setSlots(avail.times.map((t: any) => ({ time: t.time || (t.hour + ':' + t.minute), capacity: t.capacity })));
+          } else if (Array.isArray(avail)) {
+            // Octo format
+            setSlots(avail.map((t: any) => ({ time: t.startTime, capacity: t.remainingCapacity })));
+          }
+        }
+      } catch (err) {
+        console.error('Avail fetch error:', err);
+      } finally {
+        setLoadingAvail(false);
+      }
+    };
+    
+    if (exp) fetchAvail();
   }, [exp]);
 
   if (!exp) return null;
@@ -66,7 +98,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
         bokunProductId: (exp as any)?.bokunProductId || undefined,
         source: (exp as any)?.source || 'chat',
       };
-      const res = await fetch(`${N8N_BASE}/bookmarks/add`, {
+      const res = await fetch('/api/bookmarks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload)
@@ -97,7 +129,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
           {exp.title}
         </Typography>
         {(exp.price || exp.currency) && (
-          <Typography sx={{ fontFamily: 'Inter', color: '#010057', fontWeight: 500 }}>
+          <Typography sx={{ fontFamily: 'Urbanist', color: '#010057', fontWeight: 600, fontSize: '1.1rem' }}>
             {exp.price}{exp.currency ? ` ${exp.currency}` : ''}
           </Typography>
         )}
@@ -110,7 +142,7 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
         </Box>
         <Typography sx={{ fontFamily: 'Inter', color: '#666', fontSize: '0.85rem' }}>{[exp.city, exp.category, exp.duration].filter(Boolean).join(' • ')}</Typography>
         {exp.summary && (
-          <Typography sx={{ fontFamily: 'Inter', color: '#444', fontSize: '1rem', lineHeight: 1.55 }}>{exp.summary}</Typography>
+          <Typography sx={{ fontFamily: 'Urbanist', color: '#444', fontSize: '1rem', lineHeight: 1.6, fontWeight: 400 }}>{exp.summary}</Typography>
         )}
         {/* Photos (gated) */}
         {isLoggedIn ? (
@@ -191,10 +223,10 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
               variant="contained"
               fullWidth
               onClick={() => {
+                onBook?.(exp);
                 const pid = (exp as any)?.bokunProductId || (exp as any)?.productId || (exp as any)?.id;
                 if (!pid) return;
                 track('checkout_click', { productId: pid, title: exp.title, city: exp.city, category: exp.category, source: 'panel' });
-                setOpenWidget(true);
               }}
               aria-label={`Book now for ${exp.title}`}
               sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#4A7C8C' }, fontFamily: 'Inter', textTransform: 'none' }}
@@ -208,10 +240,10 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
               color="primary"
               fullWidth
               onClick={() => {
+                onBook?.(exp);
                 const pid = (exp as any)?.bokunProductId || (exp as any)?.productId || (exp as any)?.id;
                 if (!pid) return;
                 track('widget_open', { source: 'panel', title: exp.title, city: exp.city, category: exp.category, productId: pid });
-                setOpenWidget(true);
               }}
               aria-label={`Check availability for ${exp.title}`}
               sx={{ bgcolor: '#010057', '&:hover': { bgcolor: '#4A7C8C' }, fontFamily: 'Inter', textTransform: 'none' }}
@@ -243,33 +275,8 @@ export default function DetailsPanel({ exp, onClose }: { exp: Experience | null;
           )}
         </Stack>
         {bookmarkMessage && (
-          <Alert severity="info" sx={{ mt: 1 }}>{bookmarkMessage}</Alert>
+          <Alert severity="info" sx={{ mt: 1, fontFamily: 'Urbanist' }}>{bookmarkMessage}</Alert>
         )}
-        <Dialog
-          open={openWidget}
-          onClose={() => setOpenWidget(false)}
-          fullWidth
-          maxWidth="md"
-          aria-labelledby="booking-widget-title"
-        >
-          <DialogContent
-            sx={{
-              p: 0,
-              paddingTop: 'max(16px, env(safe-area-inset-top))',
-              paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-              paddingLeft: 'max(16px, env(safe-area-inset-left))',
-              paddingRight: 'max(16px, env(safe-area-inset-right))'
-            }}
-          >
-            {((exp as any)?.bokunProductId || (exp as any)?.productId || (exp as any)?.id) && (
-              <BokunBookingWidget
-                productId={String((exp as any)?.bokunProductId || (exp as any)?.productId || (exp as any)?.id)}
-                source="panel"
-                onError={(err) => console.error('Booking widget error:', err)}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
       </Stack>
     </Paper>
   );

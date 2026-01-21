@@ -67,17 +67,25 @@ export async function GET(
 
     const experience = {
       id: row.id,
-      bokunProductId: row.bokun_product_id || '',
+      bokunProductId: row.bokun_product_id || (row.external_id?.startsWith('BOK-') ? row.external_id : ''),
       title: row.title || '',
       summary: row.description || row.summary || '',
       city: row.city || '',
       duration: row.duration_minutes ? row.duration_minutes / 60 : 0,
-      price: row.price || 0,
+      price: row.min_retail_price || row.price || 0,
       currency: row.currency || 'USD',
       url: row.booking_link || '',
       status: row.status || 'Active',
       images: photos.map((url: string) => ({ url })),
+      photos: photos,
+      videos: (row.video_urls || (raw?.videoUrls as string[]) || []),
       category: row.category || '',
+      metadata: {
+        difficulty: row.difficulty,
+        requirements: row.requirements,
+        cancellation: row.cancellation_policy || '24h before',
+        source: row.source || 'Bokun'
+      }
     };
 
     return NextResponse.json({ experience });

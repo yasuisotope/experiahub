@@ -17,6 +17,7 @@ import { track } from '@/services/analytics';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import BokunBookingWidget from '@/components/BokunBookingWidget';
+import BookingOverlay from '@/components/booking/BookingOverlay';
 import SupportDialog from '@/components/support/SupportDialog';
 import Stack from '@mui/material/Stack';
 // header removed (was AppBar) to avoid layout conflicts with MainLayout sidebars
@@ -141,6 +142,7 @@ export default function ChatPage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [listWidgetOpen, setListWidgetOpen] = useState(false);
   const [listWidgetProductId, setListWidgetProductId] = useState<string | null>(null);
+  const [bookingExperience, setBookingExperience] = useState<any>(null);
   const [supportOpen, setSupportOpen] = useState(false);
 
   // Background picker states
@@ -266,10 +268,10 @@ export default function ChatPage() {
     const loadBg = async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-        const cached = loadCachedBackground('chat' as any);
+        const cached = loadCachedBackground('chat');
         if (cached) setBg(cached);
         const server = await getUserBackground(token);
-        if (server) { setBg(server); saveCachedBackground(server, 'chat' as any); }
+        if (server) { setBg(server); saveCachedBackground(server, 'chat'); }
       } catch {}
     };
     loadBg();
@@ -279,7 +281,7 @@ export default function ChatPage() {
     try {
       setBg(p);
       setBgAnchorEl(null);
-      saveCachedBackground(p, 'chat' as any);
+      saveCachedBackground(p, 'chat');
       const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
       if (token) {
         await setUserBackground(token, p);
@@ -562,7 +564,7 @@ export default function ChatPage() {
                             </Box>
                             <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
                               <Button size="small" variant="outlined" onClick={() => setSelectedExperience(exp)} sx={{ textTransform: 'none', color: '#010057', borderColor: '#010057' }}>Details</Button>
-                              <Button size="small" variant="contained" onClick={() => { setListWidgetProductId(String(exp.id)); setListWidgetOpen(true); }} sx={{ textTransform: 'none', bgcolor: '#010057', '&:hover': { bgcolor: '#4A7C8C' } }}>Check availability</Button>
+                              <Button size="small" variant="contained" onClick={() => { setBookingExperience(exp); setListWidgetOpen(true); }} sx={{ textTransform: 'none', bgcolor: '#010057', '&:hover': { bgcolor: '#4A7C8C' } }}>Check availability</Button>
                             </Box>
                           </Box>
                         </Paper>
@@ -659,7 +661,14 @@ export default function ChatPage() {
           height: '100dvh'
         }}
       >
-        <DetailsPanel exp={selectedExperience} onClose={handleCloseDetails} />
+        <DetailsPanel 
+          exp={selectedExperience} 
+          onClose={handleCloseDetails} 
+          onBook={(exp: any) => {
+            setBookingExperience(exp);
+            setListWidgetOpen(true);
+          }}
+        />
       </Box>
 
       {/* Background Picker Button (Added back per request) */}
@@ -683,11 +692,12 @@ export default function ChatPage() {
     </Box>
     )}
 
-    <Dialog open={listWidgetOpen} onClose={() => setListWidgetOpen(false)} fullWidth maxWidth="md">
-      <DialogContent sx={{ p: 0 }}>
-        {listWidgetProductId && <BokunBookingWidget productId={listWidgetProductId} source="list" />}
-      </DialogContent>
-    </Dialog>
+    <BookingOverlay
+      open={listWidgetOpen}
+      onClose={() => setListWidgetOpen(false)}
+      productId={String(bookingExperience?.bokunProductId || bookingExperience?.productId || bookingExperience?.id || '')}
+      experienceTitle={bookingExperience?.title}
+    />
     <SupportDialog open={supportOpen} onClose={()=>setSupportOpen(false)} defaultRole="user" />
     
     <Popover
@@ -775,7 +785,7 @@ export default function ChatPage() {
           {(bgLoading || bgLoadingMore) && (<Skeleton variant="rectangular" height={60} />)}
           <Button size="small" color="error" variant="outlined" sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', borderRadius: 2 }} onClick={async ()=>{
             const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
-            setBg(null); saveCachedBackground(null, 'user' as any);
+            setBg(null); saveCachedBackground(null, 'chat');
             try { await setUserBackground(token, null as any); } catch {}
           }}>Remove Background</Button>
         </Stack>

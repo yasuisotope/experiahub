@@ -639,14 +639,15 @@ async function handleDirectSave(type: 'billing'|'legal'|'locations'|'user_profil
         const toUpsert = payload.bookings.map((b: any) => ({
             application_id: appId,
             bokun_booking_id: b.id?.toString(),
-            title: b.productTitle,
+            experience_title: b.productTitle || b.title,
             customer_name: b.customerName,
             date: b.date, 
             pax: b.pax ? parseInt(b.pax) : 1,
             price: b.price ? parseFloat(b.price) : 0,
             currency: b.currency || 'USD',
             status: b.status, 
-            payment_status: 'PAID',
+            payment_status: b.paymentStatus || 'PAID',
+            customer_email: b.customerEmail,
             updated_at: new Date().toISOString()
         }));
 

@@ -14,21 +14,65 @@ export default function PaymentsPage() {
   const { user } = useWordPressAuth();
   const [bg, setBg] = useState<PortalBackground | null>(null);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<any>(null);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+        
+        // 1. Load Background
         const cached = loadCachedBackground('user');
         if (cached) setBg(cached);
         const server = await getUserBackground(token);
         if (server) setBg(server);
-      } catch {} finally {
+
+        // 2. Load Payment Status
+        const res = await fetch('/api/payments', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setStatus(data);
+        }
+      } catch (err) {
+        console.error('Failed to load payment info:', err);
+      } finally {
         setLoading(false);
       }
     };
     loadData();
   }, []);
+
+  const handleManage = async () => {
+    setProcessing(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          action: 'manage',
+          email: user?.email,
+          name: user?.display_name 
+        })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch (err) {
+      console.error('Management failed:', err);
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   return (
     <ProtectedRoute>
@@ -68,17 +112,26 @@ export default function PaymentsPage() {
               <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontWeight: 600 }}>Current Plan</Typography>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>ExperiaHub Premium</Typography>
-                  <Typography variant="body2" color="text.secondary">Active since {new Date().toLocaleDateString()}</Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{status?.plan || 'ExperiaHub Premium'}</Typography>
+                  <Typography variant="body2" color="text.secondary">Status: {status?.status || 'Active'}</Typography>
                 </Box>
                 <Box sx={{ textAlign: 'right' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#010057' }}>$29.00 / mo</Typography>
-                  <Typography variant="caption" color="text.secondary">Next billing date: Feb 20, 2026</Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#010057' }}>{status?.price || '$29.00 / mo'}</Typography>
+                  {status?.next_billing && (
+                    <Typography variant="caption" color="text.secondary">
+                      Next billing: {new Date(status.next_billing).toLocaleDateString()}
+                    </Typography>
+                  )}
                 </Box>
               </Stack>
               <Divider sx={{ my: 2 }} />
-              <Button variant="contained" sx={{ bgcolor: '#010057', textTransform: 'none', borderRadius: '8px' }}>
-                Manage Subscription
+              <Button 
+                variant="contained" 
+                onClick={handleManage}
+                disabled={processing}
+                sx={{ bgcolor: '#010057', textTransform: 'none', borderRadius: '8px' }}
+              >
+                {processing ? 'Connecting...' : 'Manage Subscription'}
               </Button>
             </Paper>
 
@@ -90,10 +143,10 @@ export default function PaymentsPage() {
                   <CreditCardIcon sx={{ color: '#010057' }} />
                 </Box>
                 <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="subtitle2">Visa ending in 4242</Typography>
-                  <Typography variant="caption" color="text.secondary">Expires 12/28</Typography>
+                  <Typography variant="subtitle2">{status?.card_brand || 'Visa'} ending in {status?.card_last4 || '4242'}</Typography>
+                  <Typography variant="caption" color="text.secondary">Securely managed via Stripe</Typography>
                 </Box>
-                <Button variant="outlined" size="small" sx={{ textTransform: 'none', color: '#010057', borderColor: 'rgba(1,0,87,0.3)' }}>Edit</Button>
+                <Button variant="outlined" size="small" onClick={handleManage} sx={{ textTransform: 'none', color: '#010057', borderColor: 'rgba(1,0,87,0.3)' }}>Edit</Button>
               </Stack>
             </Paper>
 
@@ -101,20 +154,24 @@ export default function PaymentsPage() {
             <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', border: '1px solid rgba(1,0,87,0.1)', bgcolor: 'rgba(255,255,255,0.5)' }}>
               <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontWeight: 600 }}>Billing History</Typography>
               <Stack spacing={1}>
-                {[1, 2, 3].map((i) => (
-                  <Stack key={i} direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 1.5, borderRadius: '8px', '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
+                {status?.invoices?.length > 0 ? status.invoices.map((inv: any) => (
+                  <Stack key={inv.id} direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 1.5, borderRadius: '8px', '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
                     <Stack direction="row" spacing={2} alignItems="center">
                       <ReceiptIcon sx={{ color: '#64748B', fontSize: 20 }} />
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Invoice #EXH-000{i}</Typography>
-                        <Typography variant="caption" color="text.secondary">Jan {20 - i}, 2026</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Invoice #{inv.number}</Typography>
+                        <Typography variant="caption" color="text.secondary">{new Date(inv.date).toLocaleDateString()}</Typography>
                       </Box>
                     </Stack>
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>$29.00</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{inv.total}</Typography>
                   </Stack>
-                ))}
+                )) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+                    No recent invoices.
+                  </Typography>
+                )}
               </Stack>
-              <Button fullWidth variant="outlined" sx={{ mt: 2, textTransform: 'none', color: '#010057', borderColor: 'rgba(1,0,87,0.3)' }}>
+              <Button fullWidth variant="outlined" onClick={handleManage} sx={{ mt: 2, textTransform: 'none', color: '#010057', borderColor: 'rgba(1,0,87,0.3)' }}>
                 View All Invoices
               </Button>
             </Paper>

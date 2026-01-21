@@ -190,6 +190,47 @@ class BokunService {
       body: JSON.stringify(body)
     });
   }
+  // Create a new booking
+  async createBooking(params: {
+    productId: string;
+    date: string;
+    startTimeId: number;
+    pax: { adult: number } & Partial<Record<string, number>>;
+    customer: { name: string; email: string; phone?: string };
+  }): Promise<BokunApiResponse<any>> {
+    const endpoint = '/booking.json/create-and-confirm';
+    const body = {
+      productBookingRequests: [{
+        activityId: Number(params.productId),
+        date: params.date,
+        startTimeId: params.startTimeId,
+        paxRequests: Object.entries(params.pax).map(([category, count]) => ({
+          paxCategory: category === 'adult' ? 'ADULT' : category.toUpperCase(),
+          count
+        }))
+      }],
+      customer: {
+        firstName: params.customer.name.split(' ')[0],
+        lastName: params.customer.name.split(' ').slice(1).join(' ') || 'Customer',
+        email: params.customer.email,
+        phoneNumber: params.customer.phone
+      }
+    };
+
+    return this.makeRequest(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+  }
+
+  // Cancel an existing booking
+  async cancelBooking(bookingId: string, reason: string = 'User requested cancellation'): Promise<BokunApiResponse<any>> {
+    const endpoint = `/booking.json/${bookingId}/cancel`;
+    return this.makeRequest(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({ note: reason })
+    });
+  }
 }
 
 export const bokunService = new BokunService();

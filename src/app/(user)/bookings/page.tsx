@@ -120,6 +120,10 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
               color: '#666666',
               bgcolor: 'rgba(0, 0, 0, 0.1)',
             }),
+            ...(booking.status === 'cancelled' && {
+              color: '#d32f2f',
+              bgcolor: 'rgba(211, 47, 47, 0.1)',
+            }),
           }}
         >
           {booking.status}
@@ -342,38 +346,37 @@ export default function BookingsPage() {
     let alive = true;
     try {
       setLoading(true);
-      const base = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
       const token = typeof window !== 'undefined' ? window.localStorage.getItem('wp_token') : null;
       const headersBase: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headersBase.Authorization = `Bearer ${token}`;
       
-      // Fetch saved bookmarks
-      const rSaved = await fetch(`${base}/bookmarks/list`, { headers: headersBase, cache: 'no-store' });
+      // Fetch saved bookmarks via our new API
+      const rSaved = await fetch('/api/bookmarks', { headers: headersBase, cache: 'no-store' });
       if (rSaved.ok) {
         const j = await rSaved.json();
         if (alive) setSaved(Array.isArray(j) ? j : (j.items || []));
       }
       
-      // Fetch user bookings from new API
-      const rBookings = await fetch(`${base}/user/bookings`, { headers: headersBase, cache: 'no-store' });
+      // Fetch user bookings from our new internal API
+      const rBookings = await fetch('/api/bookings', { headers: headersBase, cache: 'no-store' });
       if (rBookings.ok) {
         const bookingData = await rBookings.json();
         if (alive && bookingData.success) {
           // Map bookings to Booking type
           const mapBooking = (b: any): Booking => ({
-            id: b.bookingId || b.id || '',
-            title: b.title || 'Experience',
-            date: b.experienceDate || b.bookingDate || '',
-            time: b.experienceTime || '',
+            id: b.id || b.bookingId || '',
+            title: b.experience_title || b.title || 'Experience',
+            date: b.date ? new Date(b.date).toISOString().split('T')[0] : (b.experienceDate || b.bookingDate || ''),
+            time: b.time || b.experienceTime || '',
             location: b.location || '',
-            participants: b.participants || 1,
-            status: (b.status === 'cancelled' ? 'completed' : b.status) || 'confirmed' as 'confirmed' | 'pending' | 'completed',
-            price: b.totalPrice ? `${b.currency || 'USD'} ${b.totalPrice}` : ''
+            participants: b.participants || b.pax || 1,
+            status: b.status?.toLowerCase() || ('confirmed' as any),
+            price: b.price ? `${b.currency || 'USD'} ${b.price}` : ''
           });
           
           setUpcoming((bookingData.upcoming || []).map(mapBooking));
           setPast((bookingData.past || []).map(mapBooking));
-          setCanceled((bookingData.bookings || []).filter((b: any) => b.status === 'cancelled').map(mapBooking));
+          setCanceled((bookingData.bookings || []).filter((b: any) => b.status?.toLowerCase() === 'cancelled').map(mapBooking));
         }
       }
     } catch {
@@ -586,14 +589,12 @@ export default function BookingsPage() {
                           onClick={async () => {
                             try {
                               setRemoveBusyId(s.id);
-                              const base = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
                               const token = typeof window !== 'undefined' ? window.localStorage.getItem('wp_token') : null;
                               const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                               if (token) headers.Authorization = `Bearer ${token}`;
-                              const res = await fetch(`${base}/bookmarks/remove`, {
-                                method: 'POST',
-                                headers,
-                                body: JSON.stringify({ id: s.id })
+                              const res = await fetch(`/api/bookmarks?id=${s.id}`, {
+                                method: 'DELETE',
+                                headers
                               });
                               if (!res.ok) throw new Error('Failed');
                               setSaved((list) => list.filter((x) => x.id !== s.id));
@@ -658,12 +659,11 @@ export default function BookingsPage() {
                         try {
                           setDetailsLoading(true);
                           setDetailsError(null);
-                          const base = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
                           const token = typeof window !== 'undefined' ? window.localStorage.getItem('wp_token') : null;
                           const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                           if (token) headers.Authorization = `Bearer ${token}`;
                           const bookingId = typeof b.id === 'string' ? b.id : String(b.id);
-                          const res = await fetch(`${base}/user/bookings/${encodeURIComponent(bookingId)}`, { headers, cache: 'no-store' });
+                          const res = await fetch(`/api/bookings/${encodeURIComponent(bookingId)}`, { headers, cache: 'no-store' });
                           if (!res.ok) throw new Error(`Failed (${res.status})`);
                           const j = await res.json();
                           setDetails(j.success ? j.booking : j);
@@ -712,12 +712,11 @@ export default function BookingsPage() {
                     }}
                     onCancel={async (b) => {
                       try {
-                        const base = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
                         const token = typeof window !== 'undefined' ? window.localStorage.getItem('wp_token') : null;
                         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                         if (token) headers.Authorization = `Bearer ${token}`;
                         const bookingId = typeof b.id === 'string' ? b.id : String(b.id);
-                        const res = await fetch(`${base}/user/bookings/${encodeURIComponent(bookingId)}/cancel`, { 
+                        const res = await fetch(`/api/bookings/${encodeURIComponent(bookingId)}/cancel`, { 
                           method: 'POST', 
                           headers, 
                           body: JSON.stringify({ reason: 'Customer requested cancellation' }) 
@@ -728,7 +727,7 @@ export default function BookingsPage() {
                         }
                         setSnack({ open: true, message: 'Booking canceled', severity: 'success' });
                         setUpcoming((list) => list.filter((x) => x.id !== b.id));
-                        setCanceled((list) => [{ ...b, status: 'completed' }, ...list]);
+                        setCanceled((list) => [{ ...b, status: 'cancelled' }, ...list]);
                         await fetchLists(); // Refresh list
                       } catch (e: any) {
                         setSnack({ open: true, message: e?.message || 'Failed to cancel', severity: 'error' });
@@ -796,18 +795,15 @@ export default function BookingsPage() {
               try {
                 setSlotsLoading(true);
                 setSlotTimes([]);
-                const base = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
                 const token = typeof window !== 'undefined' ? window.localStorage.getItem('wp_token') : null;
                 const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                 if (token) headers.Authorization = `Bearer ${token}`;
-                const res = await fetch(`${base}/supplier/bokun/availability`, {
-                  method: 'POST',
-                  headers,
-                  body: JSON.stringify({ experienceId: selectedSaved.experienceId, date: d })
+                const res = await fetch(`/api/bokun/availability/${selectedSaved.experienceId}?date=${d}`, {
+                  headers
                 });
                 if (res.ok) {
                   const j = await res.json();
-                  const times = Array.isArray(j.slots) ? j.slots.map((s: any) => s.time || s.startTime || s.start || '').filter((t: string) => t) : [];
+                  const times = Array.isArray(j.availability?.times) ? j.availability.times.map((s: any) => s.time || '').filter((t: string) => t) : [];
                   setSlotTimes(times);
                   if (times.length > 0) setAddTime(times[0].slice(0,5));
                 }
@@ -924,12 +920,11 @@ export default function BookingsPage() {
                   try {
                     setDetailsLoading(true);
                     setDetailsError(null);
-                    const base = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
                     const token = typeof window !== 'undefined' ? window.localStorage.getItem('wp_token') : null;
                     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                     if (token) headers.Authorization = `Bearer ${token}`;
                     const bookingId = typeof selectedBooking.id === 'string' ? selectedBooking.id : String(selectedBooking.id);
-                    const res = await fetch(`${base}/user/bookings/${encodeURIComponent(bookingId)}`, { headers, cache: 'no-store' });
+                    const res = await fetch(`/api/bookings/${encodeURIComponent(bookingId)}`, { headers, cache: 'no-store' });
                     if (!res.ok) throw new Error(`We couldn't load your booking. (${res.status})`);
                     const j = await res.json();
                     setDetails(j.success ? j.booking : j);
@@ -987,12 +982,11 @@ export default function BookingsPage() {
                   <Button variant="outlined" color="error" size="small" onClick={async () => {
                   if (!selectedBooking) return;
                   try {
-                    const base = process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook';
                     const token = typeof window !== 'undefined' ? window.localStorage.getItem('wp_token') : null;
                     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                     if (token) headers.Authorization = `Bearer ${token}`;
                     const bookingId = typeof selectedBooking.id === 'string' ? selectedBooking.id : String(selectedBooking.id);
-                    const res = await fetch(`${base}/user/bookings/${encodeURIComponent(bookingId)}/cancel`, { 
+                    const res = await fetch(`/api/bookings/${encodeURIComponent(bookingId)}/cancel`, { 
                       method: 'POST', 
                       headers, 
                       body: JSON.stringify({ reason: 'Customer requested cancellation' }) 
@@ -1003,7 +997,7 @@ export default function BookingsPage() {
                     }
                     setSnack({ open: true, message: 'Booking canceled', severity: 'success' });
                     setUpcoming((list) => list.filter((x) => x.id !== selectedBooking.id));
-                    setCanceled((list) => [{ ...selectedBooking, status: 'completed' }, ...list]);
+                    setCanceled((list) => [{ ...selectedBooking, status: 'cancelled' }, ...list]);
                     setDetailsOpen(false);
                     await fetchLists(); // Refresh list
                   } catch {
