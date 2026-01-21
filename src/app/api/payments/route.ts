@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
        // If no email, return default state (Guest)
        return NextResponse.json({
          status: 'none',
-         plan: 'Free',
-         price: '$0.00/mo'
+         plan: 'Standard Access',
+         price: 'Guest'
        });
     }
 
@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
     if (customers.data.length === 0) {
       return NextResponse.json({
          status: 'none',
-         plan: 'Free',
-         price: '$0.00/mo'
+         plan: 'Standard Access',
+         price: 'Guest'
       });
     }
 
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         status: 'active',
         plan: 'Premium Member',
         next_billing: new Date(activeSub.current_period_end * 1000).toISOString(),
-        price: `${amountStr}/${activeSub.items.data[0]?.price?.recurring?.interval || 'mo'}`
+        price: `${amountStr}/${activeSub.items.data[0]?.price.recurring?.interval || 'mo'}`
       });
     }
 
@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       status: 'inactive',
-      plan: 'Free',
-      price: '$0.00/mo'
+      plan: 'Standard Access',
+      price: 'Guest'
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

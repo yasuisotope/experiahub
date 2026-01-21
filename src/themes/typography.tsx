@@ -23,22 +23,22 @@ export default function Typography(theme: Theme, borderRadius: number, fontFamil
     h4: {
       fontSize: '1rem',
       color: theme.palette.mode === ThemeMode.DARK ? theme.palette.grey[600] : theme.palette.grey[900],
-      fontWeight: 600
+      fontWeight: 500
     },
     h3: {
       fontSize: '1.25rem',
       color: theme.palette.mode === ThemeMode.DARK ? theme.palette.grey[600] : theme.palette.grey[900],
-      fontWeight: 600
+      fontWeight: 500
     },
     h2: {
       fontSize: '1.5rem',
       color: theme.palette.mode === ThemeMode.DARK ? theme.palette.grey[600] : theme.palette.grey[900],
-      fontWeight: 700
+      fontWeight: 600
     },
     h1: {
       fontSize: '2.125rem',
       color: theme.palette.mode === ThemeMode.DARK ? theme.palette.grey[600] : theme.palette.grey[900],
-      fontWeight: 700
+      fontWeight: 600
     },
     subtitle1: {
       fontSize: '0.875rem',

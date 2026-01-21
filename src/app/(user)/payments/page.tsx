@@ -18,6 +18,13 @@ export default function PaymentsPage() {
   const [status, setStatus] = useState<any>(null);
   const [processing, setProcessing] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [isTranslucent, setIsTranslucent] = useState(true);
+
+  useEffect(() => {
+    const handler = (e: CustomEvent) => setIsTranslucent(e.detail.isTransparent);
+    window.addEventListener('ui:transparency', handler as any);
+    return () => window.removeEventListener('ui:transparency', handler as any);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -78,6 +85,14 @@ export default function PaymentsPage() {
     }
   };
 
+  const paperStyle = {
+    p: 4, 
+    borderRadius: '20px', 
+    border: '1px solid rgba(1,0,87,0.1)', 
+    bgcolor: isTranslucent ? 'rgba(255,255,255,0.7)' : '#fff', 
+    backdropFilter: isTranslucent ? 'blur(10px)' : 'none'
+  };
+
   return (
     <ProtectedRoute>
       <BackgroundImage imageUrl={bg?.url} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0.1}>
@@ -89,8 +104,8 @@ export default function PaymentsPage() {
             p: 4,
             maxWidth: 900,
             mx: 'auto',
-            bgcolor: 'rgba(255, 255, 255, 0.4)', // Slightly more opaque for better contrast
-            backdropFilter: 'blur(20px)',
+            bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.4)' : '#f8fafc',
+            backdropFilter: isTranslucent ? 'blur(20px)' : 'none',
             borderRadius: '24px',
             m: '16px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
@@ -107,18 +122,18 @@ export default function PaymentsPage() {
             >
               Back
             </Button>
-            <Typography variant="h4" sx={{ width: '100%', textAlign: 'center', color: '#010057', fontFamily: 'Playfair Display', fontWeight: 700 }}>
+            <Typography variant="h4" sx={{ width: '100%', textAlign: 'center', color: '#010057', fontFamily: 'Playfair Display', fontWeight: 600 }}>
               Payment Details
             </Typography>
           </Box>
 
           <Stack spacing={4} sx={{ width: '100%', maxWidth: 600 }}> {/* Constrain width for centering */}
             {/* Membership Summary */}
-            <Paper elevation={0} sx={{ p: 4, borderRadius: '20px', border: '1px solid rgba(1,0,87,0.1)', bgcolor: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' }}>
+            <Paper elevation={0} sx={paperStyle}>
               <Stack alignItems="center" spacing={1}>
                 <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.85rem' }}>Membership Status</Typography>
-                <Typography variant="h3" sx={{ color: '#010057', fontFamily: 'Playfair Display', fontWeight: 700, my: 1 }}>
-                  {status?.plan === 'Premium' ? 'ExperiaHub Premium' : 'Free Member'}
+                <Typography variant="h3" sx={{ color: '#010057', fontFamily: 'Playfair Display', fontWeight: 600, my: 1 }}>
+                  {status?.plan?.includes('Premium') ? 'ExperiaHub Premium' : 'Standard Access'}
                 </Typography>
                 <Box sx={{ 
                   bgcolor: status?.status === 'active' ? 'rgba(46, 125, 50, 0.1)' : 'rgba(0,0,0,0.05)', 
