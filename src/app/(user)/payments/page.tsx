@@ -128,55 +128,14 @@ export default function PaymentsPage() {
           </Box>
 
           <Stack spacing={4} sx={{ width: '100%', maxWidth: 600 }}> {/* Constrain width for centering */}
-            {/* Membership Summary */}
+            {/* Payment Methods - Primary Action */}
             <Paper elevation={0} sx={paperStyle}>
-              <Stack alignItems="center" spacing={1}>
-                <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.85rem' }}>Membership Status</Typography>
-                <Typography variant="h3" sx={{ color: '#010057', fontFamily: 'Playfair Display', fontWeight: 600, my: 1 }}>
-                  {status?.plan?.includes('Premium') ? 'ExperiaHub Premium' : 'Standard Access'}
-                </Typography>
-                <Box sx={{ 
-                  bgcolor: status?.status === 'active' ? 'rgba(46, 125, 50, 0.1)' : 'rgba(0,0,0,0.05)', 
-                  color: status?.status === 'active' ? '#2e7d32' : '#666',
-                  px: 2, py: 0.5, borderRadius: '12px',
-                  fontFamily: 'Urbanist', fontWeight: 600, fontSize: '0.85rem'
-                }}>
-                  {status?.status === 'active' ? 'ACTIVE' : 'INACTIVE'}
-                </Box>
-                {status?.status === 'active' && (
-                  <Typography variant="body2" sx={{ color: '#666', fontFamily: 'Urbanist', mt: 1 }}>
-                    Next billing: {new Date(status.next_billing).toLocaleDateString()} • {status?.price}
-                  </Typography>
-                )}
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                 <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 600 }}>Payment Methods</Typography>
+                 <Button variant="contained" onClick={handleManage} disabled={processing} sx={{ bgcolor: '#010057', textTransform: 'none', borderRadius: '50px', fontFamily: 'Urbanist' }}>
+                   Manage
+                 </Button>
               </Stack>
-              
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <Button 
-                  variant="contained" 
-                  onClick={handleManage}
-                  disabled={processing}
-                  sx={{ 
-                    bgcolor: '#010057', 
-                    color: '#fff',
-                    px: 6,
-                    py: 1.5,
-                    fontFamily: 'Urbanist',
-                    textTransform: 'none', 
-                    borderRadius: '50px',
-                    fontSize: '1rem',
-                    boxShadow: '0 4px 14px 0 rgba(1,0,87,0.39)',
-                    '&:hover': { bgcolor: '#000030', transform: 'translateY(-1px)', boxShadow: '0 6px 20px rgba(1,0,87,0.23)' },
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {processing ? 'Processing...' : (status?.status === 'active' ? 'Manage Subscription' : 'Upgrade to Premium')}
-                </Button>
-              </Box>
-            </Paper>
-
-            {/* Payment Methods */}
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '20px', border: '1px solid rgba(1,0,87,0.08)', bgcolor: 'rgba(255,255,255,0.6)' }}>
-              <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontFamily: 'Urbanist', fontWeight: 600 }}>Payment Method</Typography>
               <Stack direction="row" spacing={2} alignItems="center">
                 <Box sx={{ p: 1.5, bgcolor: '#fff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                   <CreditCardIcon sx={{ color: '#010057' }} />
@@ -184,12 +143,13 @@ export default function PaymentsPage() {
                 <Box sx={{ flexGrow: 1 }}>
                   <Typography variant="subtitle1" sx={{ fontFamily: 'Urbanist', fontWeight: 600, color: '#010057' }}>{status?.card_brand || 'No card linked'}</Typography>
                   <Typography variant="caption" sx={{ fontFamily: 'Urbanist', color: '#666' }}>
-                    {status?.card_last4 ? `Ending in ${status.card_last4}` : 'Secure payment processing by Stripe'}
+                    {status?.card_last4 ? `Ending in ${status.card_last4}` : 'add a method for faster checkout'}
                   </Typography>
                 </Box>
-                <Button variant="text" size="small" onClick={handleManage} sx={{ textTransform: 'none', color: '#010057', fontFamily: 'Urbanist', fontWeight: 600 }}>Update</Button>
               </Stack>
             </Paper>
+
+
 
             {/* Billing History */}
             {status?.invoices?.length > 0 && (
