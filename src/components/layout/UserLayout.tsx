@@ -167,6 +167,15 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
   const [isTransparent, setIsTransparent] = React.useState(true);
 
+  React.useEffect(() => {
+    // Sync state on mount and navigation
+    const emit = () => window.dispatchEvent(new CustomEvent('ui:transparency', { detail: { isTransparent } }));
+    emit();
+    // Small delay to ensure children are mounted
+    const t = setTimeout(emit, 100);
+    return () => clearTimeout(t);
+  }, [isTransparent, pathname]);
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100dvh', height: '100dvh', position: 'relative', zIndex: 5 }}>
       {/* Left Sidebar */}
@@ -203,13 +212,13 @@ export default function UserLayout({ children }: UserLayoutProps) {
           sx={{
             mx: 2,
             mb: 2,
-            bgcolor: '#4A7C8C',
+            bgcolor: '#010057',
             color: '#fff',
             fontWeight: 500,
             textTransform: 'none',
             textTransform: 'none',
             fontFamily: 'Urbanist, sans-serif',
-            '&:hover': { bgcolor: '#3A6370' },
+            '&:hover': { bgcolor: '#00003b' },
           }}
         >
           NEW CHAT
@@ -222,16 +231,16 @@ export default function UserLayout({ children }: UserLayoutProps) {
               onClick={() => router.push('/chat')} 
               selected={pathname === '/chat'}
               sx={{
-                '&.Mui-selected': { bgcolor: 'rgba(74, 124, 140, 0.12)' },
-                '&.Mui-selected:hover': { bgcolor: 'rgba(74, 124, 140, 0.18)' },
+                '&.Mui-selected': { bgcolor: 'rgba(1, 0, 87, 0.08)' },
+                '&.Mui-selected:hover': { bgcolor: 'rgba(1, 0, 87, 0.12)' },
               }}
             >
-              <ListItemIcon sx={{ color: pathname === '/chat' ? '#4A7C8C' : '#333' }}>
+              <ListItemIcon sx={{ color: pathname === '/chat' ? '#010057' : '#333' }}>
                 <ChatIcon />
               </ListItemIcon>
               <ListItemText 
                 primary="Chat" 
-                primaryTypographyProps={{ fontFamily: 'Urbanist, sans-serif', fontSize: '0.95rem', fontWeight: pathname === '/chat' ? 600 : 400, color: pathname === '/chat' ? '#4A7C8C' : '#333' }}
+                primaryTypographyProps={{ fontFamily: 'Urbanist, sans-serif', fontSize: '0.95rem', fontWeight: pathname === '/chat' ? 600 : 400, color: pathname === '/chat' ? '#010057' : '#333' }}
               />
             </ListItemButton>
           </ListItem>
@@ -246,12 +255,12 @@ export default function UserLayout({ children }: UserLayoutProps) {
                     '&.Mui-selected:hover': { bgcolor: 'rgba(1, 0, 87, 0.12)' },
                   }}
                 >
-                  <ListItemIcon sx={{ color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}>
+                  <ListItemIcon sx={{ color: pathname.startsWith('/bookings') ? '#010057' : '#333' }}>
                     <BookingIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary="Bookings"
-                    primaryTypographyProps={{ fontFamily: 'Urbanist, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/bookings') ? 600 : 400, color: pathname.startsWith('/bookings') ? '#4A7C8C' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Urbanist, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/bookings') ? 600 : 400, color: pathname.startsWith('/bookings') ? '#010057' : '#333' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -264,12 +273,12 @@ export default function UserLayout({ children }: UserLayoutProps) {
                     '&.Mui-selected:hover': { bgcolor: 'rgba(1, 0, 87, 0.12)' },
                   }}
                 >
-                  <ListItemIcon sx={{ color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}>
+                  <ListItemIcon sx={{ color: pathname.startsWith('/schedule') ? '#010057' : '#333' }}>
                     <CalendarIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary="Schedule"
-                    primaryTypographyProps={{ fontFamily: 'Urbanist, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/schedule') ? 600 : 400, color: pathname.startsWith('/schedule') ? '#4A7C8C' : '#333' }}
+                    primaryTypographyProps={{ fontFamily: 'Urbanist, sans-serif', fontSize: '0.95rem', fontWeight: pathname.startsWith('/schedule') ? 600 : 400, color: pathname.startsWith('/schedule') ? '#010057' : '#333' }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -320,7 +329,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
                       primaryTypographyProps={{
                         fontSize: '0.875rem',
                         fontWeight: currentChat?.id === chat.id ? 600 : 400,
-                        color: currentChat?.id === chat.id ? '#4A7C8C' : '#2F2F2F',
+                        color: currentChat?.id === chat.id ? '#010057' : '#2F2F2F',
                         noWrap: true,
                         fontFamily: 'Urbanist, sans-serif',
                       }}
@@ -385,7 +394,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
               sx={{
                 bgcolor: '#010057',
                 fontFamily: 'Urbanist, sans-serif',
-                '&:hover': { bgcolor: '#4A7C8C' },
+                '&:hover': { bgcolor: '#00003b' },
               }}
             >
               LOGIN

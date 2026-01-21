@@ -66,21 +66,21 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
       p: 2.5,
       mb: 2,
       bgcolor: 'rgba(255, 255, 255, 0.9)',
-      border: '1px solid rgba(74, 124, 140, 0.1)',
+      border: '1px solid rgba(1, 0, 87, 0.1)',
       borderRadius: 2,
       opacity: isPast ? 0.7 : 1,
       transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, opacity 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
       cursor: 'pointer',
       '&:focus-visible': {
-        outline: '2px solid rgba(74,124,140,0.45)',
+        outline: '2px solid rgba(1, 0, 87, 0.45)',
         outlineOffset: 2,
-        borderColor: 'rgba(74,124,140,0.35)'
+        borderColor: 'rgba(1, 0, 87, 0.35)'
       },
       '&:hover': {
         opacity: 1,
         backgroundColor: 'rgba(240, 248, 250, 0.6)',
-        borderColor: 'rgba(74, 124, 140, 0.25)',
-        boxShadow: '0 0 0 2px rgba(74,124,140,0.08) inset'
+        borderColor: 'rgba(1, 0, 87, 0.25)',
+        boxShadow: '0 0 0 2px rgba(1, 0, 87, 0.08) inset'
       },
     }}
     onClick={() => onOpen && onOpen(booking)}
@@ -132,25 +132,25 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
 
       <Stack spacing={1.5}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CalendarMonth sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
+          <CalendarMonth sx={{ color: 'rgba(1, 0, 87, 0.9)', fontSize: 18 }} />
           <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
             {booking.date}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AccessTime sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
+          <AccessTime sx={{ color: 'rgba(1, 0, 87, 0.9)', fontSize: 18 }} />
           <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
             {booking.time}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <LocationOn sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
+          <LocationOn sx={{ color: 'rgba(1, 0, 87, 0.9)', fontSize: 18 }} />
           <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
             {booking.location}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Groups sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
+          <Groups sx={{ color: 'rgba(1, 0, 87, 0.9)', fontSize: 18 }} />
           <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
             {booking.participants} {booking.participants === 1 ? 'person' : 'people'}
           </Typography>
@@ -164,7 +164,7 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
             fontSize: '1rem',
             fontFamily: 'Urbanist',
             fontWeight: 600,
-            color: 'rgba(74, 124, 140, 0.9)',
+            color: 'rgba(1, 0, 87, 0.9)',
           }}
         >
           {booking.price}
@@ -453,8 +453,8 @@ export default function BookingsPage() {
           My Bookings
         </Typography>
 
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 5, bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(74,124,140,0.08)', py: 1, px: 0.5 }}>
-          <Box sx={{ display: 'inline-flex', p: 0.5, borderRadius: '999px', bgcolor: 'rgba(74,124,140,0.06)', border: '1px solid rgba(74,124,140,0.18)' }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 5, bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(1, 0, 87, 0.08)', py: 1, px: 0.5 }}>
+          <Box sx={{ display: 'inline-flex', p: 0.5, borderRadius: '999px', bgcolor: 'rgba(1, 0, 87, 0.06)', border: '1px solid rgba(1, 0, 87, 0.18)' }}>
             <ToggleButtonGroup
               size="small"
               exclusive
@@ -472,15 +472,15 @@ export default function BookingsPage() {
                 color: '#4A4A4A',
                   '&:not(:first-of-type)': { ml: 0.5 },
                   '&.Mui-selected': {
-                    bgcolor: 'rgba(74,124,140,0.14)',
+                    bgcolor: 'rgba(1, 0, 87, 0.14)',
                     color: '#2F2F2F',
-                    boxShadow: 'inset 0 0 0 1px rgba(74,124,140,0.28)'
+                    boxShadow: 'inset 0 0 0 1px rgba(1, 0, 87, 0.28)'
                   },
                   '&:hover': {
-                    bgcolor: 'rgba(74,124,140,0.12)'
+                    bgcolor: 'rgba(1, 0, 87, 0.12)'
                   },
                   '&:focus-visible': {
-                    outline: '2px solid rgba(74,124,140,0.45)',
+                    outline: '2px solid rgba(1, 0, 87, 0.45)',
                     outlineOffset: 2
                   }
                 }
@@ -563,13 +563,13 @@ export default function BookingsPage() {
                   <Paper key={s.id} variant="outlined" sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.9)' }}>
                     <Stack direction="row" alignItems="center" spacing={2}>
                       {s.image ? (
-                        <Box component="img" src={s.image} alt={s.title} sx={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 1, border: '1px solid rgba(74,124,140,0.15)' }} />
+                        <Box component="img" src={s.image} alt={s.title} sx={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 1, border: '1px solid rgba(1,0,87,0.15)' }} />
                       ) : null}
                       <Box sx={{ flex: 1 }}>
                         <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{s.title}</Typography>
                         <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>{s.city}{s.category ? ` • ${s.category}` : ''}</Typography>
                         {(s.price || s.currency) && (
-                          <Typography sx={{ fontFamily: 'Urbanist', color: 'rgba(74,124,140,0.9)', fontWeight: 600 }}>
+                          <Typography sx={{ fontFamily: 'Urbanist', color: 'rgba(1,0,87,0.9)', fontWeight: 600 }}>
                             {s.price}{s.currency ? ` ${s.currency}` : ''}
             </Typography>
                         )}
@@ -640,7 +640,7 @@ export default function BookingsPage() {
               upcoming.map((booking) => (
                 <Box key={booking.id} sx={{ mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <CalendarMonth sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 20 }} />
+                    <CalendarMonth sx={{ color: 'rgba(1, 0, 87, 0.9)', fontSize: 20 }} />
             <Typography
               sx={{
                 fontSize: '1.2rem',
