@@ -971,7 +971,7 @@ export default function SchedulePage() {
       <Fab color="primary" aria-label="Contact support" onClick={()=>setSupportOpen(true)} sx={{ position: 'fixed', right: 20, bottom: 24, zIndex: 2000, bgcolor: 'rgba(74,124,140,0.9)', '&:hover': { bgcolor: 'rgba(74,124,140,1)' } }}>
         <SupportAgentIcon />
       </Fab>
-      <Fab color="default" aria-label="Background" onClick={(e)=>setBgAnchorEl(e.currentTarget)} sx={{ position: 'fixed', right: 20, bottom: 92, zIndex: 2000, bgcolor: 'rgba(255,255,255,0.9)', color: '#4a7c8c' }}>
+      <Fab color="default" aria-label="Background" onClick={(e)=>setBgAnchorEl(e.currentTarget)} sx={{ position: 'fixed', right: 20, bottom: 92, zIndex: 2000, bgcolor: 'rgba(255,255,255,0.9)', color: '#010057' }}>
         <WallpaperIcon />
       </Fab>
     </>

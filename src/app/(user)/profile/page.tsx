@@ -344,7 +344,7 @@ export default function ProfilePage() {
           color="default"
           aria-label="Background"
           onClick={(e)=>{ setBgSeed((s)=>s+1); setBgAnchorEl(e.currentTarget); }}
-          sx={{ position: 'fixed', right: 20, bottom: 92, zIndex: 2000, bgcolor: 'rgba(255,255,255,0.9)', color: '#4a7c8c' }}
+          sx={{ position: 'fixed', right: 20, bottom: 92, zIndex: 2000, bgcolor: 'rgba(255,255,255,0.9)', color: '#010057' }}
         >
           <WallpaperIcon />
         </Fab>

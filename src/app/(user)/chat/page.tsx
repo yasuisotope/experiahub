@@ -428,7 +428,7 @@ export default function ChatPage() {
                       fontFamily: 'Urbanist',
                       textTransform: 'none',
                       fontSize: '1rem',
-                      '&:hover': { bgcolor: '#4A7C8C' },
+                      '&:hover': { bgcolor: '#010057' },
                       '&:disabled': { bgcolor: 'rgba(0, 0, 0, 0.12)' },
                     }}
                   >
@@ -565,7 +565,7 @@ export default function ChatPage() {
                             <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
                               <Button size="small" variant="outlined" onClick={() => setSelectedExperience(exp)} sx={{ textTransform: 'none', color: '#010057', borderColor: '#010057', fontFamily: 'Urbanist' }}>Details</Button>
                               {(exp?.bokunProductId || (exp?.id && !String(exp.id).startsWith('temp_'))) && (
-                                <Button size="small" variant="contained" onClick={() => { setBookingExperience(exp); setListWidgetOpen(true); }} sx={{ textTransform: 'none', bgcolor: '#010057', fontFamily: 'Urbanist', '&:hover': { bgcolor: '#4A7C8C' } }}>Check availability</Button>
+                                <Button size="small" variant="contained" onClick={() => { setBookingExperience(exp); setListWidgetOpen(true); }} sx={{ textTransform: 'none', bgcolor: '#010057', fontFamily: 'Urbanist', '&:hover': { bgcolor: '#010057' } }}>Check availability</Button>
                               )}
                             </Box>
                           </Box>
@@ -599,9 +599,9 @@ export default function ChatPage() {
               >
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                   <Box sx={{ display: 'inline-flex', gap: 0.6 }}>
-                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s infinite' }} />
-                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.2s infinite' }} />
-                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#4a7c8c', animation: 'blink 1.2s 0.4s infinite' }} />
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#010057', animation: 'blink 1.2s infinite' }} />
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#010057', animation: 'blink 1.2s 0.2s infinite' }} />
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#010057', animation: 'blink 1.2s 0.4s infinite' }} />
                   </Box>
                   <Typography variant="body2" sx={{ fontFamily: 'Urbanist', color: '#010057', fontStyle: 'italic', ml: 1 }}>
                     ExperiaHub is thinking...
@@ -684,7 +684,7 @@ export default function ChatPage() {
           bottom: 24, 
           zIndex: 2000, 
           bgcolor: 'rgba(255,255,255,0.9)', 
-          color: '#4a7c8c',
+          color: '#010057',
           backdropFilter: 'blur(8px)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
         }}
