@@ -42,9 +42,17 @@ export default function ExperiencePage() {
   const [bgPage, setBgPage] = useState<number>(1);
   const [bgLoadingMore, setBgLoadingMore] = useState<boolean>(false);
   const [bgSeed, setBgSeed] = useState<number>(0);
+  const [isTranslucent, setIsTranslucent] = useState(true);
+
+  useEffect(() => {
+    const handler = (e: CustomEvent) => setIsTranslucent(e.detail.isTransparent);
+    window.addEventListener('ui:transparency', handler as any);
+    return () => window.removeEventListener('ui:transparency', handler as any);
+  }, []);
 
   useEffect(() => {
     const fetchExperience = async () => {
+      // ... logic unchanged ...
       try {
         setLoading(true);
         const response = await fetch(`/api/experiences/${params.id}`, { 
@@ -68,6 +76,30 @@ export default function ExperiencePage() {
       fetchExperience();
     }
   }, [params.id]);
+
+  // ... (keeping other effects) ...
+
+  // Skipping to Return JSX update for brevity of this instruction if possible, but replace tool needs exact match.
+  // I will just construct the replacements at the top and the return.
+  
+  // Actually, I can replace the WHOLE top part.
+  
+  // But let's stay safer.
+  // I will just add state at top.
+  
+  // And replace return below.
+  // This tool call is for STATE insertion.
+  
+  useEffect(() => {
+    const fetchExperience = async () => {
+      // ...
+    }
+    // ...
+  }, [params.id]);
+
+// Wait, I can't insert easily without matching context.
+// I will target the `const [bgSeed` line and `useEffect` block.
+
 
   useEffect(() => {
     (async () => {
@@ -116,11 +148,11 @@ export default function ExperiencePage() {
 
   return (
     <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
-    <Box sx={{ maxWidth: 1200, margin: '24px auto', padding: '0 16px', height: '100dvh', overflowY: 'auto', bgcolor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', borderRadius: 2 }}>
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, mb: 4 }}>
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: '0 16px', height: '100%', overflowY: 'auto', bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff', backdropFilter: isTranslucent ? 'blur(12px)' : 'none', borderRadius: '16px' }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, mb: 4, pt: 4 }}>
         {/* Experience Details */}
-        <Paper sx={{ p: 3, height: 'fit-content' }}>
-          <Typography variant="h4" sx={{ mb: 2, fontFamily: 'Cormorant Garamond' }}>
+        <Paper sx={{ p: 3, height: 'fit-content', borderRadius: '16px' }}>
+          <Typography variant="h4" sx={{ mb: 2, fontFamily: 'Urbanist', color: '#010057', fontWeight: 500 }}>
             {experience.title}
           </Typography>
           
@@ -133,13 +165,13 @@ export default function ExperiencePage() {
                   width: '100%',
                   height: 300,
                   objectFit: 'cover',
-                  borderRadius: 8,
+                  borderRadius: 16,
                 }}
               />
             </Box>
           )}
 
-          <Typography variant="body1" sx={{ mb: 3, color: '#666', lineHeight: 1.6 }}>
+          <Typography variant="body1" sx={{ mb: 3, color: '#666', lineHeight: 1.6, fontFamily: 'Urbanist' }}>
             {experience.summary}
           </Typography>
 
@@ -148,40 +180,41 @@ export default function ExperiencePage() {
               <Chip 
                 label={experience.city} 
                 variant="outlined" 
-                sx={{ color: 'rgba(74, 124, 140, 0.9)' }}
+                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Urbanist' }}
               />
             )}
             {experience.category && (
               <Chip 
                 label={experience.category} 
                 variant="outlined"
-                sx={{ color: 'rgba(74, 124, 140, 0.9)' }}
+                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Urbanist' }}
               />
             )}
             {experience.duration && (
               <Chip 
                 label={`${experience.duration}h`} 
                 variant="outlined"
-                sx={{ color: 'rgba(74, 124, 140, 0.9)' }}
+                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Urbanist' }}
               />
             )}
           </Box>
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6" sx={{ color: 'rgba(74, 124, 140, 0.9)' }}>
+            <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 500 }}>
               {experience.price ? `${experience.currency} ${experience.price}` : 'Price TBA'}
             </Typography>
             <Chip 
               label={experience.status} 
               color={experience.status === 'Active' ? 'success' : 'warning'}
               size="small"
+              sx={{ fontFamily: 'Urbanist' }}
             />
           </Box>
         </Paper>
 
         {/* Booking Widget */}
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Cormorant Garamond' }}>
+        <Paper sx={{ p: 3, borderRadius: '16px' }}>
+          <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Urbanist', fontWeight: 500, color: '#010057' }}>
             Book This Experience
           </Typography>
           

@@ -334,10 +334,57 @@ export default function SchedulePage() {
   const [bgPage, setBgPage] = React.useState<number>(1);
   const [bgLoading, setBgLoading] = React.useState<boolean>(false);
   const [bgLoadingMore, setBgLoadingMore] = React.useState<boolean>(false);
+  const [isTranslucent, setIsTranslucent] = React.useState(true);
+
+  React.useEffect(() => {
+    const handler = (e: CustomEvent) => setIsTranslucent(e.detail.isTransparent);
+    window.addEventListener('ui:transparency', handler as any);
+    return () => window.removeEventListener('ui:transparency', handler as any);
+  }, []);
 
   const [remoteSchedule, setRemoteSchedule] = React.useState<ScheduleDay[] | null>(null);
   const monthStoreRef = React.useRef<Map<string, ScheduleDay[]>>(new Map());
   const loadingMonthsRef = React.useRef<Set<string>>(new Set());
+
+  // ... (rest of logic unchanged until Return)
+
+  const ymdMonth = (d: Date) => d.toISOString().slice(0,7); // YYYY-MM
+  const monthStart = (ym: string) => new Date(`${ym}-01T00:00:00`);
+  const monthEndExclusive = (ym: string) => { const d = monthStart(ym); d.setMonth(d.getMonth()+1); return d; };
+
+  const upsertMonthDays = (ym: string, events: Array<{ id: string; title: string; startISO: string; endISO: string; location?: string; details?: string; type?: ScheduleEvent['type']; bookingId?: string; provider?: string }>) => {
+    // ... logic ...
+    const byDate = new Map<string, ScheduleEvent[]>();
+    events.forEach((ev) => {
+        // ...
+        const entry: ScheduleEvent = {
+        id: ev.id,
+        type: (ev.type as ScheduleEvent['type']) || 'activity',
+        title: ev.title,
+        time: `${new Date(ev.startISO).toTimeString().slice(0,5)} - ${new Date(ev.endISO).toTimeString().slice(0,5)}`,
+        location: ev.location || '',
+        details: ev.details || '',
+        icon: <Groups sx={{ fontSize: 18, color: '#010057' }} />,
+        bookingId: ev.bookingId,
+        provider: ev.provider,
+        photos: Array.isArray((ev as any)?.photos) ? ((ev as any).photos as string[]).filter(Boolean) : undefined,
+        videos: Array.isArray((ev as any)?.videos) ? ((ev as any).videos as string[]).filter(Boolean) : undefined
+      };
+      if (!byDate.has(new Date(ev.startISO).toISOString().slice(0,10))) byDate.set(new Date(ev.startISO).toISOString().slice(0,10), []);
+      byDate.get(new Date(ev.startISO).toISOString().slice(0,10))!.push(entry);
+    });
+    // ...
+    // Since this tool cannot replace logic easily without context, I will focus on the EFFECT and RETURN part.
+    // I will output the State/Effect part primarily.
+  };
+  
+  // (Aborting complex logic replacement).
+  // I will replace ONLY the State/Effect part and Root Render part in separate chunks.
+  
+  // Chunk 1: State
+  
+  // Chunk 2: Return JSX
+
 
   const ymdMonth = (d: Date) => d.toISOString().slice(0,7); // YYYY-MM
   const monthStart = (ym: string) => new Date(`${ym}-01T00:00:00`);
@@ -498,15 +545,16 @@ export default function SchedulePage() {
               <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
       <Box
         sx={{
-          height: '100dvh',
+          height: '100%',
           display: 'flex',
           flexDirection: 'column',
           p: 3,
           maxWidth: 800,
           mx: 'auto',
-          bgcolor: 'rgba(255,255,255,0.8)',
-          backdropFilter: 'blur(12px)',
+          bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
+          backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
           overflowY: 'auto',
+          borderRadius: '16px',
         }}
       >
         <Typography
@@ -514,8 +562,8 @@ export default function SchedulePage() {
           sx={{
             mb: 4,
             fontSize: '2rem',
-            color: '#4A4A4A',
-            fontFamily: 'Cormorant Garamond',
+            color: '#010057',
+            fontFamily: 'Urbanist',
             fontWeight: 500,
           }}
         >
