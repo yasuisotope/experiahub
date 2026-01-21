@@ -383,10 +383,10 @@ export default function ChatPage() {
             >
               <Box component="form" onSubmit={handleLogin} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box sx={{ textAlign: 'center', mb: 2 }}>
-                  <Typography variant="h4" component="h2" sx={{ m: 0, color: '#010057', fontFamily: 'Urbanist', fontWeight: 600 }}>
+                  <Typography variant="h4" component="h2" sx={{ m: 0, color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400 }}>
                     Welcome to ExperiaHub
                   </Typography>
-                  <Typography sx={{ mt: 1, color: '#666', fontFamily: 'Urbanist' }}>
+                  <Typography sx={{ mt: 1, color: '#666', fontFamily: 'Nunito, sans-serif' }}>
                     Please log in to start chatting
                   </Typography>
                 </Box>
@@ -397,7 +397,7 @@ export default function ChatPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isLoggingIn}
-                  sx={{ '& .MuiOutlinedInput-root': { fontFamily: 'Urbanist' } }}
+                  sx={{ '& .MuiOutlinedInput-root': { fontFamily: 'Nunito, sans-serif' } }}
                 />
                 
                 <TextField
@@ -407,11 +407,11 @@ export default function ChatPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoggingIn}
-                  sx={{ '& .MuiOutlinedInput-root': { fontFamily: 'Urbanist' } }}
+                  sx={{ '& .MuiOutlinedInput-root': { fontFamily: 'Nunito, sans-serif' } }}
                 />
                 
                 {loginError && (
-                  <Typography sx={{ color: '#d32f2f', fontSize: '0.875rem', fontFamily: 'Urbanist', textAlign: 'center' }}>
+                  <Typography sx={{ color: '#d32f2f', fontSize: '0.875rem', fontFamily: 'Nunito, sans-serif', textAlign: 'center' }}>
                     {loginError}
                   </Typography>
                 )}
@@ -425,7 +425,7 @@ export default function ChatPage() {
                       py: 1.5,
                       bgcolor: '#010057',
                       color: 'white',
-                      fontFamily: 'Urbanist',
+                      fontFamily: 'Nunito, sans-serif',
                       textTransform: 'none',
                       fontSize: '1rem',
                       '&:hover': { bgcolor: '#010057' },
@@ -446,7 +446,7 @@ export default function ChatPage() {
                       borderColor: '#010057',
                       borderWidth: 1,
                       borderStyle: 'solid',
-                      fontFamily: 'Urbanist',
+                      fontFamily: 'Agrandir, serif',
                       textTransform: 'none',
                       fontSize: '1rem',
                       '&:hover': { bgcolor: 'rgba(1, 0, 87, 0.1)', borderWidth: 1 },
@@ -507,7 +507,7 @@ export default function ChatPage() {
                     color: '#333',
                     border: '1px solid rgba(255,255,255,0.8)',
                     borderRadius: '12px',
-                    fontFamily: 'Urbanist',
+                    fontFamily: 'Nunito, sans-serif',
                     px: 2,
                     '&:hover': { bgcolor: 'rgba(255,255,255,0.9)', borderColor: '#fff' }
                   }}
@@ -542,7 +542,7 @@ export default function ChatPage() {
                       borderRadius: '16px',
                       border: isTranslucent ? '1px solid rgba(255,255,255,0.1)' : 'none',
                       ...(message.isUser ? { borderBottomRightRadius: '4px' } : { borderBottomLeftRadius: '4px' }),
-                      fontFamily: 'Urbanist',
+                      fontFamily: 'Nunito, sans-serif',
                       fontSize: '1rem',
                       lineHeight: 1.6,
                     }}
@@ -556,16 +556,16 @@ export default function ChatPage() {
                       {experienceList.slice(0,5).map((exp: any, i: number) => (
                         <Paper key={i} elevation={0} sx={{ p: 1.5, backgroundColor: isTranslucent ? 'rgba(255,255,255,0.7)' : '#fff', backdropFilter: isTranslucent ? 'blur(8px)' : 'none', border: '1px solid rgba(1, 0, 87, 0.1)', borderRadius: '10px' }}>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                            <Box sx={{ fontFamily: 'Urbanist', color: '#010057', fontSize: '0.95rem', fontWeight: 500 }}>
+                            <Box sx={{ fontFamily: 'Nunito, sans-serif', color: '#010057', fontSize: '0.95rem', fontWeight: 400 }}>
                               {`${i+1}. ${exp?.title || 'Experience'}`}
                             </Box>
-                            <Box sx={{ fontFamily: 'Urbanist', color: '#64748B', fontSize: '0.85rem' }}>
+                            <Box sx={{ fontFamily: 'Nunito, sans-serif', color: '#64748B', fontSize: '0.85rem' }}>
                               {[exp?.city, exp?.category, exp?.duration].filter(Boolean).join(' • ')}
                             </Box>
                             <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                              <Button size="small" variant="outlined" onClick={() => setSelectedExperience(exp)} sx={{ textTransform: 'none', color: '#010057', borderColor: '#010057', fontFamily: 'Urbanist' }}>Details</Button>
+                              <Button size="small" variant="outlined" onClick={() => setSelectedExperience(exp)} sx={{ textTransform: 'none', color: '#010057', borderColor: '#010057', fontFamily: 'Nunito, sans-serif' }}>Details</Button>
                               {(exp?.bokunProductId || (exp?.id && !String(exp.id).startsWith('temp_'))) && (
-                                <Button size="small" variant="contained" onClick={() => { setBookingExperience(exp); setListWidgetOpen(true); }} sx={{ textTransform: 'none', bgcolor: '#010057', fontFamily: 'Urbanist', '&:hover': { bgcolor: '#010057' } }}>Check availability</Button>
+                                <Button size="small" variant="contained" onClick={() => { setBookingExperience(exp); setListWidgetOpen(true); }} sx={{ textTransform: 'none', bgcolor: '#010057', fontFamily: 'Nunito, sans-serif', '&:hover': { bgcolor: '#010057' } }}>Check availability</Button>
                               )}
                             </Box>
                           </Box>
@@ -603,7 +603,7 @@ export default function ChatPage() {
                     <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#010057', animation: 'blink 1.2s 0.2s infinite' }} />
                     <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#010057', animation: 'blink 1.2s 0.4s infinite' }} />
                   </Box>
-                  <Typography variant="body2" sx={{ fontFamily: 'Urbanist', color: '#010057', fontStyle: 'italic', ml: 1 }}>
+                  <Typography variant="body2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#010057', fontStyle: 'italic', ml: 1 }}>
                     ExperiaHub is thinking...
                   </Typography>
                 </Box>
@@ -760,7 +760,7 @@ export default function ChatPage() {
                 ) : null
               }}
             />
-            <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Urbanist', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 500, borderRadius: 3 }} onClick={async ()=>{
+            <Button size="small" variant="outlined" disabled={bgLoading || !bgSearch.trim()} sx={{ fontFamily: 'Nunito, sans-serif', borderColor: 'rgba(1,0,87,0.5)', color: '#010057', fontWeight: 400, borderRadius: 3 }} onClick={async ()=>{
               try {
                 setBgLoading(true);
                 const results = await searchUnsplash(bgSearch.trim(), 1, 30);

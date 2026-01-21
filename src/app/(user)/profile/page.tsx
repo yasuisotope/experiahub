@@ -158,7 +158,7 @@ export default function ProfilePage() {
             mx: 'auto',
             bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
             backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
-            overflowY: 'hidden',
+            overflowY: 'auto',
 			borderRadius: '16px', // Standardize corners
           }}
         >
@@ -169,14 +169,14 @@ export default function ProfilePage() {
             >
               <ArrowBackIcon />
             </IconButton>
-            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 500 }}>
+            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400 }}>
               Edit Profile
             </Typography>
           </Box>
           <UserProfile />
 
           <Paper elevation={0} sx={{ mt: 3, p: 2, border: '1px solid rgba(1,0,87,0.12)', borderRadius: '16px' }}>
-            <Typography variant="h6" sx={{ mb: 1, fontFamily: 'Urbanist', color: '#010057', fontWeight: 500 }}>Calendar</Typography>
+            <Typography variant="h6" sx={{ mb: 1, fontFamily: 'Nunito, sans-serif', color: '#010057', fontWeight: 400 }}>Calendar</Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
               <FormControl size="small" sx={{ minWidth: 180 }}>
                 <InputLabel id="ttl-label">Token Expiry</InputLabel>
@@ -199,13 +199,13 @@ export default function ProfilePage() {
             <Typography variant="body2" sx={{ mt: 1, color: '#666' }}>Add to Google Calendar: Settings → Add calendar → From URL. Apple Calendar: File → New Calendar Subscription.</Typography>
             {history.length > 0 && (
               <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontFamily: 'Urbanist', color: '#010057', mb: 1 }}>Issued Tokens</Typography>
+                <Typography variant="subtitle2" sx={{ fontFamily: 'Nunito, sans-serif', color: '#010057', mb: 1 }}>Issued Tokens</Typography>
                 {history.map((h, idx) => (
                   <Stack key={idx} direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {h.token}
                     </Typography>
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>
+                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>
                       Exp: {new Date(h.expiresAt).toLocaleString()}
                     </Typography>
                     <Button size="small" variant="outlined" onClick={()=>revokeOne(h.token)}>Remove</Button>

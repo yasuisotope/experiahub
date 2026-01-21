@@ -93,7 +93,7 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
         <Typography
           sx={{
             fontSize: '1rem',
-            fontFamily: 'Urbanist',
+            fontFamily: 'Nunito, sans-serif',
             fontWeight: 600,
             color: '#4A4A4A',
           }}
@@ -105,8 +105,8 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
             px: 1.5,
             py: 0.5,
             fontSize: '0.75rem',
-            fontFamily: 'Urbanist',
-            fontWeight: 500,
+            fontFamily: 'Nunito, sans-serif',
+            fontWeight: 400,
             borderRadius: 1,
             ...(booking.status === 'confirmed' && {
               color: '#2e7d32',
@@ -133,25 +133,25 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
       <Stack spacing={1.5}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CalendarMonth sx={{ color: 'rgba(1, 0, 87, 0.9)', fontSize: 18 }} />
-          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
+          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
             {booking.date}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <AccessTime sx={{ color: 'rgba(1, 0, 87, 0.9)', fontSize: 18 }} />
-          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
+          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
             {booking.time}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <LocationOn sx={{ color: 'rgba(1, 0, 87, 0.9)', fontSize: 18 }} />
-          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
+          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
             {booking.location}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Groups sx={{ color: 'rgba(1, 0, 87, 0.9)', fontSize: 18 }} />
-          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
+          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
             {booking.participants} {booking.participants === 1 ? 'person' : 'people'}
           </Typography>
         </Box>
@@ -162,7 +162,7 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
         <Typography
           sx={{
             fontSize: '1rem',
-            fontFamily: 'Urbanist',
+            fontFamily: 'Nunito, sans-serif',
             fontWeight: 600,
             color: 'rgba(1, 0, 87, 0.9)',
           }}
@@ -446,8 +446,8 @@ export default function BookingsPage() {
             mb: 1,
             fontSize: '2rem',
             color: '#4A4A4A',
-            fontFamily: 'Urbanist',
-            fontWeight: 500,
+            fontFamily: 'Agrandir, serif',
+            fontWeight: 400,
           }}
         >
           My Bookings
@@ -467,7 +467,7 @@ export default function BookingsPage() {
                   px: 1.75,
                   py: 0.5,
                   textTransform: 'none',
-                  fontFamily: 'Urbanist',
+                  fontFamily: 'Nunito, sans-serif',
                   fontSize: '0.85rem',
                 color: '#4A4A4A',
                   '&:not(:first-of-type)': { ml: 0.5 },
@@ -497,7 +497,7 @@ export default function BookingsPage() {
 
         {tab === 'saved' && (
           <Box>
-            <Typography sx={{ fontFamily: 'Urbanist', color: '#666', mb: 1 }}>Saved experiences</Typography>
+            <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666', mb: 1 }}>Saved experiences</Typography>
             {/* Filters row */}
             <Stack direction="row" spacing={1} sx={{ mb: 2 }} alignItems="center">
               <FormControl size="small" sx={{ minWidth: 160 }}>
@@ -528,16 +528,16 @@ export default function BookingsPage() {
                   <MenuItem value="price_desc">Price: High to Low</MenuItem>
                 </Select>
               </FormControl>
-              <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>{filteredSaved.length} results</Typography>
+              <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>{filteredSaved.length} results</Typography>
             </Stack>
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={18} />
-                <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Loading saved…</Typography>
+                <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>Loading saved…</Typography>
               </Box>
             ) : saved.length === 0 ? (
               <Paper variant="outlined" sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.9)' }}>
-                <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>
+                <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>
                   You haven’t saved any experiences yet.
                 </Typography>
               </Paper>
@@ -566,10 +566,10 @@ export default function BookingsPage() {
                         <Box component="img" src={s.image} alt={s.title} sx={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 1, border: '1px solid rgba(1,0,87,0.15)' }} />
                       ) : null}
                       <Box sx={{ flex: 1 }}>
-                        <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600 }}>{s.title}</Typography>
-                        <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>{s.city}{s.category ? ` • ${s.category}` : ''}</Typography>
+                        <Typography sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>{s.title}</Typography>
+                        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>{s.city}{s.category ? ` • ${s.category}` : ''}</Typography>
                         {(s.price || s.currency) && (
-                          <Typography sx={{ fontFamily: 'Urbanist', color: 'rgba(1,0,87,0.9)', fontWeight: 600 }}>
+                          <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: 'rgba(1,0,87,0.9)', fontWeight: 600 }}>
                             {s.price}{s.currency ? ` ${s.currency}` : ''}
             </Typography>
                         )}
@@ -630,11 +630,11 @@ export default function BookingsPage() {
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={18} />
-                <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Loading bookings…</Typography>
+                <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>Loading bookings…</Typography>
               </Box>
             ) : upcoming.length === 0 ? (
               <Paper variant="outlined" sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.9)' }}>
-                <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>No upcoming bookings.</Typography>
+                <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>No upcoming bookings.</Typography>
               </Paper>
             ) : (
               upcoming.map((booking) => (
@@ -645,7 +645,7 @@ export default function BookingsPage() {
               sx={{
                 fontSize: '1.2rem',
                 color: '#4A4A4A',
-                fontFamily: 'Urbanist',
+                fontFamily: 'Nunito, sans-serif',
                 fontWeight: 600,
               }}
             >
@@ -754,11 +754,11 @@ export default function BookingsPage() {
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={18} />
-                <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Loading bookings…</Typography>
+                <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>Loading bookings…</Typography>
               </Box>
             ) : past.length === 0 ? (
               <Paper variant="outlined" sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.9)' }}>
-                <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>No past bookings.</Typography>
+                <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>No past bookings.</Typography>
               </Paper>
             ) : (
               past.map((booking) => (
@@ -773,11 +773,11 @@ export default function BookingsPage() {
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={18} />
-                <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Loading bookings…</Typography>
+                <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>Loading bookings…</Typography>
               </Box>
             ) : canceled.length === 0 ? (
               <Paper variant="outlined" sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.9)' }}>
-                <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>No canceled bookings.</Typography>
+                <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>No canceled bookings.</Typography>
               </Paper>
             ) : (
               canceled.map((booking) => (
@@ -825,7 +825,7 @@ export default function BookingsPage() {
           {slotsLoading ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <CircularProgress size={18} />
-              <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Loading times…</Typography>
+              <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>Loading times…</Typography>
             </Box>
           ) : slotTimes.length > 0 ? (
             <FormControl sx={{ minWidth: 180 }}>
@@ -907,20 +907,20 @@ export default function BookingsPage() {
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CalendarMonth sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
-                <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Urbanist', color: '#666666' }}>
+                <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
                   {selectedBooking.date} {selectedBooking.time}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <LocationOn sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
-                <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Urbanist', color: '#666666' }}>
+                <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
                   {selectedBooking.location}
                 </Typography>
               </Box>
               {detailsLoading ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CircularProgress size={18} />
-                  <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Loading booking details…</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>Loading booking details…</Typography>
                 </Box>
               ) : detailsError ? (
                 <Alert severity="error" action={<Button size="small" onClick={async () => {
@@ -948,17 +948,17 @@ export default function BookingsPage() {
                 <>
               {details.cancellationPolicy && (
                     <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.9)' }}>
-                      <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600, mb: 0.5 }}>Refund policy</Typography>
-                      <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>{details.cancellationPolicy}</Typography>
+                      <Typography sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, mb: 0.5 }}>Refund policy</Typography>
+                      <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>{details.cancellationPolicy}</Typography>
                       {details.refundableUntil && (
-                        <Typography sx={{ fontFamily: 'Urbanist', color: '#666', mt: 0.5 }}>Refundable until: {new Date(details.refundableUntil).toLocaleString()}</Typography>
+                        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666', mt: 0.5 }}>Refundable until: {new Date(details.refundableUntil).toLocaleString()}</Typography>
                       )}
                     </Paper>
                   )}
               {/* Optional media when available */}
               {Array.isArray((details as any)?.photos) && (details as any).photos.length > 0 && (
                 <Box sx={{ mt: 1 }}>
-                  <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600, mb: 0.5 }}>Photos</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, mb: 0.5 }}>Photos</Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
                     {(details as any).photos.slice(0, 6).map((src: string, i: number) => (
                       <Box key={i} component="img" src={src} alt={`photo-${i}`} loading="lazy" sx={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 1 }} />
@@ -968,7 +968,7 @@ export default function BookingsPage() {
               )}
               {Array.isArray((details as any)?.videos) && (details as any).videos.length > 0 && (
                 <Box sx={{ mt: 1 }}>
-                  <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600, mb: 0.5 }}>Videos</Typography>
+                  <Typography sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, mb: 0.5 }}>Videos</Typography>
                   <Stack spacing={1}>
                     {(details as any).videos.slice(0, 2).map((src: string, i: number) => (
                       <Box key={i} component="video" src={src} controls preload="metadata" sx={{ width: '100%', borderRadius: 1 }} />
@@ -977,10 +977,10 @@ export default function BookingsPage() {
                 </Box>
               )}
                   {details.participants ? (
-                    <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Participants: {details.participants}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>Participants: {details.participants}</Typography>
                   ) : null}
                   {details.price ? (
-                    <Typography sx={{ fontFamily: 'Urbanist', color: 'rgba(74,124,140,0.9)', fontWeight: 600 }}>{details.price}</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: 'rgba(74,124,140,0.9)', fontWeight: 600 }}>{details.price}</Typography>
                   ) : null}
                 </>
               ) : null}
@@ -1094,7 +1094,7 @@ export default function BookingsPage() {
           {rescheduleLoading ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <CircularProgress size={18} />
-              <Typography sx={{ fontFamily: 'Urbanist', color: '#666' }}>Loading times…</Typography>
+              <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666' }}>Loading times…</Typography>
             </Box>
           ) : (rescheduleSlots.length > 0 ? (
             <FormControl sx={{ minWidth: 180 }}>

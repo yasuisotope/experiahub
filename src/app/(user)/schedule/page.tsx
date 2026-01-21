@@ -224,7 +224,7 @@ const EventCard = ({ event, date, onOpenDetails }: { event: ScheduleEvent; date:
           <Typography
             sx={{
               fontSize: '1rem',
-              fontFamily: 'Urbanist',
+              fontFamily: 'Nunito, sans-serif',
               fontWeight: 600,
               color: '#4A4A4A',
             }}
@@ -238,8 +238,8 @@ const EventCard = ({ event, date, onOpenDetails }: { event: ScheduleEvent; date:
             px: 1.5,
             py: 0.5,
             fontSize: '0.75rem',
-            fontFamily: 'Urbanist',
-            fontWeight: 500,
+            fontFamily: 'Nunito, sans-serif',
+            fontWeight: 400,
             color: 'rgba(74, 124, 140, 0.9)',
             bgcolor: 'rgba(74, 124, 140, 0.1)',
             borderRadius: 1,
@@ -261,13 +261,13 @@ const EventCard = ({ event, date, onOpenDetails }: { event: ScheduleEvent; date:
       <Stack spacing={1}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <AccessTime sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
-          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
+          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
             {event.time}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <LocationOn sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
-          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
+          <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
             {event.location}
           </Typography>
         </Box>
@@ -276,7 +276,7 @@ const EventCard = ({ event, date, onOpenDetails }: { event: ScheduleEvent; date:
       <Typography
         sx={{
           fontSize: '0.85rem',
-          fontFamily: 'Urbanist',
+          fontFamily: 'Nunito, sans-serif',
           color: '#666666',
           fontStyle: 'italic',
         }}
@@ -526,8 +526,8 @@ export default function SchedulePage() {
             mb: 4,
             fontSize: '2rem',
             color: '#010057',
-            fontFamily: 'Urbanist',
-            fontWeight: 500,
+            fontFamily: 'Agrandir, serif',
+            fontWeight: 400,
           }}
         >
           Schedule
@@ -604,7 +604,7 @@ export default function SchedulePage() {
                     px: 1.75,
                     py: 0.5,
                     textTransform: 'none',
-                    fontFamily: 'Urbanist',
+                    fontFamily: 'Nunito, sans-serif',
                     fontSize: '0.85rem',
                     color: '#4A4A4A',
                     '&:not(:first-of-type)': { ml: 0.5 },
@@ -639,7 +639,7 @@ export default function SchedulePage() {
             {/* Right group: tools */}
             <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <Tooltip title={`Your timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local'}. Events shown in local time.`}>
-                <Typography sx={{ fontSize: '0.75rem', color: '#666', fontFamily: 'Urbanist', bgcolor: 'rgba(74,124,140,0.08)', border: '1px solid rgba(74,124,140,0.18)', px: 1, py: 0.25, borderRadius: 1 }}>
+                <Typography sx={{ fontSize: '0.75rem', color: '#666', fontFamily: 'Nunito, sans-serif', bgcolor: 'rgba(74,124,140,0.08)', border: '1px solid rgba(74,124,140,0.18)', px: 1, py: 0.25, borderRadius: 1 }}>
                   {`TZ: ${Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local'}`}
                 </Typography>
               </Tooltip>
@@ -755,29 +755,29 @@ export default function SchedulePage() {
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CalendarMonth sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
-                  <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Urbanist', color: '#666666' }}>
+                  <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
                     {new Date(selectedEvent.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <AccessTime sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
-                  <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Urbanist', color: '#666666' }}>
+                  <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
                     {selectedEvent.time}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <LocationOn sx={{ color: 'rgba(74, 124, 140, 0.9)', fontSize: 18 }} />
-                  <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Urbanist', color: '#666666' }}>
+                  <Typography sx={{ fontSize: '0.95rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
                     {selectedEvent.location}
                   </Typography>
                 </Box>
-                <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Urbanist', color: '#666666' }}>
+                <Typography sx={{ fontSize: '0.9rem', fontFamily: 'Nunito, sans-serif', color: '#666666' }}>
                   {selectedEvent.details}
                 </Typography>
                 {/* Optional media if provided in event details mapping */}
                 {Array.isArray((selectedEvent as any)?.photos) && (selectedEvent as any).photos.length > 0 && (
                   <Box>
-                    <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600, mb: 0.5 }}>Photos</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, mb: 0.5 }}>Photos</Typography>
                     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
                       {(selectedEvent as any).photos.slice(0,6).map((src: string, i: number) => (
                         <Box key={i} component="img" src={src} alt={`photo-${i}`} loading="lazy" sx={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 1 }} />
@@ -787,7 +787,7 @@ export default function SchedulePage() {
                 )}
                 {Array.isArray((selectedEvent as any)?.videos) && (selectedEvent as any).videos.length > 0 && (
                   <Box>
-                    <Typography sx={{ fontFamily: 'Urbanist', fontWeight: 600, mb: 0.5 }}>Videos</Typography>
+                    <Typography sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, mb: 0.5 }}>Videos</Typography>
                     <Stack spacing={1}>
                       {(selectedEvent as any).videos.slice(0,2).map((src: string, i: number) => (
                         <Box key={i} component="video" src={src} controls preload="metadata" sx={{ width: '100%', borderRadius: 1 }} />
@@ -809,10 +809,10 @@ export default function SchedulePage() {
                   return (
                     <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
                       <Paper variant="outlined" sx={{ px: 1.5, py: 0.75, cursor: 'pointer' }} onClick={() => window.open(buildGoogleCalendarUrl(ce), '_blank', 'noopener')}>
-                        <Typography sx={{ fontSize: '0.85rem', fontFamily: 'Urbanist', color: 'rgba(74, 124, 140, 0.9)' }}>Add to Google Calendar</Typography>
+                        <Typography sx={{ fontSize: '0.85rem', fontFamily: 'Nunito, sans-serif', color: 'rgba(74, 124, 140, 0.9)' }}>Add to Google Calendar</Typography>
                       </Paper>
                       <Paper variant="outlined" sx={{ px: 1.5, py: 0.75, cursor: 'pointer' }} onClick={() => downloadICS(ce)}>
-                        <Typography sx={{ fontSize: '0.85rem', fontFamily: 'Urbanist', color: 'rgba(74, 124, 140, 0.9)' }}>Download .ics</Typography>
+                        <Typography sx={{ fontSize: '0.85rem', fontFamily: 'Nunito, sans-serif', color: 'rgba(74, 124, 140, 0.9)' }}>Download .ics</Typography>
                       </Paper>
                     </Stack>
                   );

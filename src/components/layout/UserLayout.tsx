@@ -183,8 +183,8 @@ export default function UserLayout({ children }: UserLayoutProps) {
         sx={{
           width: 280,
           transition: 'all .3s ease',
-          bgcolor: isTransparent ? 'rgba(255,255,255,0.4)' : '#fff',
-          backdropFilter: isTransparent ? 'blur(20px)' : 'none',
+          bgcolor: isTransparent ? 'rgba(255,255,255,0.7)' : '#fff',
+          backdropFilter: isTransparent ? 'blur(10px)' : 'none',
           color: '#010057',
           borderRight: '1px solid rgba(1, 0, 87, 0.08)',
           display: 'flex',
@@ -217,7 +217,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
             fontWeight: 500,
             textTransform: 'none',
             textTransform: 'none',
-            fontFamily: 'Urbanist, sans-serif',
+            fontFamily: 'Nunito, sans-serif',
             '&:hover': { bgcolor: '#00003b' },
           }}
         >
@@ -331,7 +331,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
                         fontWeight: currentChat?.id === chat.id ? 600 : 400,
                         color: currentChat?.id === chat.id ? '#010057' : '#2F2F2F',
                         noWrap: true,
-                        fontFamily: 'Urbanist, sans-serif',
+                        fontFamily: 'Nunito, sans-serif',
                       }}
                     />
                   </ListItemButton>
@@ -393,7 +393,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
               onClick={() => router.push('/login')}
               sx={{
                 bgcolor: '#010057',
-                fontFamily: 'Urbanist, sans-serif',
+                fontFamily: 'Nunito, sans-serif',
                 '&:hover': { bgcolor: '#00003b' },
               }}
             >

@@ -17,7 +17,7 @@ interface BackgroundImageProps {
 
 export default function BackgroundImage({ imageUrl, lqip, attribution, children, overlayOpacity = 0.45 }: BackgroundImageProps) {
   return (
-    <div style={{ position: 'relative', minHeight: '100vh' }}>
+    <div style={{ position: 'relative', height: '100%' }}>
       <div
         aria-hidden="true"
         style={{
@@ -45,7 +45,7 @@ export default function BackgroundImage({ imageUrl, lqip, attribution, children,
         }}
       />
       {/* content */}
-      <div style={{ position: 'relative', zIndex: 2 }}>{children}</div>
+      <div style={{ position: 'relative', zIndex: 2, height: '100%' }}>{children}</div>
       {/* attribution intentionally hidden in UI per product direction */}
     </div>
   );
