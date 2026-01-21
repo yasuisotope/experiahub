@@ -648,8 +648,13 @@ export default function ChatPage() {
         sx={{
           display: { xs: 'none', md: 'block' },
           width: { md: selectedExperience ? '420px' : 0 },
+          minWidth: 0,
+          transition: 'width 420ms cubic-bezier(.22,.61,.36,1), opacity 360ms ease-in-out, transform 360ms ease-in-out',
           opacity: selectedExperience ? 1 : 0,
-          transition: 'all 0.4s ease',
+          transform: selectedExperience ? 'translateY(0)' : 'translateY(8px)',
+          transitionDelay: selectedExperience ? (isOpening ? '140ms' : '90ms') : '0ms',
+          willChange: 'opacity, transform',
+          pointerEvents: selectedExperience ? 'auto' : 'none',
           overflowY: 'auto',
           height: '100dvh'
         }}

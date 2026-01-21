@@ -788,7 +788,7 @@ export default function SupplierPortalPage() {
     })();
   }, [bgAnchorEl, bgSeed, bgSearch]);
   const [tab, setTab] = React.useState<number>(0);
-  const [section, setSection] = React.useState<'welcome'|'company'|'user'|'experiences'|'information'>('company');
+  const [section, setSection] = React.useState<'welcome'|'company'|'user'|'experiences'|'bookings'|'information'>('company');
   const [toast, setToast] = React.useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = React.useState<{ section: string; timestamp: string } | null>(null);
   
@@ -2195,7 +2195,6 @@ const PRIMARY_BUTTON_SX = {
           height: '100%', // Match sidebar height
           overflowY: 'auto', // Enable scroll within the card
           bgcolor: isTransparent ? 'rgba(255,255,255,0.6)' : '#fff',
-          color: '#3b4850',
           backdropFilter: isTransparent ? 'blur(12px)' : 'none',
           WebkitBackdropFilter: isTransparent ? 'blur(12px)' : 'none',
           color: '#0F172A',
