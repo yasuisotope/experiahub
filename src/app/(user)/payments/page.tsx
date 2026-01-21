@@ -87,13 +87,15 @@ export default function PaymentsPage() {
 
   const paperStyle = {
     p: 4, 
-    borderRadius: '20px', 
+    borderRadius: '16px', 
     border: '1px solid rgba(1,0,87,0.1)', 
-    bgcolor: isTranslucent ? 'rgba(255,255,255,0.7)' : '#fff', 
-    backdropFilter: isTranslucent ? 'blur(10px)' : 'none'
+    bgcolor: isTranslucent ? 'rgba(255,255,255,0.6)' : '#fff', 
+    backdropFilter: isTranslucent ? 'blur(12px)' : 'none'
   };
 
   return (
+    <ProtectedRoute>
+      <BackgroundImage imageUrl={bg?.url} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0.1}>
     <ProtectedRoute>
       <BackgroundImage imageUrl={bg?.url} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0.1}>
         <Box
@@ -104,9 +106,9 @@ export default function PaymentsPage() {
             p: 4,
             maxWidth: 900,
             mx: 'auto',
-            bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.4)' : '#f8fafc',
-            backdropFilter: isTranslucent ? 'blur(20px)' : 'none',
-            borderRadius: '24px',
+            bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#f8fafc',
+            backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
+            borderRadius: '16px',
             m: '16px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
             overflowY: 'auto',
@@ -122,7 +124,7 @@ export default function PaymentsPage() {
             >
               Back
             </Button>
-            <Typography variant="h4" sx={{ width: '100%', textAlign: 'center', color: '#010057', fontFamily: 'Playfair Display', fontWeight: 600 }}>
+            <Typography variant="h4" sx={{ width: '100%', textAlign: 'center', color: '#010057', fontFamily: 'Urbanist', fontWeight: 600 }}>
               Payment Details
             </Typography>
           </Box>
@@ -153,7 +155,7 @@ export default function PaymentsPage() {
 
             {/* Billing History */}
             {status?.invoices?.length > 0 && (
-              <Paper elevation={0} sx={{ p: 3, borderRadius: '20px', border: '1px solid rgba(1,0,87,0.08)', bgcolor: 'rgba(255,255,255,0.6)' }}>
+              <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', border: '1px solid rgba(1,0,87,0.08)', bgcolor: 'rgba(255,255,255,0.6)' }}>
                 <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontFamily: 'Urbanist', fontWeight: 600 }}>Billing History</Typography>
                 <Stack spacing={1}>
                   {status.invoices.map((inv: any) => (
