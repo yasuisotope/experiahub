@@ -127,7 +127,7 @@ export default function PaymentsPage() {
             </Typography>
           </Box>
 
-          <Stack spacing={4} sx={{ width: '100%', maxWidth: 600 }}> {/* Constrain width for centering */}
+          <Stack spacing={4} sx={{ width: '100%', maxWidth: 600, mx: 'auto' }}> {/* Constrain width for centering */}
             {/* Payment Methods - Primary Action */}
             <Paper elevation={0} sx={paperStyle}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>

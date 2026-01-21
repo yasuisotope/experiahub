@@ -150,7 +150,7 @@ export default function ProfilePage() {
       <>
         <Box
           sx={{
-            height: 'calc(100vh - 32px)',
+            height: '100%',
             display: 'flex',
             flexDirection: 'column',
             p: 2,
@@ -159,6 +159,7 @@ export default function ProfilePage() {
             bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
             backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
             overflowY: 'hidden',
+			borderRadius: '16px', // Standardize corners
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -168,14 +169,14 @@ export default function ProfilePage() {
             >
               <ArrowBackIcon />
             </IconButton>
-            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Urbanist' }}>
+            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Urbanist', fontWeight: 500 }}>
               Edit Profile
             </Typography>
           </Box>
           <UserProfile />
 
-          <Paper elevation={0} sx={{ mt: 3, p: 2, border: '1px solid rgba(1,0,87,0.12)', borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ mb: 1, fontFamily: 'Urbanist', color: '#010057' }}>Calendar</Typography>
+          <Paper elevation={0} sx={{ mt: 3, p: 2, border: '1px solid rgba(1,0,87,0.12)', borderRadius: '16px' }}>
+            <Typography variant="h6" sx={{ mb: 1, fontFamily: 'Urbanist', color: '#010057', fontWeight: 500 }}>Calendar</Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
               <FormControl size="small" sx={{ minWidth: 180 }}>
                 <InputLabel id="ttl-label">Token Expiry</InputLabel>
