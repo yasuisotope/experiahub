@@ -67,62 +67,45 @@ const parseAIResponse = (content: string) => {
 
 // Helper: synthesize experiences from plain text when backend array is missing
 const synthesizeExperiences = (text: string) => {
+  if (!text) return [];
   try {
     const textStr = String(text || '');
     const items: any[] = [];
+    
+    // Improved detection to handle broad AI variations
+    const lines = textStr.split('\n');
+    for (let i = 0; i < lines.length && items.length < 5; i++) {
+        const line = lines[i].trim();
+        if (!line || line.length < 5) continue;
 
-    // Robust regex: match a number OR bullet followed by optional dot/space
-    // We use [\s\S]+? to capture newlines.
-    const re = /(?:^|\n|\s)(?:(\d{1,2})\.|[-•])\s*([\s\S]+?)(?=(?:\n\s*(?:\d{1,2}\.|[-•])\s*)|$)/g;
-    let match: RegExpExecArray | null;
-    while ((match = re.exec(textStr)) && items.length < 5) {
-      const part = match[2].trim();
-      const firstLine = part.split('\n')[0].trim();
-      const title = firstLine || part || 'Experience';
-      const cityMatch = part.match(/\(([^)]+)\)/);
-      const city = cityMatch?.[1]?.trim();
-      const durMatch = part.match(/(\d+(?:\.\d+)?)\s*hours?/i);
-      const duration = durMatch?.[0];
-      const summaryPart = part.split(/–|\u2013|•/).slice(1).join(' ').trim();
-      const summary = summaryPart ? summaryPart.slice(0, 220) : undefined;
-      items.push({ title, city, duration, summary });
-    }
+        // Matches "1. Tour Name (Tokyo) ..." or "• Tour Name (Tokyo) ..." or just "Tour Name (Tokyo)"
+        // or "Experience: Tour Name (Tokyo)"
+        const m = line.match(/^(?:\d{1,2}\.|[-•*]|Experience:)?\s*([A-Za-z][^:(]*?)(?:\s*\(([^)]+)\))?\s*[:–•-]?\s*(\d+(?:\.\d+)?\s*hours?)?/i);
+        
+        if (m && m[1] && m[1].length > 4) {
+            const title = m[1].trim();
+            // Blacklist some common conversation words that aren't experiences
+            const lower = title.toLowerCase();
+            if (['here are', 'sure', 'some', 'there', 'please', 'this is', 'i found'].some(word => lower.includes(word))) continue;
 
-    // If nothing found inline, try per-line detection
-    if (items.length === 0) {
-      const lines = textStr.split('\n');
-      for (let i = 0; i < lines.length && items.length < 5; i++) {
-        const line = lines[i];
-        let title = '';
-        let city = '';
-        let duration = '';
-        let summary: string | undefined;
+            const city = m[2] ? m[2].trim() : '';
+            const duration = m[3] ? m[3].trim() : '';
+            
+            // Look ahead for summary/description if it's not another bullet
+            let summary: string | undefined;
+            const nextLine = (lines[i+1] || '').trim();
+            if (nextLine && !nextLine.match(/^(?:\d{1,2}\.|[-•*]|Experience:)/i)) {
+                summary = nextLine.slice(0, 200);
+            }
 
-        const m = line.match(/^(?:(\d{1,2})\.|[-•])[\s-]*(.*)$/);
-        const fallback = !m && line.match(/^([A-Za-z][^:(]*?)(?:\s*\(([^)]+)\))?\s*[:–•-]?\s*(\d+(?:\.\d+)?\s*hours?)?/i);
-
-        if (m) {
-          const titlePart = m[2] || '';
-          title = titlePart.split(/\(|•|–|\u2013|:/)[0].trim() || 'Experience';
-          const cityMatch = titlePart.match(/\(([^)]+)\)/);
-          city = cityMatch?.[1]?.trim() || '';
-          const durMatch = titlePart.match(/(\d+(?:\.\d+)?)\s*hours?/i);
-          duration = durMatch?.[0] || '';
-          const nextLine = (lines[i + 1] || '').trim();
-          summary = nextLine ? nextLine.replace(/^[–•]\s*/, '').slice(0, 220) : undefined;
-        } else if (fallback) {
-           title = fallback[1].trim();
-           city = fallback[2] ? fallback[2].trim() : '';
-           duration = fallback[3] ? fallback[3].trim() : '';
-           const nextLine = (lines[i + 1] || '').trim();
-           summary = nextLine ? nextLine.slice(0, 220) : undefined;
+            items.push({ 
+                title, 
+                city, 
+                duration, 
+                summary,
+                id: `synthetic-${items.length}` 
+            });
         }
-
-        if (title && title.length > 3) {
-             const cleanTitle = title.replace(/^\d+[\s.]+\s*/, '');
-             items.push({ title: cleanTitle, city, duration, summary });
-        }
-      }
     }
     return items;
   } catch {
@@ -150,8 +133,15 @@ export default function ChatPage() {
   const { user, isLoggedIn, login, isLoading: authLoading } = useWordPressAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
   const [input, setInput] = useState('');
+
+    // Synthesis ID mapping: ensure we don't try to book synthetic IDs
+    const getBookingId = (exp: any) => {
+      const bid = exp?.bokunProductId || exp?.bokun_product_id || exp?.productId || exp?.id;
+      if (String(bid).startsWith('synthetic-')) return null;
+      return String(bid || '');
+    };
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -219,7 +209,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (selectedExperience) {
       setIsOpening(true);
-      const pid = (selectedExperience as any)?.bokunProductId || (selectedExperience as any)?.productId || (selectedExperience as any)?.id;
+      const pid = getBookingId(selectedExperience);
       track('details_open', { title: selectedExperience.title, city: (selectedExperience as any)?.city, category: (selectedExperience as any)?.category, productId: pid });
       const t = setTimeout(() => setIsOpening(false), 600);
       try {
@@ -516,7 +506,7 @@ export default function ChatPage() {
           bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.7)' : '#fff',
           backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
           borderRadius: '16px',
-          boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
+          boxShadow: 'none', // Removed frame/shadow
           border: 'none',
         }}>
           {/* Inline header row for chat list area */}
@@ -655,7 +645,7 @@ export default function ChatPage() {
           )}
         </Box>
 
-        <Box sx={{ px: 1, pt: 1, pb: { xs: '30px', md: '30px' }, background: 'transparent', flexShrink: 0 }}>
+        <Box sx={{ px: 2, pt: 1, pb: { xs: '30px', md: '50px' }, background: 'transparent', flexShrink: 0 }}>
           <TextField
             fullWidth
             placeholder="How can I help you today?"
@@ -733,7 +723,7 @@ export default function ChatPage() {
     <BookingOverlay
       open={listWidgetOpen}
       onClose={() => setListWidgetOpen(false)}
-      productId={String(bookingExperience?.bokunProductId || bookingExperience?.productId || bookingExperience?.id || '')}
+      productId={getBookingId(bookingExperience)}
       experienceTitle={bookingExperience?.title}
     />
     <SupportDialog open={supportOpen} onClose={()=>setSupportOpen(false)} defaultRole="user" />

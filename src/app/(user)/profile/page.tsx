@@ -165,13 +165,13 @@ export default function ProfilePage() {
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <Button
+            <IconButton
               onClick={() => router.back()}
-              startIcon={<ArrowBackIcon />}
-              sx={{ color: '#010057', fontSize: '0.9rem', textTransform: 'none', fontFamily: 'Nunito, sans-serif', mb: 1, pl: 0 }}
+              sx={{ color: '#010057', mb: 1, ml: -1 }}
+              size="large"
             >
-              Back
-            </Button>
+              <ArrowBackIcon />
+            </IconButton>
             <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400, fontSize: '2rem' }}>
               Edit Profile
             </Typography>

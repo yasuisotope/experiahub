@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Stack, Button, Divider, Skeleton } from '@mui/material';
+import { Box, Typography, Paper, Stack, Button, Divider, Skeleton, IconButton } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, CreditCard as CreditCardIcon, Receipt as ReceiptIcon, AccountBalance as AccountBalanceIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -63,6 +63,7 @@ export default function PaymentsPage() {
     setProcessing(true);
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
+      const action = (status?.status === 'active' || status?.status === 'trialing') ? 'portal' : 'checkout';
       const res = await fetch('/api/payments', {
         method: 'POST',
         headers: { 
@@ -70,7 +71,7 @@ export default function PaymentsPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
-          action: status?.status === 'active' ? 'portal' : 'checkout',
+          action,
           email: user?.email,
           name: user?.display_name 
         })
@@ -118,14 +119,14 @@ export default function PaymentsPage() {
           }}
         >
           {/* Header */}
-          <Box sx={{ width: '100%', mb: 3 }}>
-            <Button
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <IconButton
               onClick={() => router.back()}
-              startIcon={<ArrowBackIcon />}
-              sx={{ color: '#010057', fontSize: '0.9rem', textTransform: 'none', fontFamily: 'Nunito, sans-serif', mb: 1, pl: 0 }}
+              sx={{ color: '#010057', mb: 1, ml: -1 }}
+              size="large"
             >
-              Back
-            </Button>
+              <ArrowBackIcon />
+            </IconButton>
             <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400, fontSize: '2rem' }}>
               Payment Details
             </Typography>

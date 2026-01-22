@@ -50,8 +50,8 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
     }
     
     const fetchAvail = async () => {
-      const pid = (exp as any)?.bokunProductId || (exp as any)?.id;
-      if (!pid || pid.startsWith('temp_')) return;
+      const pid = (exp as any)?.bokunProductId || (exp as any)?.bokun_product_id || (exp as any)?.id;
+      if (!pid || String(pid).startsWith('temp_') || String(pid).startsWith('synthetic-')) return;
       
       setLoadingAvail(true);
       try {
@@ -89,13 +89,13 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
       const token = typeof window !== 'undefined' ? localStorage.getItem('wp_token') : null;
       if (!token) { setBookmarkMessage('Please log in to bookmark.'); return; }
       const payload: any = {
-        id: (exp as any)?.id || (exp as any)?.bokunProductId || '',
+        id: (exp as any)?.id || (exp as any)?.bokunProductId || (exp as any)?.bokun_product_id || '',
         title: exp.title,
         city: (exp as any)?.city,
-        category: (exp as any)?.category,
+        category: (exp as any)?.category || (exp as any)?.experience_type,
         price: (exp as any)?.price,
         currency: (exp as any)?.currency,
-        bokunProductId: (exp as any)?.bokunProductId || undefined,
+        bokunProductId: (exp as any)?.bokunProductId || (exp as any)?.bokun_product_id || undefined,
         source: (exp as any)?.source || 'chat',
       };
       const res = await fetch('/api/bookmarks', {
@@ -114,7 +114,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
     }
   };
   return (
-    <Paper id="details-panel" role="dialog" aria-modal="true" aria-labelledby="details-title" tabIndex={-1} ref={panelRef} onKeyDown={handleKeyDown} elevation={0} sx={{ p: 2, m: 2, bgcolor: 'rgba(255,255,255,0.9)', border: '0', borderRadius: 1, boxShadow: '0 0 0 0 transparent', outline: 'none' }}>
+    <Paper id="details-panel" role="dialog" aria-modal="true" aria-labelledby="details-title" tabIndex={-1} ref={panelRef} onKeyDown={handleKeyDown} elevation={0} sx={{ p: 2, m: 2, bgcolor: 'rgba(255,255,255,0.9)', border: '0', borderRadius: '16px', boxShadow: '0 0 0 0 transparent', outline: 'none' }}>
       <Stack spacing={1.25}>
         <Typography
           id="details-title"

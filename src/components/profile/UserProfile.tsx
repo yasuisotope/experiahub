@@ -23,7 +23,7 @@ export default function UserProfile() {
     <Paper
       sx={{
         p: 4,
-        borderRadius: 2,
+        borderRadius: '16px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
         bgcolor: 'rgba(255, 255, 255, 0.7)',
         backdropFilter: 'blur(12px)',

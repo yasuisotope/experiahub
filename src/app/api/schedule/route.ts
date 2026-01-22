@@ -11,7 +11,19 @@ export async function GET(request: NextRequest) {
 
     const base = (process.env.NEXT_PUBLIC_N8N_SUPPLIER_URL || 'https://n8n.isotope-blue.com/webhook').replace(/\/$/, '');
     // Ensure we don't double the /schedule if it's already in the base
-    const url = base.endsWith('/schedule') ? base : `${base}/schedule?from=${from || ''}&to=${to || ''}`;
+    let url = base.endsWith('/schedule') ? base : `${base}/schedule`;
+    
+    // Construct search params string
+    const params = new URLSearchParams();
+    if (from) params.append('from', from);
+    if (to) params.append('to', to);
+    
+    const queryString = params.toString();
+    if (queryString) {
+      url += (url.includes('?') ? '&' : '?') + queryString;
+    }
+
+    console.log('Proxying schedule request to:', url);
 
     const res = await fetch(url, {
       method: 'GET',
