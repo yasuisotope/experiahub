@@ -224,7 +224,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
               fullWidth
               onClick={() => {
                 onBook?.(exp);
-                const pid = (exp as any)?.bokunProductId || (exp as any)?.productId || (exp as any)?.id;
+                const pid = (exp as any)?.bokunProductId || (exp as any)?.bokun_product_id || (exp as any)?.productId || (exp as any)?.id;
                 if (!pid) return;
                 track('checkout_click', { productId: pid, title: exp.title, city: exp.city, category: exp.category, source: 'panel' });
               }}
@@ -232,35 +232,15 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
               sx={{ 
                 bgcolor: '#010057', 
                 borderRadius: '12px',
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 600,
                 '&:hover': { bgcolor: 'rgba(1,0,87,0.85)' }, 
                 fontFamily: 'Nunito, sans-serif', 
                 textTransform: 'none' 
               }}
             >
               Book Now
-            </Button>
-          )}
-          {showWidgetCta && (
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={() => {
-                onBook?.(exp);
-                const pid = (exp as any)?.bokunProductId || (exp as any)?.productId || (exp as any)?.id;
-                if (!pid) return;
-                track('widget_open', { source: 'panel', title: exp.title, city: exp.city, category: exp.category, productId: pid });
-              }}
-              aria-label={`Check availability for ${exp.title}`}
-              sx={{ 
-                bgcolor: '#010057', 
-                borderRadius: '12px',
-                '&:hover': { bgcolor: 'rgba(1,0,87,0.85)' }, 
-                fontFamily: 'Nunito, sans-serif', 
-                textTransform: 'none' 
-              }}
-            >
-              Check availability
             </Button>
           )}
         </Stack>

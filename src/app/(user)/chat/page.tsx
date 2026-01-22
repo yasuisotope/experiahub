@@ -72,26 +72,23 @@ const synthesizeExperiences = (text: string) => {
     const textStr = String(text || '');
     const items: any[] = [];
     
-    // Improved detection to handle broad AI variations
     const lines = textStr.split('\n');
     for (let i = 0; i < lines.length && items.length < 5; i++) {
         const line = lines[i].trim();
-        if (!line || line.length < 5) continue;
+        if (!line || line.length < 3) continue;
 
-        // Matches "1. Tour Name (Tokyo) ..." or "• Tour Name (Tokyo) ..." or just "Tour Name (Tokyo)"
-        // or "Experience: Tour Name (Tokyo)"
-        const m = line.match(/^(?:\d{1,2}\.|[-•*]|Experience:)?\s*([A-Za-z][^:(]*?)(?:\s*\(([^)]+)\))?\s*[:–•-]?\s*(\d+(?:\.\d+)?\s*hours?)?/i);
+        // More aggressive regex to catch titles that might start with quotes or direct text
+        const m = line.match(/^(?:\d{1,2}\.|[-•*]|Experience:)?\s*["']?([A-Z0-9][^:(]*?)(?:\s*\(([^)]+)\))?\s*[:–•-]?\s*(\d+(?:\.\d+)?\s*hours?)?/i);
         
         if (m && m[1] && m[1].length > 4) {
-            const title = m[1].trim();
-            // Blacklist some common conversation words that aren't experiences
+            const title = m[1].replace(/["']$/, '').trim();
             const lower = title.toLowerCase();
-            if (['here are', 'sure', 'some', 'there', 'please', 'this is', 'i found'].some(word => lower.includes(word))) continue;
+            // Expanded blacklist
+            if (['here are', 'sure', 'some', 'there', 'please', 'this is', 'i found', 'you can', 'let me'].some(word => lower.includes(word))) continue;
 
             const city = m[2] ? m[2].trim() : '';
             const duration = m[3] ? m[3].trim() : '';
             
-            // Look ahead for summary/description if it's not another bullet
             let summary: string | undefined;
             const nextLine = (lines[i+1] || '').trim();
             if (nextLine && !nextLine.match(/^(?:\d{1,2}\.|[-•*]|Experience:)/i)) {
@@ -494,27 +491,28 @@ export default function ChatPage() {
       }}>
         {/* Left column: messages + input */}
         <Box sx={{ 
-          display: 'grid',
-          gridTemplateRows: '1fr auto',
           minWidth: 0,
-          minHeight: 0,
           height: '100%',
-          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
           width: '100%',
-          maxWidth: 1000, // Centered and wide
+          maxWidth: 1000,
           mx: 'auto',
+          bgcolor: 'transparent',
+          position: 'relative',
+          overflow: 'hidden',
           transition: `${isOpening ? '520ms' : '420ms'} cubic-bezier(.22,.61,.36,1)`,
           transitionProperty: 'max-width',
-          bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.7)' : '#fff',
-          backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
+          backdropFilter: 'none',
           borderRadius: '16px',
-          boxShadow: 'none', // Removed frame/shadow
+          boxShadow: 'none',
           border: 'none',
         }}>
           {/* Inline header row for chat list area */}
-          <Box ref={messagesContainerRef as any} sx={{ 
-          overflowY: 'auto', 
-            p: { xs: 1, sm: 2 },
+           <Box ref={messagesContainerRef as any} sx={{ 
+           flex: 1,
+           overflowY: 'auto', 
+             p: { xs: 1, sm: 2 },
           display: 'flex',
           flexDirection: 'column',
             gap: { xs: 1, sm: 2 },
@@ -647,7 +645,16 @@ export default function ChatPage() {
           )}
         </Box>
 
-        <Box sx={{ px: 2, pt: 1, pb: { xs: '30px', md: '50px' }, background: 'transparent', flexShrink: 0 }}>
+        <Box sx={{ 
+          px: 2, 
+          pt: 1, 
+          pb: { xs: 2, md: 3 }, 
+          background: 'transparent', 
+          flexShrink: 0,
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 15
+        }}>
           <TextField
             fullWidth
             placeholder="How can I help you today?"
@@ -657,10 +664,12 @@ export default function ChatPage() {
             disabled={loading}
             sx={{
               '& .MuiOutlinedInput-root': {
-                height: '44px',
+                height: '52px',
                 borderRadius: '12px',
-                backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                '& fieldset': { borderColor: 'rgba(1, 0, 87, 0.15)' },
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                '& fieldset': { borderColor: 'rgba(1, 0, 87, 0.1)' },
                 '&:hover fieldset': { borderColor: '#010057 !important' },
                 '&.Mui-focused fieldset': { borderColor: '#010057 !important' },
               }

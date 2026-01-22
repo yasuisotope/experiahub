@@ -174,10 +174,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           // @ts-expect-error retain cta for UI even if not in type
           cta: response.response.cta || null
         };
-        // Attach experiences (non-typed UI extension)
-        (newAiMessage as unknown as { experiences?: any[] }).experiences = response.response.experiences || [];
-
-        // Attach experiences (non-typed UI extension)
         (newAiMessage as unknown as { experiences?: any[] }).experiences = response.response.experiences || [];
 
         setCurrentChat(prev => {

@@ -67,7 +67,7 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
       mb: 2,
       bgcolor: 'rgba(255, 255, 255, 0.9)',
       border: '1px solid rgba(1, 0, 87, 0.1)',
-      borderRadius: 2,
+      borderRadius: '12px',
       opacity: isPast ? 0.7 : 1,
       transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, opacity 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
       cursor: 'pointer',
@@ -565,7 +565,7 @@ export default function BookingsPage() {
                   <Paper key={s.id} variant="outlined" sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.9)' }}>
                     <Stack direction="row" alignItems="center" spacing={2}>
                       {s.image ? (
-                        <Box component="img" src={s.image} alt={s.title} sx={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 1, border: '1px solid rgba(1,0,87,0.15)' }} />
+                        <Box component="img" src={s.image} alt={s.title} sx={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '12px', border: '1px solid rgba(1,0,87,0.15)' }} />
                       ) : null}
                       <Box sx={{ flex: 1 }}>
                         <Typography sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>{s.title}</Typography>
