@@ -456,7 +456,7 @@ export default function BookingsPage() {
         </Typography>
 
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 5, bgcolor: 'transparent', py: 1, px: 0.5 }}>
-          <Box sx={{ display: 'inline-flex', p: 0.5, borderRadius: '999px', bgcolor: 'rgba(1, 0, 87, 0.06)', border: '1px solid rgba(1, 0, 87, 0.18)' }}>
+          <Box sx={{ display: 'inline-flex', p: 0.5, borderRadius: '999px', bgcolor: 'transparent', border: 'none' }}>
             <ToggleButtonGroup
               size="small"
               exclusive

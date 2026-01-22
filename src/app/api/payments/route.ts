@@ -93,13 +93,10 @@ export async function POST(request: NextRequest) {
 
     // 1. Find or Create Customer
     let customerId;
-    const customers = await stripe.customers.list({ email: email, limit: 1 });
+    const customers = await stripe.customers.list({ email, limit: 1 });
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
     } else {
-      if (action === 'portal') {
-         return NextResponse.json({ error: 'No customer found for this email' }, { status: 404 });
-      }
       const newCustomer = await stripe.customers.create({
         email,
         name: name || 'ExperiaHub Member',
@@ -144,3 +141,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+```

@@ -131,11 +131,11 @@ export default function PaymentsPage() {
             </Typography>
           </Box>
 
-          <Stack spacing={4} sx={{ width: '100%', maxWidth: 800 }}> {/* Widened and left-aligned with title */}
+          <Stack spacing={4} sx={{ width: '100%', maxWidth: 800, mx: 'auto' }}> {/* Centered content */}
             {/* Payment Methods - Primary Action */}
             <Paper elevation={0} sx={paperStyle}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                 <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 400 }}>Payment Methods</Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                 <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400 }}>Payment Methods</Typography>
                  <Button variant="contained" onClick={handleManage} disabled={processing} sx={{ bgcolor: '#010057', textTransform: 'none', borderRadius: '12px', fontFamily: 'Nunito, sans-serif' }}>
                    Manage
                  </Button>
@@ -157,8 +157,8 @@ export default function PaymentsPage() {
 
             {/* Billing History */}
             {status?.invoices?.length > 0 && (
-              <Paper elevation={0} sx={{ p: 3, borderRadius: '16px', border: '1px solid rgba(1,0,87,0.08)', bgcolor: 'rgba(255,255,255,0.6)' }}>
-                <Typography variant="h6" sx={{ color: '#010057', mb: 2, fontFamily: 'Nunito, sans-serif', fontWeight: 400 }}>Billing History</Typography>
+              <Paper elevation={0} sx={{ p: 4, borderRadius: '16px', border: '1px solid rgba(1,0,87,0.1)', bgcolor: isTranslucent ? 'rgba(255,255,255,0.6)' : '#fff', backdropFilter: isTranslucent ? 'blur(12px)' : 'none' }}>
+                <Typography variant="h6" sx={{ color: '#010057', mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 400 }}>Billing History</Typography>
                 <Stack spacing={1}>
                   {status.invoices.map((inv: any) => (
                     <Stack key={inv.id} direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 1.5, borderRadius: '12px', '&:hover': { bgcolor: 'rgba(255,255,255,0.8)' }, transition: 'background-color 0.2s' }}>

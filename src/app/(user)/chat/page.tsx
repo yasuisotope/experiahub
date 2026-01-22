@@ -429,6 +429,7 @@ export default function ChatPage() {
                   disabled={isLoggingIn}
                   sx={{ '& .MuiOutlinedInput-root': { fontFamily: 'Nunito, sans-serif' } }}
                 />
+
                 
                 {loginError && (
                   <Typography sx={{ color: '#d32f2f', fontSize: '0.875rem', fontFamily: 'Nunito, sans-serif', textAlign: 'center' }}>
@@ -456,9 +457,11 @@ export default function ChatPage() {
                   </Button>
                   
                   <Button
-                    component="a"
-                    href="https://experiahub.com/signup/"
-                    target="_blank"
+          variant="outlined"
+          component="a"
+          href="https://experiahub.com/signup/"
+          target="_blank"
+          rel="noopener noreferrer"
                     fullWidth
                     sx={{
                       py: 1.5,
@@ -481,12 +484,8 @@ export default function ChatPage() {
         )}
 
 
-        {/* Header - Fixed to match other pages */}
-        <Box sx={{ p: 4, pb: 0, maxWidth: 1000, mx: 'auto', width: '100%', position: 'relative', zIndex: 10 }}>
-           <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400, fontSize: '2rem', mb: 3 }}>
-             Chat
-           </Typography>
-        </Box>
+        {/* Header - Removed title for Chat as requested */}
+        <Box sx={{ p: isMobile ? 1 : 2, pb: 0, maxWidth: 1000, mx: 'auto', width: '100%', position: 'relative', zIndex: 10 }} />
 
         {/* Chat Interface (Logged In) */}
         {isLoggedIn && !authLoading && (
@@ -494,7 +493,7 @@ export default function ChatPage() {
         display: { xs: 'block', md: 'grid' }, 
         gridTemplateColumns: { md: selectedExperience ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr) 0px' },
         transition: 'grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        height: '100%', // Use 100% of parent, not full viewport
+        height: '100%',
         position: 'relative'
       }}>
         {/* Left column: messages + input */}
@@ -506,7 +505,7 @@ export default function ChatPage() {
           height: '100%',
           overflow: 'hidden',
           width: '100%',
-          maxWidth: { md: selectedExperience ? '100%' : 760 },
+          maxWidth: 1000, // Centered and wide
           mx: 'auto',
           transition: `${isOpening ? '520ms' : '420ms'} cubic-bezier(.22,.61,.36,1)`,
           transitionProperty: 'max-width',
@@ -514,8 +513,8 @@ export default function ChatPage() {
           backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
           borderRadius: '16px',
           boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
-          border: '1px solid rgba(1, 0, 87, 0.08)',
-          m: 0 // Reset margin to fit container
+          border: 'none', // Removed frame/border
+          m: 0 
         }}>
           {/* Inline header row for chat list area */}
           <Box ref={messagesContainerRef as any} sx={{ 
