@@ -107,7 +107,7 @@ const BookingCard = ({ booking, isPast = false, onReschedule, onCancel, onOpen, 
             fontSize: '0.75rem',
             fontFamily: 'Nunito, sans-serif',
             fontWeight: 400,
-            borderRadius: 1,
+            borderRadius: '12px',
             ...(booking.status === 'confirmed' && {
               color: '#2e7d32',
               bgcolor: 'rgba(46, 125, 50, 0.1)',

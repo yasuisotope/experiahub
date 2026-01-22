@@ -798,7 +798,7 @@ export default function SchedulePage() {
                     <Typography sx={{ fontFamily: 'Nunito, sans-serif', fontWeight: 600, mb: 0.5 }}>Videos</Typography>
                     <Stack spacing={1}>
                       {(selectedEvent as any).videos.slice(0,2).map((src: string, i: number) => (
-                        <Box key={i} component="video" src={src} controls preload="metadata" sx={{ width: '100%', borderRadius: 1 }} />
+                        <Box key={i} component="video" src={src} controls preload="metadata" sx={{ width: '100%', borderRadius: '12px' }} />
                       ))}
                     </Stack>
                   </Box>
@@ -816,10 +816,10 @@ export default function SchedulePage() {
                   };
                   return (
                     <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
-                      <Paper variant="outlined" sx={{ px: 1.5, py: 0.75, cursor: 'pointer' }} onClick={() => window.open(buildGoogleCalendarUrl(ce), '_blank', 'noopener')}>
+                      <Paper variant="outlined" sx={{ px: 1.5, py: 0.75, cursor: 'pointer', borderRadius: '12px' }} onClick={() => window.open(buildGoogleCalendarUrl(ce), '_blank', 'noopener')}>
                         <Typography sx={{ fontSize: '0.85rem', fontFamily: 'Nunito, sans-serif', color: 'rgba(74, 124, 140, 0.9)' }}>Add to Google Calendar</Typography>
                       </Paper>
-                      <Paper variant="outlined" sx={{ px: 1.5, py: 0.75, cursor: 'pointer' }} onClick={() => downloadICS(ce)}>
+                      <Paper variant="outlined" sx={{ px: 1.5, py: 0.75, cursor: 'pointer', borderRadius: '12px' }} onClick={() => downloadICS(ce)}>
                         <Typography sx={{ fontSize: '0.85rem', fontFamily: 'Nunito, sans-serif', color: 'rgba(74, 124, 140, 0.9)' }}>Download .ics</Typography>
                       </Paper>
                     </Stack>
@@ -829,9 +829,9 @@ export default function SchedulePage() {
                 {/* Booking actions */}
                 {selectedEvent.bookingId && (
                   <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
-                    <Button variant="contained" size="small" onClick={() => router.push(`/bookings/${selectedEvent.bookingId}`)}>View booking</Button>
-                    <Button variant="outlined" size="small" onClick={() => { setRescheduleOpen(true); }}>Reschedule</Button>
-                    <Button variant="outlined" color="error" size="small" onClick={() => setCancelOpen(true)}>Cancel</Button>
+                    <Button variant="contained" size="small" sx={{ borderRadius: '12px', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }} onClick={() => router.push(`/bookings/${selectedEvent.bookingId}`)}>View booking</Button>
+                    <Button variant="outlined" size="small" sx={{ borderRadius: '12px', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }} onClick={() => { setRescheduleOpen(true); }}>Reschedule</Button>
+                    <Button variant="outlined" color="error" size="small" sx={{ borderRadius: '12px', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }} onClick={() => setCancelOpen(true)}>Cancel</Button>
                   </Stack>
                 )}
               </Stack>

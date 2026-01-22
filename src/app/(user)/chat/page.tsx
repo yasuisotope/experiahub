@@ -443,6 +443,7 @@ export default function ChatPage() {
                       fontFamily: 'Nunito, sans-serif',
                       textTransform: 'none',
                       fontSize: '1rem',
+                      borderRadius: '12px',
                       '&:hover': { bgcolor: '#010057' },
                       '&:disabled': { bgcolor: 'rgba(0, 0, 0, 0.12)' },
                     }}
@@ -466,6 +467,7 @@ export default function ChatPage() {
                       fontFamily: 'Agrandir, serif',
                       textTransform: 'none',
                       fontSize: '1rem',
+                      borderRadius: '12px',
                       '&:hover': { bgcolor: 'rgba(1, 0, 87, 0.1)', borderWidth: 1 },
                     }}
                   >
