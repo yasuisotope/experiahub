@@ -91,8 +91,8 @@ export default function ExperiencesPage() {
 
   return (
     <BackgroundImage imageUrl={bg?.url} lqip={bg?.lqip} attribution={{ authorName: bg?.authorName, authorUrl: bg?.authorUrl }} overlayOpacity={0}>
-    <div style={{ maxWidth: 960, margin: '24px auto', padding: '0 16px', height: '100dvh', overflowY: 'auto', backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', borderRadius: 8 }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>Experiences</h1>
+    <div style={{ maxWidth: 1000, margin: '24px auto', padding: '40px', minHeight: '100dvh', overflowY: 'auto', backgroundColor: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', borderRadius: '16px', boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)' }}>
+      <h1 style={{ fontSize: '2rem', fontWeight: 400, marginBottom: 24, fontFamily: 'Agrandir, serif', color: '#010057' }}>Experiences</h1>
       {process.env.NEXT_PUBLIC_BOKUN_DISABLED === '1' && (
         <div style={{ background: '#FFF6EC', color: '#9f5c00', padding: 8, borderRadius: 8, marginBottom: 12 }}>
           Booking API activation in progress. Experience data is synchronized with the Supplier Portal.
@@ -117,10 +117,10 @@ export default function ExperiencesPage() {
             href={`/experiences/${x.id}`}
             style={{
               display: 'block',
-              padding: 16,
-              borderRadius: 12,
-              background: '#fff',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.08)',
+              padding: 20,
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.8)',
+              boxShadow: '0 4px 14px rgba(1, 0, 87, 0.06)',
               textDecoration: 'none',
               color: '#333',
             }}
@@ -137,8 +137,8 @@ export default function ExperiencesPage() {
               ) : (
                 <div style={{ width: 140, height: 88, background: '#F0F4F6', borderRadius: 8 }} />
               )}
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 18, fontWeight: 600 }}>{x.title || 'Untitled'}</div>
+              <div style={{ flex: 1, fontFamily: 'Nunito, sans-serif' }}>
+                <div style={{ fontSize: 18, fontWeight: 600, color: '#010057' }}>{x.title || 'Untitled'}</div>
                 <div style={{ fontSize: 13, color: '#666', margin: '6px 0 10px' }}>{x.summary}</div>
                 <div style={{ display: 'flex', gap: 12, fontSize: 13, alignItems: 'center' }}>
                   <span>{x.city || '—'}</span>

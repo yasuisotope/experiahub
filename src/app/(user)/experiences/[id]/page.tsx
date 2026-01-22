@@ -152,7 +152,7 @@ export default function ExperiencePage() {
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, mb: 4, pt: 4 }}>
         {/* Experience Details */}
         <Paper sx={{ p: 3, height: 'fit-content', borderRadius: '16px' }}>
-          <Typography variant="h4" sx={{ mb: 2, fontFamily: 'Nunito', color: '#010057', fontWeight: 500 }}>
+          <Typography variant="h4" sx={{ mb: 2, fontFamily: 'Agrandir, serif', color: '#010057', fontWeight: 400, fontSize: '2rem' }}>
             {experience.title}
           </Typography>
           
@@ -165,13 +165,13 @@ export default function ExperiencePage() {
                   width: '100%',
                   height: 300,
                   objectFit: 'cover',
-                  borderRadius: 16,
+                  borderRadius: '16px',
                 }}
               />
             </Box>
           )}
 
-          <Typography variant="body1" sx={{ mb: 3, color: '#666', lineHeight: 1.6, fontFamily: 'Nunito' }}>
+          <Typography variant="body1" sx={{ mb: 3, color: '#666', lineHeight: 1.6, fontFamily: 'Nunito, sans-serif' }}>
             {experience.summary}
           </Typography>
 
@@ -180,47 +180,47 @@ export default function ExperiencePage() {
               <Chip 
                 label={experience.city} 
                 variant="outlined" 
-                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Nunito' }}
+                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Nunito, sans-serif' }}
               />
             )}
             {experience.category && (
               <Chip 
                 label={experience.category} 
                 variant="outlined"
-                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Nunito' }}
+                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Nunito, sans-serif' }}
               />
             )}
             {experience.duration && (
               <Chip 
                 label={`${experience.duration}h`} 
                 variant="outlined"
-                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Nunito' }}
+                sx={{ color: '#010057', borderColor: 'rgba(1,0,87,0.2)', fontFamily: 'Nunito, sans-serif' }}
               />
             )}
           </Box>
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Nunito', fontWeight: 500 }}>
+            <Typography variant="h6" sx={{ color: '#010057', fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>
               {experience.price ? `${experience.currency} ${experience.price}` : 'Price TBA'}
             </Typography>
             <Chip 
               label={experience.status} 
               color={experience.status === 'Active' ? 'success' : 'warning'}
               size="small"
-              sx={{ fontFamily: 'Nunito' }}
+              sx={{ fontFamily: 'Nunito, sans-serif' }}
             />
           </Box>
         </Paper>
 
         {/* Booking Widget */}
         <Paper sx={{ p: 3, borderRadius: '16px' }}>
-          <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Nunito', fontWeight: 500, color: '#010057' }}>
+          <Typography variant="h5" sx={{ mb: 3, fontFamily: 'Agrandir, serif', fontWeight: 400, color: '#010057' }}>
             Book This Experience
           </Typography>
           
-          {process.env.NEXT_PUBLIC_BOKUN_DISABLED === '0' && experience.bokunProductId ? (
+          {process.env.NEXT_PUBLIC_BOKUN_DISABLED === '0' && (experience.bokunProductId || (experience as any).bokun_product_id) ? (
             <BokunBookingWidget 
-              productId={experience.bokunProductId}
+              productId={experience.bokunProductId || (experience as any).bokun_product_id}
               onError={(error) => console.error('Booking widget error:', error)}
             />
           ) : (
@@ -229,11 +229,11 @@ export default function ExperiencePage() {
               alignItems: 'center', 
               justifyContent: 'center', 
               height: 400,
-              backgroundColor: '#f8f9fa',
-              borderRadius: 1,
-              border: '1px solid #dee2e6'
+              backgroundColor: 'rgba(255, 255, 255, 0.5)',
+              borderRadius: '12px',
+              border: '1px solid rgba(0,0,0,0.08)'
             }}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: '#666', fontFamily: 'Nunito, sans-serif' }}>
                 {process.env.NEXT_PUBLIC_BOKUN_DISABLED === '1' 
                   ? 'Booking integration coming soon'
                   : 'Booking widget not available for this experience'
