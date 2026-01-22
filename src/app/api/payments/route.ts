@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         status: 'active',
         plan: 'Premium Member',
-        next_billing: new Date(activeSub.current_period_end * 1000).toISOString(),
+        next_billing: new Date((activeSub as any).current_period_end * 1000).toISOString(),
         price: `${amountStr}/${activeSub.items.data[0]?.price.recurring?.interval || 'mo'}`
       });
     }
@@ -107,18 +107,23 @@ export async function POST(request: NextRequest) {
       customerId = newCustomer.id;
     }
 
+    const origin = request.nextUrl.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://app.experiahub.com';
+    const appUrl = origin.replace(/\/$/, '');
+
     // 2. Handle Actions
     if (action === 'portal') {
+      console.log('Opening billing portal for:', customerId);
       const session = await stripe.billingPortal.sessions.create({
         customer: customerId,
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/payments`,
+        return_url: `${appUrl}/payments`,
       });
       return NextResponse.json({ url: session.url });
     } else {
       // Default: Create Checkout Session
+      console.log('Creating checkout session for:', email, STRIPE_PRICE_ID);
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
-        mode: 'payment', // Use 'subscription' if price is recurring, 'payment' if one-time
+        mode: 'subscription',
         payment_method_types: ['card'],
         line_items: [
           {
@@ -126,8 +131,8 @@ export async function POST(request: NextRequest) {
             quantity: 1,
           },
         ],
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payments?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payments`,
+        success_url: `${appUrl}/payments?success=true`,
+        cancel_url: `${appUrl}/payments?cancel=true`,
         metadata: {
           source: 'experiahub_app'
         }

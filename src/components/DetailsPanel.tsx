@@ -140,9 +140,9 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
             <Typography sx={{ fontSize: '0.8rem', lineHeight: 1.4 }}>{(exp as any).metadata.cancellation}</Typography>
           )}
         </Box>
-        <Typography sx={{ fontFamily: 'Nunito', color: '#666', fontSize: '0.85rem' }}>{[exp.city, exp.category, exp.duration].filter(Boolean).join(' • ')}</Typography>
+        <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#666', fontSize: '0.85rem' }}>{[exp.city, exp.category, exp.duration].filter(Boolean).join(' • ')}</Typography>
         {exp.summary && (
-          <Typography sx={{ fontFamily: 'Nunito', color: '#444', fontSize: '1rem', lineHeight: 1.6, fontWeight: 400 }}>{exp.summary}</Typography>
+          <Typography sx={{ fontFamily: 'Nunito, sans-serif', color: '#444', fontSize: '1rem', lineHeight: 1.6, fontWeight: 400 }}>{exp.summary}</Typography>
         )}
         {/* Photos (gated) */}
         {isLoggedIn ? (
@@ -229,7 +229,13 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
                 track('checkout_click', { productId: pid, title: exp.title, city: exp.city, category: exp.category, source: 'panel' });
               }}
               aria-label={`Book now for ${exp.title}`}
-              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: 'rgba(1,0,87,0.8)' }, fontFamily: 'Nunito', textTransform: 'none' }}
+              sx={{ 
+                bgcolor: '#010057', 
+                borderRadius: '12px',
+                '&:hover': { bgcolor: 'rgba(1,0,87,0.85)' }, 
+                fontFamily: 'Nunito, sans-serif', 
+                textTransform: 'none' 
+              }}
             >
               Book Now
             </Button>
@@ -246,7 +252,13 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
                 track('widget_open', { source: 'panel', title: exp.title, city: exp.city, category: exp.category, productId: pid });
               }}
               aria-label={`Check availability for ${exp.title}`}
-              sx={{ bgcolor: '#010057', '&:hover': { bgcolor: 'rgba(1,0,87,0.8)' }, fontFamily: 'Nunito', textTransform: 'none' }}
+              sx={{ 
+                bgcolor: '#010057', 
+                borderRadius: '12px',
+                '&:hover': { bgcolor: 'rgba(1,0,87,0.85)' }, 
+                fontFamily: 'Nunito, sans-serif', 
+                textTransform: 'none' 
+              }}
             >
               Check availability
             </Button>
@@ -254,7 +266,7 @@ export default function DetailsPanel({ exp, onClose, onBook }: { exp: Experience
         </Stack>
         {/* Secondary actions */}
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-start', flexWrap: 'wrap' }}>
-          <Button variant="outlined" size="small" aria-label="Bookmark experience" onClick={handleBookmark} sx={{ fontFamily: 'Nunito', textTransform: 'none', color: '#010057', borderColor: '#010057' }}>Bookmark</Button>
+          <Button variant="outlined" size="small" aria-label="Bookmark experience" onClick={handleBookmark} sx={{ fontFamily: 'Nunito, sans-serif', textTransform: 'none', color: '#010057', borderColor: '#010057', borderRadius: '12px' }}>Bookmark</Button>
           {onClose && (
             <Button
               size="small"

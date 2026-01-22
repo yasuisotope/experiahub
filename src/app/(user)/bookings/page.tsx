@@ -431,12 +431,14 @@ export default function BookingsPage() {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          p: 3,
+          p: 4,
           maxWidth: 1000,
           mx: 'auto',
-          bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
+          width: '100%',
+          bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.7)' : '#fff',
           backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
           borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
           overflowY: 'auto',
         }}
       >
@@ -453,7 +455,7 @@ export default function BookingsPage() {
           My Bookings
         </Typography>
 
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 5, bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(1, 0, 87, 0.08)', py: 1, px: 0.5 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 5, bgcolor: 'transparent', py: 1, px: 0.5 }}>
           <Box sx={{ display: 'inline-flex', p: 0.5, borderRadius: '999px', bgcolor: 'rgba(1, 0, 87, 0.06)', border: '1px solid rgba(1, 0, 87, 0.18)' }}>
             <ToggleButtonGroup
               size="small"
@@ -492,7 +494,7 @@ export default function BookingsPage() {
               <ToggleButton value="canceled">Canceled</ToggleButton>
             </ToggleButtonGroup>
           </Box>
-          <Button component={Link} href="/schedule" variant="outlined" size="small">View in Schedule</Button>
+          <Button component={Link} href="/schedule" variant="outlined" size="small" sx={{ borderRadius: '12px', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}>View in Schedule</Button>
         </Stack>
 
         {tab === 'saved' && (
@@ -575,24 +577,29 @@ export default function BookingsPage() {
                         )}
                       </Box>
                       <Stack direction="row" spacing={1}>
-                        <Button component={Link} href={`/experiences/${s.experienceId}`} variant="outlined" size="small">View</Button>
+                        <Button component={Link} href={`/experiences/${s.experienceId}`} variant="outlined" size="small" sx={{ borderRadius: '12px', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}>View</Button>
                         <Button
                           variant="contained"
                           size="small"
                           onClick={() => {
                             const pid = String(s.bokunProductId || s.experienceId || s.id || '');
-                            if (!pid) return;
+                            if (!pid || pid.startsWith('temp_')) {
+                               setSnack({ open: true, message: 'Invalid product ID for booking', severity: 'error' });
+                               return;
+                            }
                             setWidgetProductId(pid);
                             setWidgetOpen(true);
                           }}
+                          sx={{ borderRadius: '12px', textTransform: 'none', fontFamily: 'Nunito, sans-serif', bgcolor: '#010057', '&:hover': { bgcolor: 'rgba(1,0,87,0.85)' } }}
                         >
                           Book now
                         </Button>
-                        <Button variant="outlined" size="small" onClick={() => openAddToSchedule(s)}>Add to Schedule</Button>
+                        <Button variant="outlined" size="small" onClick={() => openAddToSchedule(s)} sx={{ borderRadius: '12px', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}>Add to Schedule</Button>
                         <Button
                           variant="outlined"
                           color="error"
                           size="small"
+                          sx={{ borderRadius: '12px', textTransform: 'none', fontFamily: 'Nunito, sans-serif' }}
                           disabled={removeBusyId === s.id}
                           onClick={async () => {
                             try {

@@ -56,8 +56,8 @@ export default function UserProfile() {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Button
           variant="outlined"
+          component="a"
           href={wpProfileUrl}
-          component={Link}
           target="_blank"
           rel="noopener noreferrer"
           sx={{

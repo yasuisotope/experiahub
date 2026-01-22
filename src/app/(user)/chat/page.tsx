@@ -97,27 +97,28 @@ const synthesizeExperiences = (text: string) => {
         let summary: string | undefined;
 
         const m = line.match(/^(?:(\d{1,2})\.|[-•])[\s-]*(.*)$/);
-        const fallback = !m && line.match(/^([A-Za-z][^:]+?)(\([^)]+\)).*?(\d+(?:\.\d+)?)\s*hours?/i);
+        const fallback = !m && line.match(/^([A-Za-z][^:(]*?)(?:\s*\(([^)]+)\))?\s*[:–•-]?\s*(\d+(?:\.\d+)?\s*hours?)?/i);
 
         if (m) {
           const titlePart = m[2] || '';
-          title = titlePart.split(/\(|•|–|\u2013/)[0].trim() || 'Experience';
+          title = titlePart.split(/\(|•|–|\u2013|:/)[0].trim() || 'Experience';
           const cityMatch = titlePart.match(/\(([^)]+)\)/);
           city = cityMatch?.[1]?.trim() || '';
           const durMatch = titlePart.match(/(\d+(?:\.\d+)?)\s*hours?/i);
           duration = durMatch?.[0] || '';
-          const next = (lines[i + 1] || '').trim();
-          summary = next ? next.replace(/^[–•]\s*/, '').slice(0, 220) : undefined;
+          const nextLine = (lines[i + 1] || '').trim();
+          summary = nextLine ? nextLine.replace(/^[–•]\s*/, '').slice(0, 220) : undefined;
         } else if (fallback) {
            title = fallback[1].trim();
-           city = fallback[2].replace(/[()]/g, '').trim();
-           duration = fallback[3] + ' hours'; // approximate reconstruction
-           const next = (lines[i + 1] || '').trim();
-           summary = next ? next.slice(0, 220) : undefined;
+           city = fallback[2] ? fallback[2].trim() : '';
+           duration = fallback[3] ? fallback[3].trim() : '';
+           const nextLine = (lines[i + 1] || '').trim();
+           summary = nextLine ? nextLine.slice(0, 220) : undefined;
         }
 
-        if (title && (city || duration)) {
-             items.push({ title, city, duration, summary });
+        if (title && title.length > 3) {
+             const cleanTitle = title.replace(/^\d+[\s.]+\s*/, '');
+             items.push({ title: cleanTitle, city, duration, summary });
         }
       }
     }
@@ -304,7 +305,7 @@ export default function ChatPage() {
       if (token) {
         await setUserBackground(token, p);
       }
-      trackBackgroundChange(p.url || '');
+      trackBackgroundChange('chat', p);
     } catch (e) {
       console.error('BG Change Error:', e);
     }
@@ -480,14 +481,21 @@ export default function ChatPage() {
         )}
 
 
+        {/* Header - Fixed to match other pages */}
+        <Box sx={{ p: 4, pb: 0, maxWidth: 1000, mx: 'auto', width: '100%', position: 'relative', zIndex: 10 }}>
+           <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400, fontSize: '2rem', mb: 3 }}>
+             Chat
+           </Typography>
+        </Box>
+
         {/* Chat Interface (Logged In) */}
         {isLoggedIn && !authLoading && (
         <Box sx={{ 
         display: { xs: 'block', md: 'grid' }, 
         gridTemplateColumns: { md: selectedExperience ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr) 0px' },
         transition: 'grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        height: '100dvh', // Force full viewport height
-        position: 'relative' // Ensure positioning context
+        height: '100%', // Use 100% of parent, not full viewport
+        position: 'relative'
       }}>
         {/* Left column: messages + input */}
         <Box sx={{ 
@@ -495,13 +503,19 @@ export default function ChatPage() {
           gridTemplateRows: '1fr auto',
           minWidth: 0,
           minHeight: 0,
-          height: '100dvh', // Force full viewport height
+          height: '100%',
           overflow: 'hidden',
           width: '100%',
           maxWidth: { md: selectedExperience ? '100%' : 760 },
           mx: 'auto',
           transition: `${isOpening ? '520ms' : '420ms'} cubic-bezier(.22,.61,.36,1)`,
-          transitionProperty: 'max-width'
+          transitionProperty: 'max-width',
+          bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.7)' : '#fff',
+          backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
+          borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
+          border: '1px solid rgba(1, 0, 87, 0.08)',
+          m: 0 // Reset margin to fit container
         }}>
           {/* Inline header row for chat list area */}
           <Box ref={messagesContainerRef as any} sx={{ 

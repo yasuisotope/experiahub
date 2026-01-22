@@ -406,9 +406,15 @@ export default function SchedulePage() {
         cache: 'no-store'
       });
       if (!res.ok) { return; }
-      const data: Array<{ id: string; title: string; startISO: string; endISO: string; location?: string; details?: string; type?: ScheduleEvent['type']; bookingId?: string; provider?: string }> = await res.json();
-      upsertMonthDays(ym, data);
-    } catch {}
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        upsertMonthDays(ym, data);
+      } else if (data && typeof data === 'object' && Array.isArray((data as any).events)) {
+        upsertMonthDays(ym, (data as any).events);
+      }
+    } catch (e) {
+      console.error('Failed to load schedule month:', ym, e);
+    }
     finally {
       loadingMonthsRef.current.delete(ym);
     }
@@ -511,13 +517,15 @@ export default function SchedulePage() {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          p: 3,
+          p: 4,
           maxWidth: 1000,
           mx: 'auto',
-          bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
+          width: '100%',
+          bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.7)' : '#fff',
           backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
           overflowY: 'auto',
           borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
         }}
       >
         <Typography
@@ -533,7 +541,7 @@ export default function SchedulePage() {
           Schedule
         </Typography>
 
-        <Stack spacing={1} sx={{ mb: 2, position: 'sticky', top: 0, zIndex: 5, bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(1,0,87,0.08)', py: 1.25, px: 0.5 }}>
+        <Stack spacing={1} sx={{ mb: 2, position: 'sticky', top: 0, zIndex: 5, bgcolor: 'transparent', py: 1.25, px: 0.5 }}>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
             <FormControl size="small" sx={{ minWidth: 160 }}>
               <InputLabel id="month-filter-label">Month filter</InputLabel>

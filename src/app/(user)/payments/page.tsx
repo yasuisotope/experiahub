@@ -106,19 +106,19 @@ export default function PaymentsPage() {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            p: 4,
+            p: 4, // Unified padding
             maxWidth: 1000,
             mx: 'auto',
-            bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#f8fafc',
+            width: '100%',
+            bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.7)' : '#fff',
             backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
             borderRadius: '16px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
             overflowY: 'auto',
-            // Removed duplicate overflowY
           }}
         >
           {/* Header */}
-          <Box sx={{ width: '100%', mb: 4 }}>
+          <Box sx={{ width: '100%', mb: 3 }}>
             <Button
               onClick={() => router.back()}
               startIcon={<ArrowBackIcon />}
@@ -126,12 +126,12 @@ export default function PaymentsPage() {
             >
               Back
             </Button>
-            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400 }}>
+            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400, fontSize: '2rem' }}>
               Payment Details
             </Typography>
           </Box>
 
-          <Stack spacing={4} sx={{ width: '100%', maxWidth: 600, mx: 'auto' }}> {/* Constrain width for centering */}
+          <Stack spacing={4} sx={{ width: '100%', maxWidth: 800 }}> {/* Widened and left-aligned with title */}
             {/* Payment Methods - Primary Action */}
             <Paper elevation={0} sx={paperStyle}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>

@@ -153,23 +153,26 @@ export default function ProfilePage() {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            p: 2,
+            p: 4, // Unified padding
             maxWidth: 1000,
             mx: 'auto',
-            bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.6)' : '#fff',
+            width: '100%',
+            bgcolor: isTranslucent ? 'rgba(255, 255, 255, 0.7)' : '#fff',
             backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
             overflowY: 'auto',
-			borderRadius: '16px', // Standardize corners
+            borderRadius: '16px',
+            boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <IconButton 
+            <Button
               onClick={() => router.back()}
-              sx={{ mr: 2, color: '#010057' }}
+              startIcon={<ArrowBackIcon />}
+              sx={{ color: '#010057', fontSize: '0.9rem', textTransform: 'none', fontFamily: 'Nunito, sans-serif', mb: 1, pl: 0 }}
             >
-              <ArrowBackIcon />
-            </IconButton>
-            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400 }}>
+              Back
+            </Button>
+            <Typography variant="h4" sx={{ color: '#010057', fontFamily: 'Agrandir, serif', fontWeight: 400, fontSize: '2rem' }}>
               Edit Profile
             </Typography>
           </Box>
