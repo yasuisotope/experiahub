@@ -8,6 +8,8 @@ import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { Send as SendIcon } from '@mui/icons-material';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useWordPressAuth } from '@/contexts/WordPressContext';
@@ -146,6 +148,8 @@ export default function ChatPage() {
   const searchParams = useSearchParams();
   const { currentChat, sendMessage, loading } = useChatContext();
   const { user, isLoggedIn, login, isLoading: authLoading } = useWordPressAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   const [input, setInput] = useState('');
   const [username, setUsername] = useState('');
@@ -513,8 +517,7 @@ export default function ChatPage() {
           backdropFilter: isTranslucent ? 'blur(12px)' : 'none',
           borderRadius: '16px',
           boxShadow: '0 8px 32px rgba(1, 0, 87, 0.05)',
-          border: 'none', // Removed frame/border
-          m: 0 
+          border: 'none',
         }}>
           {/* Inline header row for chat list area */}
           <Box ref={messagesContainerRef as any} sx={{ 
